@@ -6,25 +6,26 @@
 
 ##  Load Packages  --------------------------------------------------------------------
 library(tidyverse) 
-library(Seurat)
+library(EWCE) # To create ctd object
+library(AnnotationDbi)
+library(org.Hs.eg.db)
 library(patchwork)
 library(data.table)
 library(ClusterProfiler)
 library(readxl)
-library(cowplot)
 
 
 ##  Set Variables  --------------------------------------------------------------------
-DATA_DIR <- '~/GitHub/MScBioinfo/resources/Shi_2021/'
-OUT_DIR <- '~/GitHub/MScBioinfo/results/R_objects/'
-FIG_DIR <- '~/GitHub/MScBioinfo/results/figures/'
+DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/raw_data/shi_et_al_2021/'
+OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/ctd_objects/'
+dir.create(OUT_DIR)
 
 ##  Load Data  ------------------------------------------------------------------------
 shi_data <- fread(paste0(DATA_DIR, "GSE135827_GE_mat_raw_count_with_week_info.txt"))
-shi_meta <- read_excel(paste0(DATA_DIR, "science.abj6641_table_s2.xlsx"), col_names = TRUE, 
-                   skip = 1) # Note added skip here to get rid of nonsense 1st line in excel sheet
-                             # And get colnames established properly this caused you problems in
-                             # in your script - head the data with and without skip
+shi_meta <- read_excel(paste0(DATA_DIR, "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"), 
+                       col_names = TRUE, 
+                       skip = 1) # Note added skip here to get rid of nonsense 1st line in excel sheet
+
 
 ##  Check if the cell orders are identical in shi_meta and shi_data  ------------------
 shi_data[1:10, 1:10] # Note that fread added V1 as a col name for the genes column
@@ -36,7 +37,7 @@ shi_data_cell_IDs_df <- t(head(shi_data, 1)) %>%
   rownames_to_column("ID") %>%
   slice(-1) %>% # Get rid of V1 row
   separate(ID, c("cell_ID", "pcw"), ".GW") %>%
-  select(-V1) # get rid of V1 column
+  rename::select(-V1) # get rid of V1 column
 
 # Get the metadata cell IDs and remove trailing number 
 shi_meta_cell_IDs_df <- shi_meta %>%
@@ -60,13 +61,13 @@ sum(duplicated(shi_data_cell_IDs_df$cell_ID))
 identical(shi_meta_cell_IDs_df$cell_ID, shi_data_cell_IDs_df$cell_ID)
 
 # Now check the format that CreateSeuratObject() needs the data in
-?CreateSeuratObject()
+#?CreateSeuratObject()
 
 # Get metadata into correct format
 shi_meta <- cbind(shi_meta, shi_data_cell_IDs_df)  %>%
   column_to_rownames(var = "Cells") %>%
-  select(`Major types`, pcw) %>%
-  rename(ClusterID = `Major types`)
+  dplyr::select(`Major types`, pcw) %>%
+  dplyr::rename(ClusterID = `Major types`)
 
 # Now the count matrix
 shi_data <- shi_data %>% 
@@ -75,6 +76,46 @@ shi_data <- shi_data %>%
 # We've already extracted the pcw info and we know the cell orderings are identical
 # so we can change the cell names in shi_data to exactly match that in the meta data
 colnames(shi_data) <- shi_meta_cell_IDs_df$Cells
+
+cells_to_extract <- shi_meta %>%
+  rownames_to_column(var = 'cell_type') %>%
+  mutate(test = !(ClusterID  %in% c('Excitatory IPC','Thalamic neurons','Excitatory neuron'))) %>%
+  pull(test)
+
+shi_meta_filt <- shi_meta %>%
+  rownames_to_column(var = 'cell_type') %>%
+  filter(!grepl('Excitatory IPC|Thalamic neurons|Excitatory neuron', ClusterID)) 
+
+# Remove columns annotated to 3 cell types we want to remove
+M <- shi_data[, cells_to_extract]
+
+# # Create seurat object
+# seurat.shi <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+# 
+# # Now that the data is loaded get rid of all the objects we don't need
+# rm(shi_data, shi_data_cell_IDs_df, shi_meta, shi_meta_cell_IDs_df)
+# 
+# # Save Seurat object
+# # Use this to derive the ctd objects in the gene specificity script
+# saveRDS(seurat.shi, paste0(OUT_DIR, "seurat_shi.rds"))
+
+##  Create ctd object  ----------------------------------------------------------------
+# Requires raw count gene matrix - needs to be genes x cell and annotation data
+# Create annotations 
+annotations <- as.data.frame(cbind(rownames(shi_meta), 
+                             shi_meta$ClusterID, 
+                             shi_meta$ClusterID))
+colnames(annotations) <- c('cell_id', 'level1class', 'level2class')
+rownames(annotations) <- NULL
+annotLevels <- list(level1class = annotations$level2class, 
+                    level2class = annotations$level2class)
+##  Load ctd object  ------------------------------------------------------------------
+ctd <- generate_celltype_data(exp = shi_data, 
+                              annotLevels = annotLevels, 
+                              groupName = 'shi',
+                              savePath = OUT_DIR)
+
+load("~/Desktop/fetal_brain_snRNAseq_GE_270922/results/CellTypeData_shi.rda")
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
