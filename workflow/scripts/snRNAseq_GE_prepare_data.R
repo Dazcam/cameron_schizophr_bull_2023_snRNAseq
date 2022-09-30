@@ -1,28 +1,33 @@
 #--------------------------------------------------------------------------------------
 #
-#    Prepare the Shi 2021 snRNAseq data
+#    Prep Shi 2021 snRNAseq data - create ctd and MAGMA/LDSR gene lists
 #
 #--------------------------------------------------------------------------------------
 
 ##  Load Packages  --------------------------------------------------------------------
-library(tidyverse) 
-library(EWCE) # To create ctd object
-library(AnnotationDbi)
-library(org.Hs.eg.db)
-library(patchwork)
-library(data.table)
-library(ClusterProfiler)
-library(readxl)
+
+  # 1. Check shi data, remove 3 non-GE cell-types, munge for EWCE ctd creation
+  # 2. Create ctd - may be adding fine grained cell types
+  # 3. Prep gene lists for MAGMA and LDSR (inc. gene coord file)
+
+##  Load Packages  --------------------------------------------------------------------
+if (!require("Require")) install.packages("Require")
+Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro"))
+# BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db"))
 
 
 ##  Set Variables  --------------------------------------------------------------------
-DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/raw_data/shi_et_al_2021/'
-OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/ctd_objects/'
-dir.create(OUT_DIR)
+DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
+SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
+OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
+CTD_DIR <- paste0(OUT_DIR, 'ctd_objects/')
+GENELIST_DIR <- paste0(OUT_DIR, 'gene_lists/')
+MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
+LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
 
 ##  Load Data  ------------------------------------------------------------------------
-shi_data <- fread(paste0(DATA_DIR, "GSE135827_GE_mat_raw_count_with_week_info.txt"))
-shi_meta <- read_excel(paste0(DATA_DIR, "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"), 
+shi_data <- fread(paste0(SHI_DIR, "GSE135827_GE_mat_raw_count_with_week_info.txt"))
+shi_meta <- read_excel(paste0(SHI_DIR, "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"), 
                        col_names = TRUE, 
                        skip = 1) # Note added skip here to get rid of nonsense 1st line in excel sheet
 
@@ -35,9 +40,9 @@ shi_meta[1:10, 1:5]
 shi_data_cell_IDs_df <- t(head(shi_data, 1)) %>% 
   as.data.frame() %>%
   rownames_to_column("ID") %>%
-  slice(-1) %>% # Get rid of V1 row
+  dplyr::slice(-1) %>% # Get rid of V1 row
   separate(ID, c("cell_ID", "pcw"), ".GW") %>%
-  rename::select(-V1) # get rid of V1 column
+  dplyr::select(-V1) # get rid of V1 column
 
 # Get the metadata cell IDs and remove trailing number 
 shi_meta_cell_IDs_df <- shi_meta %>%
@@ -77,17 +82,25 @@ shi_data <- shi_data %>%
 # so we can change the cell names in shi_data to exactly match that in the meta data
 colnames(shi_data) <- shi_meta_cell_IDs_df$Cells
 
+# Extract list of cell IDs to remove from matrix
 cells_to_extract <- shi_meta %>%
   rownames_to_column(var = 'cell_type') %>%
-  mutate(test = !(ClusterID  %in% c('Excitatory IPC','Thalamic neurons','Excitatory neuron'))) %>%
+  mutate(test = !(ClusterID  %in% c('Excitatory IPC', 
+                                    'Thalamic neurons', 
+                                    'Excitatory neuron'))) %>%
   pull(test)
 
+# Remove columns annotated to 3 cell types we want to remove
+shi_data_filt <- shi_data[, cells_to_extract]
+
+# Extract unwanted cell types from metadata
 shi_meta_filt <- shi_meta %>%
   rownames_to_column(var = 'cell_type') %>%
   filter(!grepl('Excitatory IPC|Thalamic neurons|Excitatory neuron', ClusterID)) 
 
-# Remove columns annotated to 3 cell types we want to remove
-M <- shi_data[, cells_to_extract]
+# Might need to check this removal from two separate dfs is OK. And that cols
+# removed from the mat corresopnd to rows removed from df.
+# Using Seurat might be better. 
 
 # # Create seurat object
 # seurat.shi <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
@@ -102,20 +115,110 @@ M <- shi_data[, cells_to_extract]
 ##  Create ctd object  ----------------------------------------------------------------
 # Requires raw count gene matrix - needs to be genes x cell and annotation data
 # Create annotations 
-annotations <- as.data.frame(cbind(rownames(shi_meta), 
-                             shi_meta$ClusterID, 
-                             shi_meta$ClusterID))
+annotations <- as.data.frame(cbind(rownames(shi_meta_filt),
+                                   shi_meta_filt$ClusterID, 
+                                   shi_meta_filt$ClusterID))
 colnames(annotations) <- c('cell_id', 'level1class', 'level2class')
 rownames(annotations) <- NULL
 annotLevels <- list(level1class = annotations$level2class, 
                     level2class = annotations$level2class)
-##  Load ctd object  ------------------------------------------------------------------
-ctd <- generate_celltype_data(exp = shi_data, 
+##  Create object  ------------------------------------------------------------------
+dir.create(CTD_DIR)
+ctd <- EWCE::generate_celltype_data(exp = shi_data_filt, 
                               annotLevels = annotLevels, 
                               groupName = 'shi',
-                              savePath = OUT_DIR)
+                              savePath = CTD_DIR)
 
-load("~/Desktop/fetal_brain_snRNAseq_GE_270922/results/CellTypeData_shi.rda")
+load(paste0(CTD_DIR, 'ctd_shi.rda'))
+
+# Clean up
+rm(list = ls(pattern = '^shi_*'))
+
+##  Create specificity scores  ------------------------------------------------------
+# Pull out raw mean expression scores from ctd
+exp_lvl <- as.data.frame(as.matrix(ctd[[1]]$mean_exp)) %>% 
+  rownames_to_column("Gene")
+
+# Gather data
+exp_lvl <- exp_lvl %>%
+  gather(key = Lvl, value = Expr_sum_mean, -Gene) %>%
+  as_tibble()
+
+# Load gene coordinates
+# Load hg19 gene coordinates and extend upstream and downstream coordinates by 100kb.
+# File downloaded from MAGMA website (https://ctg.cncr.nl/software/magma).
+# Filtered to remove extended MHC (chr6, 25Mb to 34Mb).
+gene_coordinates <- 
+  read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt'),
+           col_names = FALSE, col_types = 'cciicc') %>%
+  dplyr::rename(chr = "X2", ENTREZ = "X1", chr = "X2", 
+                start = 'X3', end = 'X4', HGNC = 'X6') %>%
+#  mutate(start = ifelse(X3 - 100000 < 0, 0, X3 - 100000), end = X4 + 100000) %>%
+  dplyr::select(chr, start, end, ENTREZ) %>% 
+  mutate(chr = paste0("chr",chr))
+
+# Write dictionary for cell type names
+dic_lvl <- dplyr::select(exp_lvl, Lvl) %>% 
+  base::unique() %>% 
+  mutate(makenames = make.names(Lvl))
+
+# Scale each cell type to the same total number of molecules (1M)
+exp_scaled <- exp_lvl %>% 
+  group_by(Lvl) %>% 
+  mutate(Expr_sum_mean = Expr_sum_mean * 1e6 / sum(Expr_sum_mean))
+
+# Specificity Calculation
+exp_specificity <- exp_scaled %>% group_by(Gene) %>% 
+  mutate(specificity = Expr_sum_mean / sum(Expr_sum_mean))
+
+# Sanity check
+# exp_specificity %>%
+#   ungroup() %>%
+#   filter(Lvl == 'CGE') %>%
+#   summarise(across(where(is.numeric), sum))
+
+
+# Only keep MAGMA genes 
+entrez2symbol <- AnnotationDbi::toTable(org.Hs.eg.db::org.Hs.egSYMBOL2EG) %>% 
+  dplyr::rename(Gene = "symbol", ENTREZ = "gene_id")
+exp_specificity <- inner_join(exp_specificity, entrez2symbol, by = "Gene") 
+exp_specificity <- inner_join(exp_specificity, gene_coordinates, by = "ENTREZ") 
+
+
+# Get number of genes that represent 10% of the dataset
+n_genes <- length(unique(exp_specificity$ENTREZ))
+n_genes_to_keep <- (n_genes * 0.1) %>% round()
+
+
+##  Write MAGMA/LDSR input files ------------------------------------------------------
+# Filter out genes with expression below 1 (uninformative genes)
+dir.create(MAGMA_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(LDSR_DIR, recursive = TRUE, showWarnings = FALSE)
+
+MAGMA <- exp_specificity %>% 
+  filter(Expr_sum_mean > 1) %>% 
+  group_by(Lvl) %>% 
+  top_n(., n_genes_to_keep, specificity) %>%
+  select(Lvl, ENTREZ) %>%
+  ungroup() %>%
+  mutate(counts = rep(1:n_genes_to_keep, times = 7)) %>%
+  pivot_wider(names_from = counts, values_from = ENTREZ) %>%
+  write_tsv(paste0(MAGMA_DIR, "shi_top10.txt"), col_names = F)
+
+LDSR <- exp_specificity %>% filter(Expr_sum_mean > 1) %>% 
+  group_by(Lvl) %>% 
+  top_n(., n_genes_to_keep, specificity) %>%
+  select(chr, start, end, ENTREZ) %>%
+  group_walk(~ write_tsv(.x[,1:4], paste0(LDSR_DIR, .y$Lvl, ".bed")))
+
+
+# Create gene coordinate file for LDSR
+LDSR %>% 
+  ungroup() %>%
+  select(ENTREZ, chr, start, end) %>%
+  write_tsv(paste0(LDSR_DIR, "LDSR_gene_coords.bed"))
+
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
+
