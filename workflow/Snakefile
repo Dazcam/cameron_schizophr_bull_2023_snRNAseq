@@ -1,0 +1,9 @@
+configfile: '../config/config.yaml'
+
+include: 'rules/snRNAseq_GE_magma.smk'
+include: 'rules/snRNAseq_GE_scDRS.smk'
+
+rule all:
+    input:
+        expand("../results/magma/snRNAseq_GE_{GWAS}.magma.genes.raw", GWAS = config['GWAS']),
+        "../results/scDRS/scDRS_genewise_Z_top1K.gs"

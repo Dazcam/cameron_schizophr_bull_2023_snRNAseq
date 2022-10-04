@@ -9,13 +9,14 @@
 
 # ---------  SET SMK PARAMS  ----------
 configfile: "../config/config.yaml"
+localrules: magma_download_refs
 
 # -------------  RULES  ---------------
 
 rule magma_download_refs:
-    output:  dir("../resources/refs/g1000_eur")
+    output:  "../resources/refs/g1000_eur.bim"
     params:  "../resources/refs/"
-    log:     "../results/logs/magma/snRNAseq.GE.getRefs.{GWAS}.log"
+    log:     "../results/logs/magma/snRNAseq.GE.getRefs.log"
     shell:
              """
              
@@ -25,45 +26,46 @@ rule magma_download_refs:
              """        
 
 rule magma_map_snps_to_genes:
-    input:   snp_loc = 
+    input:   snp_loc = "../resources/refs/g1000_eur.bim",
              gene_loc = "../resources/refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt"
-    output:  "../results/magma/snRNAseq_GE_{GWAS}.genes.annot"
-    params:  "../results/magma/snRNAseq_GE_{GWAS}"
-    message: "Running magma annotation step for {wildcards.GWAS}"
-    log:     "../results/logs/magma/snRNAseq.GE.snps2genes.{GWAS}.log"
+    output:  "../results/magma/snRNAseq_GE.magma.genes.annot"
+    params:  "../results/magma/snRNAseq_GE.magma"
+    message: "Running magma annotation step to map SNPs to genes"
+    log:     "../results/logs/magma/snRNAseq.GE.annotate.snps2genes.log"
     shell:
              """
 
-             magma --annotate --window=35,10 --snp-loc {input.snp_loc} --gene-loc {input.gene_loc} --out {params}              
+             module load magma/1.10
+             magma --annotate window=35,10 --snp-loc {input.snp_loc} --gene-loc {input.gene_loc} --out {params}              
 
              """
 
 rule magma_gene_analysis:
-    input:   gene_annot = "../results/magma/snRNAseq_GE_{GWAS}.genes.annot",
-             ref = rules.magma_download_refs.output,
-             pval = 
-    output:  "../results/magma/snRNAseq_GE_{GWAS}.genes.raw"
-    params:  ref = "../resources/refs/g1000_eur"
-             out = "../results/magma/snRNAseq_GE_{GWAS}"
+    input:   gene_annot = "../results/magma/snRNAseq_GE.magma.genes.annot",
+             gwas = "../results/GWAS_for_MAGMA/{GWAS}_hg19_magma_ready.tsv"
+    output:  "../results/magma/snRNAseq_GE_{GWAS}.magma.genes.raw"
+    params:  ref = "../resources/refs/g1000_eur",
+             out = "../results/magma/snRNAseq_GE_{GWAS}.magma"
     message: "Running magma gene analysis step for {wildcards.GWAS}"
     log:     "../results/logs/magma/snRNAseq.GE.gene_analysis.{GWAS}.log"
     shell:
              """
 
-             magma --bfile {params.ref} --pval [PVAL_FILE] N=[N] --gene-annot {input.gene_annot} --out {params.out}
+             module load magma/1.10
+             magma --bfile {params.ref} --pval {input.gwas} ncol='N' --gene-annot {input.gene_annot} --out {params.out}
 
              """
 
 rule magma_gene_set_analysis:
-    input:   genes = "../results/magma/snRNAseq_GE_{GWAS}.genes.raw"
+    input:   genes = "../results/magma/snRNAseq_GE_{GWAS}.genes.raw",
              data  = "../results/gene_lists/MAGMA/shi_top10.txt"
-    output:  "../results/magma/snRNAseq_GE_{GWAS}.gsa.out"
-    params:  out = "../results/magma/snRNAseq_GE_{GWAS}"
+    output:  "../results/magma/snRNAseq_GE_{GWAS}.magma.gsa.out"
+    params:  out = "../results/magma/snRNAseq_GE_{GWAS}.magma"
     message: "Running magma gene set analysis step for {wildcards.GWAS}"
-    log:     "../results/logs/magma/snRNAseq.GE.gene_analysis.{GWAS}.log"
+    log:     "../results/logs/magma/snRNAseq.GE.gene_set_analysis.{GWAS}.log"
     shell:
              """
-
+             module load magma/1.10
              magma --gene-results {input.genes} --gene-covar {input.data} --out {params.out}
 
              """
