@@ -12,8 +12,9 @@
 
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
-Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro"))
-# BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db"))
+Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro",
+                   "Seurat", "reticulate", "sceasy")) # Last 2 for AnnData objects
+# BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "zellkonverter"))
 
 
 ##  Set Variables  --------------------------------------------------------------------
@@ -21,6 +22,7 @@ DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
 SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
 OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 CTD_DIR <- paste0(OUT_DIR, 'ctd_objects/')
+H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
 GENELIST_DIR <- paste0(OUT_DIR, 'gene_lists/')
 MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
 LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
@@ -99,11 +101,24 @@ shi_meta_filt <- shi_meta %>%
   filter(!grepl('Excitatory IPC|Thalamic neurons|Excitatory neuron', ClusterID)) 
 
 # Might need to check this removal from two separate dfs is OK. And that cols
-# removed from the mat corresopnd to rows removed from df.
+# removed from the mat correspond to rows removed from df.
 # Using Seurat might be better. 
 
-# # Create seurat object
-# seurat.shi <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+
+##  Create h5ad object  ---------------------------------------------------------------
+dir.create(H5AD_DIR)
+library(SingleCellExperiment)
+
+shi_cell_IDs <- shi_meta_filt$cell_type
+shi_meta_for_sce <- shi_meta_filt[, 2:3]
+rownames(shi_meta_for_sce) <- shi_cell_IDs
+
+sce <- SingleCellExperiment(list(counts = shi_data_filt), colData = shi_meta_for_sce)
+
+zellkonverter::writeH5AD(sce, paste0(H5AD_DIR, 'shi2021_filt.h5ad'))
+
+
+#seurat.shi <- CreateSeuratObject(counts = shi_data_filt, meta.data = shi_meta_for_seurat)
 # 
 # # Now that the data is loaded get rid of all the objects we don't need
 # rm(shi_data, shi_data_cell_IDs_df, shi_meta, shi_meta_cell_IDs_df)
