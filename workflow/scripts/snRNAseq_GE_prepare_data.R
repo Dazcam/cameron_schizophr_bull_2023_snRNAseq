@@ -224,7 +224,7 @@ LDSR <- exp_specificity %>% filter(Expr_sum_mean > 1) %>%
   group_by(Lvl) %>% 
   top_n(., n_genes_to_keep, specificity) %>%
   select(chr, start, end, ENTREZ) %>%
-  group_walk(~ write_tsv(.x[,1:4], paste0(LDSR_DIR, .y$Lvl, ".bed")))
+  group_walk(~ write_tsv(.x[,1:4], paste0(LDSR_DIR, .y$Lvl, ".bed"), col_names = FALSE))
 
 
 # Create gene coordinate file for LDSR
