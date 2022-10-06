@@ -57,7 +57,7 @@ rule magma_gene_analysis:
              """
 
 rule magma_gene_set_analysis:
-    input:   genes = "../results/magma/snRNAseq_GE_{GWAS}.genes.raw",
+    input:   genes = "../results/magma/snRNAseq_GE_{GWAS}.magma.genes.raw",
              data  = "../results/gene_lists/MAGMA/shi_top10.txt"
     output:  "../results/magma/snRNAseq_GE_{GWAS}.magma.gsa.out"
     params:  out = "../results/magma/snRNAseq_GE_{GWAS}.magma"
@@ -66,7 +66,7 @@ rule magma_gene_set_analysis:
     shell:
              """
              module load magma/1.10
-             magma --gene-results {input.genes} --gene-covar {input.data} --out {params.out}
+             magma --gene-results {input.genes} --set-annot {input.data} --out {params.out}
 
              """
 
