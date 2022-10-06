@@ -8,4 +8,7 @@ rule all:
     input:
         expand("../results/magma/snRNAseq_GE_{GWAS}.magma.gsa.out", GWAS = config['GWAS']),
         "../results/scDRS/scDRS_SCZ.score.gz",
+#        "../results/h5ad_objects/shi2021_filt.h5ad",
+#        "../results/scDRS/scDRS_covariates.tsv",
+#        "../results/scDRS/scDRS_genewise_Z_top1K.gs",
         expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSC_{CELL_TYPE}_{GWAS}_baseline.v1.2.results", CELL_TYPE = config['RNA_CELL_TYPES'], GWAS = config['GWAS'])

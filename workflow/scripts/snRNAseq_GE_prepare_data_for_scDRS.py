@@ -14,8 +14,8 @@ from collections import Counter
 
 SHI_GeX = snakemake.input[0]
 SHI_META = snakemake.input[1]
-H5AD_OUT = snakemake.output[1]
-COV_OUT = snakemake.output[0]
+H5AD_OUT = snakemake.output[0]
+COV_OUT = snakemake.output[1]
 
 
 # Load data -------------------------------------------------------------------
