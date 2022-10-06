@@ -14,7 +14,7 @@
 if (!require("Require")) install.packages("Require")
 Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro",
                    "Seurat", "reticulate", "sceasy")) # Last 2 for AnnData objects
-# BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "zellkonverter"))
+# BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "scuttle", zellkonverter"))
 
 
 ##  Set Variables  --------------------------------------------------------------------
@@ -38,23 +38,26 @@ shi_meta <- read_excel(paste0(SHI_DIR, "science.abj6641_tables_s2_to_s9/science.
 shi_data[1:10, 1:10] # Note that fread added V1 as a col name for the genes column
 shi_meta[1:10, 1:5]
 
-# Pull out header shi_data so we don't have to deal with entire matrix
+# Pull out shi_data header so we don't have to deal with entire matrix
 shi_data_cell_IDs_df <- t(head(shi_data, 1)) %>% 
   as.data.frame() %>%
   rownames_to_column("ID") %>%
   dplyr::slice(-1) %>% # Get rid of V1 row
   separate(ID, c("cell_ID", "pcw"), ".GW") %>%
-  dplyr::select(-V1) # get rid of V1 column
+  dplyr::select(-V1) %>%
+  as_tibble() # get rid of V1 column
 
 # Get the metadata cell IDs and remove trailing number 
 shi_meta_cell_IDs_df <- shi_meta %>%
   separate(Cells, c("cell_ID", "cell_ID_number"), "-", remove = FALSE) 
 
-# Check if the number assigned to the cells in the shi_meta table are unique
+# Note that the cell IDs in the metadata table do not match that give in the 
+# colnames of the data matrix. The former have 1-11 assigned non uniformly
 unique(shi_meta_cell_IDs_df$cell_ID_number)
+table(shi_meta_cell_IDs_df$cell_ID_number) # Note these numbers are not uniform
 
 # This number might be important - check if there are any duplicated cell IDs 
-# when that number is removed
+# in meta when that number is removed
 sum(duplicated(shi_meta_cell_IDs_df$cell_ID)) 
 
 # It's likely the numbers refer to different sequencing runs. Cells from 
@@ -63,14 +66,14 @@ sum(duplicated(shi_meta_cell_IDs_df$cell_ID))
 # Now check cell IDs in shi_data
 sum(duplicated(shi_data_cell_IDs_df$cell_ID)) 
   
-# Good sign that these match - now check if the cell IDs in shi_meta and shi_data are in the 
-# same order
+# Good sign that duplicate cells match - now check if the cell IDs in shi_meta and 
+# shi_data are in the same order
 identical(shi_meta_cell_IDs_df$cell_ID, shi_data_cell_IDs_df$cell_ID)
 
 # Now check the format that CreateSeuratObject() needs the data in
 #?CreateSeuratObject()
 
-# Get metadata into correct format
+# Get metadata into correct format - retain clusterIDs and pcw info
 shi_meta <- cbind(shi_meta, shi_data_cell_IDs_df)  %>%
   column_to_rownames(var = "Cells") %>%
   dplyr::select(`Major types`, pcw) %>%
@@ -109,12 +112,17 @@ shi_meta_filt <- shi_meta %>%
 dir.create(H5AD_DIR)
 library(SingleCellExperiment)
 
+# Prep data for sce generation
 shi_cell_IDs <- shi_meta_filt$cell_type
 shi_meta_for_sce <- shi_meta_filt[, 2:3]
 rownames(shi_meta_for_sce) <- shi_cell_IDs
 
+# Create sce object as input for zellkonverter
 sce <- SingleCellExperiment(list(counts = shi_data_filt), colData = shi_meta_for_sce)
+sce <- scuttle::addPerCellQC(sce)
+sce <- addPerFeatureQC(sce)
 
+# Create h5ad file for scDRS
 zellkonverter::writeH5AD(sce, paste0(H5AD_DIR, 'shi2021_filt.h5ad'))
 
 
