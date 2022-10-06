@@ -12,19 +12,17 @@ import os, subprocess, tempfile
 import seaborn as sn
 from collections import Counter
 
-SHI_DIR = '/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/resources/raw_data/shi_et_al_2021/'
-DATA_DIR = '/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
-H5AD_DIR = DATA_DIR + 'h5ad_objects/'
-OUT_DIR = '/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
+SHI_GeX = snakemake.input[0]
+SHI_META = snakemake.input[1]
+H5AD_OUT = snakemake.output[1]
+COV_OUT = snakemake.output[0]
 
 
 # Load data -------------------------------------------------------------------
-exp_mat = pd.read_csv(SHI_DIR + 'GSE135827_GE_mat_raw_count_with_week_info.txt', 
-                      delimiter = '\t')
+exp_mat = pd.read_csv(SHI_GeX, delimiter = '\t')
 
 # Metadata
-meta = pd.read_excel(SHI_DIR + "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx",
-                     header = 1)
+meta = pd.read_excel(SHI_META, header = 1)
 
 
 ##  Check if the cell orders are identical in shi_meta and shi_data  ---------
@@ -92,13 +90,13 @@ cov_df = pd.DataFrame(adata.obs['n_genes_by_counts'])
 cov_df.columns = ['n_genes']
 cov_df.index.name = 'index'
 cov_df.reset_index(inplace = True)
-cov_df.to_csv(OUT_DIR + 'test.tsv', sep = "\t", index = False)
+cov_df.to_csv(COV_OUT, sep = "\t", index = False)
 
 # Test for failure of compute score on hawk
 sc.pp.normalize_per_cell(adata, counts_per_cell_after = 1e4)
 
 # Write h5ad
-adata.write()
+adata.write(H5AD_OUT)
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
