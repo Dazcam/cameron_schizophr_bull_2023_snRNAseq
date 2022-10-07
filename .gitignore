@@ -3,3 +3,11 @@ resources/ldsr
 resources/refs/
 resources/scDRS
 results/h5ad_objects/
+results/magma/*.magma.genes.out
+results/magma/*.gsa.sets.genes.out  
+results/magma/*.genes.raw           
+results/magma/*.log
+results/magma/*.gsa.genes.out       
+results/magma/*.genes.annot
+results/LDSR_part_herit/baseline_v1.2/*_baseline.v1.2.log
+results/LDSR_part_herit/baseline_v1.2/*_baseline.v1.2.results 

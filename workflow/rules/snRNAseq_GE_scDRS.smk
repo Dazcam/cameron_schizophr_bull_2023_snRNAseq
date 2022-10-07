@@ -67,7 +67,7 @@ rule scDRS_compute_score:
     input:   rna_data = "../results/h5ad_objects/shi2021_filt.h5ad", 
              gs = "../results/scDRS/scDRS_genewise_Z_top1K.gs",
              cov = "../results/scDRS/scDRS_covariates.tsv"
-    output:  "../results/scDRS/scDRS_SCZ.score.gz"
+    output:  "../results/scDRS/SCZ.full_score.gz"
     params:  "../results/scDRS/"
     log:     "../results/logs/magma/snRNAseq.GE.compute.scores.log"
     shell:
@@ -88,9 +88,9 @@ rule scDRS_compute_score:
               """
 
 rule scDRS_group_level_stats:
-    input:   rna_data =	"../results/h5ad_objects",
+    input:   rna_data =	"../results/h5ad_objects/shi2021_filt.h5ad",
              gwas_scores = "../results/scDRS/SCZ.full_score.gz"
-    output:  "../results/scDRS/SCZ.scdrs_group.level1class"
+    output:  "../results/scDRS/SCZ.scdrs_group.ClusterID"
     params:  "../results/scDRS/"
     log:     "../results/logs/magma/snRNAseq.GE.group_level_stats.log"
     shell:
@@ -100,11 +100,34 @@ rule scDRS_group_level_stats:
                --h5ad-file {input.rna_data} \
                --score-file {input.gwas_scores} \
                --out-folder {params} \
-               --group-analysis level1class \
+               --group-analysis ClusterID \
                --flag-filter-data True \
                --flag-raw-count True &> {log}
       
        	      """
+
+#rule perform_downstream:
+#    input:   rna_data = "../results/h5ad_objects",
+#             scores = "../results/scDRS/SCZ.full_score.gz"
+#    output:  "../results/scDRS/<trait>.scdrs_group.{CELL_TYPE}"
+#    params:  "../results/scDRS/"
+#    log:     "../results/logs/magma/snRNAseq.GE.compute.scores.log"
+#    shell:
+#             """
+
+#             scdrs perform-downstream \
+#               --h5ad-file {input.rna_data} \
+#               --score-file {input.scores} \
+#               --out-folder {params} \
+#               --group-analysis {wildcards.CELL_TYPE} \
+#               --corr-analysis causal_variable,non_causal_variable,covariate\
+#               --gene-analysis \
+#               --flag-filter-data True \
+#               --flag-raw-count True
+
+#              """
+
+
 
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------
