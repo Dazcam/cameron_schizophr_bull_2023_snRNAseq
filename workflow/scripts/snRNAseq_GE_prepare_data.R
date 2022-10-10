@@ -126,13 +126,33 @@ sce <- addPerFeatureQC(sce)
 zellkonverter::writeH5AD(sce, paste0(H5AD_DIR, 'shi2021_filt.h5ad'))
 
 
-#seurat.shi <- CreateSeuratObject(counts = shi_data_filt, meta.data = shi_meta_for_seurat)
-# 
+seurat.shi <- CreateSeuratObject(counts = shi_data_filt, meta.data = shi_meta_for_sce)
+seurat.shi <- NormalizeData(seurat.shi)
+seurat.shi <- FindVariableFeatures(seurat.shi, selection.method = "vst", nfeatures = 2000) 
+seurat.shi <- ScaleData(seurat.shi) 
+seurat.shi <- RunPCA(seurat.shi, features = VariableFeatures(object = seurat.shi)) 
+seurat.shi <- FindNeighbors(seurat.shi) 
+seurat.shi <- FindClusters(seurat.shi) 
+seurat.shi <- RunUMAP(seurat.shi, dims = 1:30)
+seurat.shi@reductions[["umap"]]@cell.embeddings[,"UMAP_1"] <- shi_meta$`UMAP-X`
+seurat.shi@reductions[["umap"]]@cell.embeddings[,"UMAP_2"] <- shi_meta$`UMAP-Y`
+DimPlot(seurat.shi, reduction = "umap", group.by = 'pcw',
+        label = TRUE, label.size = 5,
+        pt.size = 0.1, repel = TRUE) + ggtitle(NULL) 
+
+DATA_DIR = '/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
+scDRS_DIR = paste0(DATA_DIR, 'scDRS/')
+score <- read_tsv(paste0(scDRS_DIR, 'SCZ.full_score.gz'))
+seurat.shi$scz <- score$norm_score
+my_palette <- CustomPalette(low = "blue", high = "red", mid = 'white', k = 50)
+FeaturePlot(object = seurat.shi, features = "scz", cols = my_palette)
+
 # # Now that the data is loaded get rid of all the objects we don't need
 # rm(shi_data, shi_data_cell_IDs_df, shi_meta, shi_meta_cell_IDs_df)
 # 
 # # Save Seurat object
 # # Use this to derive the ctd objects in the gene specificity script
+
 # saveRDS(seurat.shi, paste0(OUT_DIR, "seurat_shi.rds"))
 
 ##  Create ctd object  ----------------------------------------------------------------
