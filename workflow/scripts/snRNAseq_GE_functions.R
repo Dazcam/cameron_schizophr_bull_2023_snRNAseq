@@ -6,14 +6,15 @@
 
 ## Functions  -------------------------------------------------------------------------
 
-# Test and plots for various reolution parameters
+# Test and plots for various resolution parameters
 seurat_resolution_test <- function(SEURAT_OBJECT,
-                                   RESOULUTION,
+                                   CLUSTER_ID,
+                                   RESOLUTION,
                                    GROUPBY_VAR,
                                    MARKERS,
                                    UNIQUE_ID) {
   
-  for (RES in RESOULUTION) {
+  for (RES in RESOLUTION) {
     
     # Set the default Ident
     Idents(object = SEURAT_OBJECT) <- SEURAT_OBJECT@meta.data[paste0("RNA_snn_res.", RES)]
@@ -30,7 +31,7 @@ seurat_resolution_test <- function(SEURAT_OBJECT,
                                  DiscretePalette_scCustomize(num_colors = 26, palette = "ditto_seq"))
     clust_plot <- DimPlot_scCustom(SEURAT_OBJECT, group.by = paste0("RNA_snn_res.", RES),
                                    DiscretePalette_scCustomize(num_colors = 26, palette = "polychrome"))
-    shiID_plot <- DimPlot_scCustom(SEURAT_OBJECT, group.by = "ClusterID",
+    shiID_plot <- DimPlot_scCustom(SEURAT_OBJECT, group.by = CLUSTER_ID,
                                    DiscretePalette_scCustomize(num_colors = 26, palette = "polychrome"))
     violin_geX2 <- VlnPlot(SEURAT_OBJECT, MARKERS, stack = TRUE, flip = TRUE, 
                            cols = DiscretePalette_scCustomize(num_colors = 26, palette = "polychrome"),

@@ -4,9 +4,12 @@
 #
 #--------------------------------------------------------------------------------------
 
-##  Info  --------------------------------------------------------------------
+##  Info  -----------------------------------------------------------------------------
 
-# 1. Seurat testing for Shi et al (2021) data
+# Seurat testing for Shi et al (2021) data
+# Tested Shi parameters from methods as best I could - all clusters
+# Tested subset of data removing ExNs with / without batch correction 
+# Testing res levels: 'snRNAseq_GE_functions.R'
 
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
@@ -25,26 +28,14 @@ REPORT_FILE <- 'snRNAseq_GE_seurat_testing.html'
 ##  Load scripts an functions   -------------------------------------------------------
 source(paste0(SCRIPT_DIR, 'snRNAseq_GE_prep_shi_data_for_Seurat.R'))
 source(paste0(SCRIPT_DIR, 'snRNAseq_GE_functions.R'))
-
-## Markers
-mge_markers <- c("PLS3", "NXPH1", "SFTA3", "SOX6")
-lge_markers <- c("SIX3", "ZNF503", "SERTAD4", "ISL1")
-cge_markers <- c("NFIB", "PDZRN3", "AP1S2", "CALB2", "SCGN",
-                 "PCDH9", "KLHL35", "ANKS1B")
-supp1C_markers <- c("HMGN2", "EOMES", "CD68", "OLIG1", "OLIG2", 
-                    "IGFBP7", "LHX2", "GBX2", "LHX9")
-our_markers <- c('GAD1', 'GAD2', 'SLC32A1', 'GLI3', 'TNC',  
-                 'SLC17A7', 'SPI1', 'PROX1', 'SCGN', 'LHX6', 
-                 'LHX8', 'NXPH1', 'MEIS2', 'ZFHX3', 'ISL1')
-shi1C_markers <- c('HES1', 'MKI67', 'ASCL1', 'NKX2-1', 'LHX6',
-                   'SOX6', 'NR2F1', 'NR2F2', 'FOXP1', 'MEIS2', 
-                   'NEUROD2', 'TCF7L2')
-
+source(paste0(SCRIPT_DIR, 'snRNAseq_GE_marker_genes.R'))
 
 ## Replicate Shi results based on the parameters specified in Methods -----------------
 # Uses fastMNN for batch correction - from SeuratWrappers
 # Assumption that MNN was set on pcw / batch
 seurat.mnn <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+seurat.mnn <- subset(seurat.mnn, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
+                                                           "12_02", "12_02.1"))
 seurat.mnn <- NormalizeData(seurat.mnn)
 seurat.mnn  <- FindVariableFeatures(seurat.mnn, selection.method = "vst", nfeatures = 2000)
 seurat.mnn  <- RunFastMNN(object.list = SplitObject(seurat.mnn, split.by = "pcw"))
@@ -62,6 +53,8 @@ seurat_resolution_test(seurat.mnn,
 
 ## Subset Shi data - no batch correction  ---------------------------------------------
 seurat.shi <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+seurat.shi <- subset(seurat.shi, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
+                                                           "12_02", "12_02.1"))
 seurat.shi <- subset(seurat.shi, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
                                                            "Endothelial", "progenitor"))
 seurat.shi <- NormalizeData(seurat.shi)
@@ -82,6 +75,8 @@ seurat_resolution_test(seurat.shi,
 
 ## Subset Shi data - with batch correction  ---------------------------------------------
 seurat.shi.bc <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+seurat.shi.bc <- subset(seurat.shi.bc, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
+                                                           "12_02", "12_02.1"))
 seurat.shi.bc <- subset(seurat.shi.bc, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
                                                            "Endothelial", "progenitor"))
 seurat.shi.bc <- NormalizeData(seurat.shi.bc)
@@ -91,23 +86,47 @@ seurat.shi.bc  <- RunUMAP(seurat.shi.bc , reduction = "mnn", dims = 1:10)
 seurat.shi.bc  <- FindNeighbors(seurat.shi.bc , reduction = "mnn", dims = 1:10)
 seurat.shi.bc  <- FindClusters(seurat.shi.bc, resolution = c(0.2, 0.3, 0.4, 0.5))
 
+# Reporting
 seurat_resolution_test(seurat.shi.bc, 
                        c(0.2, 0.3, 0.4, 0.5),
                        'pcw',
                        our_markers,
                        'shi_subset_bc')
 
+cluster.markers <- FindMarkers(seurat.shi.bc, ident.1 = 3, min.pct = 0.25)
+
 # Create markdown file
 render(MARKDOWN_FILE, output_file = REPORT_FILE, output_dir = REPORT_DIR)
 
 
+## Subset Shi data - remove pcw clusters  ---------------------------------------------
+seurat.shi.bc <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+seurat.shi.bc <- subset(seurat.shi.bc, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
+                                                           "12_02", "12_02.1"))
+seurat.shi.bc <- subset(seurat.shi.bc, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
+                                                                 "Endothelial", "progenitor"))
+seurat.shi.bc <- NormalizeData(seurat.shi.bc)
+seurat.shi.bc  <- FindVariableFeatures(seurat.shi.bc, selection.method = "vst", nfeatures = 2000)
+seurat.shi.bc  <- RunFastMNN(object.list = SplitObject(seurat.shi.bc, split.by = "pcw"))
+seurat.shi.bc  <- RunUMAP(seurat.shi.bc , reduction = "mnn", dims = 1:10)
+seurat.shi.bc  <- FindNeighbors(seurat.shi.bc , reduction = "mnn", dims = 1:10)
+seurat.shi.bc  <- FindClusters(seurat.shi.bc, resolution = c(0.2, 0.3, 0.4, 0.5))
 
+# Plotting
+basic_plot <- DimPlot_scCustom(seurat.shi.bc,
+                               DiscretePalette_scCustomize(num_colors = 26, 
+                                                           palette = "ditto_seq"))
+pcw_plot <- DimPlot_scCustom(seurat.shi.bc, group.by = 'pcw')
+shi_plot <- DimPlot_scCustom(seurat.shi.bc, group.by = 'ClusterID')
+group_plot <- plot_grid(basic_plot, pcw_plot, shi_plot)
 
+#--------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 
 ## Testing code -----------------------------------------------------------------------
-human_colors_list <- c("firebrick1", "dodgerblue", "navy", "forestgreen", "darkorange2", "darkorchid3", "orchid",
-                       "orange", "gold", "gray", "black")
+human_colors_list <- c("firebrick1", "dodgerblue", "navy", "forestgreen", "darkorange2", 
+                       "darkorchid3", "orchid", "orange", "gold", "gray", "black")
 Stacked_VlnPlot(seurat_object = seurat.mnn, features = umap_markers, x_lab_rotate = TRUE,
                 colors_use = human_colors_list, group.by = "RNA_snn_res.0.3")
 DotPlot_scCustom(seurat_object = seurat.mnn, features = umap_markers, 

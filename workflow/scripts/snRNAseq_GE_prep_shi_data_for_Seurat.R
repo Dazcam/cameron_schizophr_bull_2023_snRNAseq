@@ -9,7 +9,8 @@
 # 1. Prepare Shi data for seurat
 
 ##  Set Variables  --------------------------------------------------------------------
-SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
+RES_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/' 
+SHI_DIR <- paste0(RES_DIR, 'raw_data/shi_et_al_2021/')
 
 ##  Load Data  ------------------------------------------------------------------------
 shi_data <- fread(paste0(SHI_DIR, "GSE135827_GE_mat_raw_count_with_week_info.txt"))
