@@ -50,4 +50,3 @@ rgc_lvl2_markers <- c('FABP7', 'VIM', 'HES1', 'ID4', 'HES5',
 ipc_lvl2_markers <- c('GAD2', 'DLX5', 'SOX4', 'DLX2', 'KPNA2',
                       'DCX', 'ASCL1', 'SOX11', 'DLX6', 'SP9',
                       'ARL4D', 'TMSB10', 'ARX')
-)

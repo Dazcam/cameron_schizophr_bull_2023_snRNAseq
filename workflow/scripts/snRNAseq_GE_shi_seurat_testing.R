@@ -21,7 +21,7 @@ Require::Require(c("tidyverse", "readxl", "data.table", "ggdendro", "Seurat",
 DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
 OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 SCRIPT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
-MARKDOWN_FILE <- paste0(SCRIPT_DIR, 'snRNAseq_GE_seurat.Rmd')
+MARKDOWN_FILE <- paste0(SCRIPT_DIR, 'snRNAseq_GE_seurat_testing.Rmd')
 REPORT_DIR <- paste0(OUT_DIR, 'rmarkdown_reports/')
 REPORT_FILE <- 'snRNAseq_GE_seurat_testing.html'
 
@@ -36,6 +36,7 @@ source(paste0(SCRIPT_DIR, 'snRNAseq_GE_marker_genes.R'))
 seurat.mnn <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
 seurat.mnn <- subset(seurat.mnn, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
                                                            "12_02", "12_02.1"))
+seurat.mnn$pcw <- str_replace(seurat.mnn$pcw, "12_02.1", "12_02")
 seurat.mnn <- NormalizeData(seurat.mnn)
 seurat.mnn  <- FindVariableFeatures(seurat.mnn, selection.method = "vst", nfeatures = 2000)
 seurat.mnn  <- RunFastMNN(object.list = SplitObject(seurat.mnn, split.by = "pcw"))
@@ -45,6 +46,7 @@ seurat.mnn  <- FindClusters(seurat.mnn, resolution = c(0.2, 0.3, 0.4, 0.5))
 
 # Reporting
 seurat_resolution_test(seurat.mnn, 
+                       'ClusterID',
                        c(0.2, 0.3, 0.4, 0.5),
                        'pcw',
                        shi1C_markers,
@@ -55,6 +57,7 @@ seurat_resolution_test(seurat.mnn,
 seurat.shi <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
 seurat.shi <- subset(seurat.shi, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
                                                            "12_02", "12_02.1"))
+seurat.shi$pcw <- str_replace(seurat.shi$pcw, "12_02.1", "12_02")
 seurat.shi <- subset(seurat.shi, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
                                                            "Endothelial", "progenitor"))
 seurat.shi <- NormalizeData(seurat.shi)
@@ -67,6 +70,7 @@ seurat.shi <- RunUMAP(seurat.shi, dims = 1:10)
 
 # Reporting
 seurat_resolution_test(seurat.shi, 
+                       'ClusterID',
                        c(0.2, 0.3, 0.4, 0.5),
                        'pcw',
                        our_markers,
@@ -77,6 +81,7 @@ seurat_resolution_test(seurat.shi,
 seurat.shi.bc <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
 seurat.shi.bc <- subset(seurat.shi.bc, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
                                                            "12_02", "12_02.1"))
+seurat.shi.bc$pcw <- str_replace(seurat.shi.bc$pcw, "12_02.1", "12_02")
 seurat.shi.bc <- subset(seurat.shi.bc, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
                                                            "Endothelial", "progenitor"))
 seurat.shi.bc <- NormalizeData(seurat.shi.bc)
@@ -88,12 +93,13 @@ seurat.shi.bc  <- FindClusters(seurat.shi.bc, resolution = c(0.2, 0.3, 0.4, 0.5)
 
 # Reporting
 seurat_resolution_test(seurat.shi.bc, 
+                       'ClusterID',
                        c(0.2, 0.3, 0.4, 0.5),
                        'pcw',
                        our_markers,
                        'shi_subset_bc')
 
-cluster.markers <- FindMarkers(seurat.shi.bc, ident.1 = 3, min.pct = 0.25)
+# cluster.markers <- FindMarkers(seurat.shi.bc, ident.1 = 3, min.pct = 0.25)
 
 # Create markdown file
 render(MARKDOWN_FILE, output_file = REPORT_FILE, output_dir = REPORT_DIR)

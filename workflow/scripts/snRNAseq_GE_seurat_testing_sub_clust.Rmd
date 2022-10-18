@@ -1,0 +1,72 @@
+---
+title: "snRNAseq GE Seurat testing sub-clusters"
+author: "Darren Cameron"
+date: "`r format(Sys.time(), '%d/%m/%y')`"
+output: 
+  html_document:
+    theme: paper
+---
+
+Seurat testing for Shi et al (2021) data
+
+*** 
+
+### **Results** {.tabset}
+
+#### **MGE** {.tabset}
+
+```{r MGE, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(i in c(0.3, 0.4, 0.5, 0.6)) {
+  cat("  \n##### **", i , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_mge_group_plot_', i)))
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_mge_ge_group_umap_', i)))
+  cat("\n***\n", sep = "")
+  cat("  \n")
+}
+```
+
+
+#### **LGE** {.tabset}
+
+```{r LGE, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(i in c(0.3, 0.4, 0.5, 0.6)) {
+  cat("  \n##### **", i , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_lge_group_plot_', i)))
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_lge_ge_group_umap_', i)))
+  cat("\n***\n", sep = "")
+  cat("  \n")
+}
+```
+
+#### **CGE** {.tabset}
+
+```{r CGE, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(i in c(0.3, 0.4, 0.5, 0.6)) {
+  cat("  \n##### **", i , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_cge_group_plot_', i)))
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_cge_ge_group_umap_', i)))
+  cat("\n***\n", sep = "")
+  cat("  \n")
+}
+```
+
+#### **Progenitor** {.tabset}
+
+```{r Prog, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(i in c(0.3, 0.4, 0.5, 0.6)) {
+  cat("  \n##### **", i , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_progenitor_group_plot_', i)))
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_progenitor_ge_group_umap_', i)))
+  cat("\n***\n", sep = "")
+  cat("  \n")
+}
+```
+
