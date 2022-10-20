@@ -58,11 +58,11 @@ rule magma_gene_analysis:
 
 rule magma_gene_set_analysis:
     input:   genes = "../results/magma/snRNAseq_GE_{GWAS}.magma.genes.raw",
-             data  = "../results/gene_lists/MAGMA/shi_top10.txt"
-    output:  "../results/magma/snRNAseq_GE_{GWAS}.magma.gsa.out"
-    params:  out = "../results/magma/snRNAseq_GE_{GWAS}.magma"
-    message: "Running magma gene set analysis step for {wildcards.GWAS}"
-    log:     "../results/logs/magma/snRNAseq.GE.gene_set_analysis.{GWAS}.log"
+             data  = "../results/gene_lists/MAGMA/shi_top10_lvl_{LEVEL}.txt"
+    output:  "../results/magma/snRNAseq_GE_{GWAS}.lvl_{LEVEL}.magma.gsa.out"
+    params:  out = "../results/magma/snRNAseq_GE_{GWAS}.lvl_{LEVEL}.magma"
+    message: "Running magma gene set analysis step for {wildcards.GWAS}, cluster level {wildcards.LEVEL}"
+    log:     "../results/logs/magma/snRNAseq.GE.gene_set_analysis.{GWAS}.lvl_{LEVEL}.log"
     shell:
              """
              module load magma/1.10

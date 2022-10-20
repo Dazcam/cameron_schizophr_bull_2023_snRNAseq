@@ -6,7 +6,7 @@ include: 'rules/snRNAseq_GE_LDSR.smk'
 
 rule all:
     input:
-        expand("../results/magma/snRNAseq_GE_{GWAS}.magma.gsa.out", GWAS = config['GWAS']),
+        expand("../results/magma/snRNAseq_GE_{GWAS}.lvl_{LEVEL}.magma.gsa.out", GWAS = config['GWAS'], LEVEL = [1,2]),
 #        "../results/scDRS/SCZ.full_score.gz",
-        "../results/scDRS/SCZ.scdrs_group.ClusterID",
+#        "../results/scDRS/SCZ.scdrs_group.ClusterID",
         expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS'])
