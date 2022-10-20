@@ -11,3 +11,11 @@ results/magma/*.gsa.genes.out
 results/magma/*.genes.annot
 results/LDSR_part_herit/baseline_v1.2/*_baseline.v1.2.log
 results/LDSR_part_herit/baseline_v1.2/*_baseline.v1.2.results 
+results/gene_lists/.DS_Store
+results/gene_lists/LDSR/.DS_Store
+results/gene_lists/MAGMA/.DS_Store
+workflow/.DS_Store
+workflow/scripts/.DS_Store
+.DS_Store
+resources/.DS_Store
+results/.DS_Store

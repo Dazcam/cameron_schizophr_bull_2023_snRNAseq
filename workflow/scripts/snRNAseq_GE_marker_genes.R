@@ -13,7 +13,7 @@ shi1C_markers <- c('HES1', 'MKI67', 'ASCL1', 'NKX2-1', 'LHX6',
                    'NEUROD2', 'TCF7L2')
 
 # Shi fig 4I top 5 rows, rest fig 4H
-lge_lvl2_markers <- c('MEIS2', 'TLE4', 'FOXP1', 'ZNF503', # Striatal potential
+lge_lvl2_markers <- c('MEIS2', 'TLE4', 'FOXP1', # 'ZNF503' (duplicate), # Striatal potential
                       'CHD7', 'DLX5', 'ID2', 'PAX6', # OB precursor
                       'PENK', 'CXCL12', 'SP9', # D2 MSN precursor
                       'TAC1', 'EBF1', 'ISL1', 'ZNF503', 'PDYN', # D1 MSN precursor (PDYN)
@@ -34,7 +34,7 @@ mge_lvl2_markers <- c('CRABP1', 'NKX2-1', 'ETV1', 'NFIA', # Striatal and CRT Ns
 )
 
 # Shi fig 2E 
-prog_lvl2_markers <- c('LHX6', 'SOX6', 'DLX6', 'SFTA3', 'NKX2-1',
+progenitor_lvl2_markers <- c('LHX6', 'SOX6', 'DLX6', 'SFTA3', 'NKX2-1',
                       'RIC3', 'GSX1', 'MBIP', 'OLIG2', 'PCDH17',
                       'NR2F1', 'NR2F2', 'NTRK2', 'DLX5', 'RBP1', 
                       'VIP', 'CALB2', 'SCGN', 'ZFHX3', 'MEIS2', 

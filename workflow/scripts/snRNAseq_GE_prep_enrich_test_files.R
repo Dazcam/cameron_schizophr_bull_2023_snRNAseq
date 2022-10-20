@@ -16,11 +16,11 @@ Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro
                    "Seurat", "reticulate", "sceasy")) # Last 2 for AnnData objects
 # BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "scuttle", zellkonverter"))
 
-
 ##  Set Variables  --------------------------------------------------------------------
 DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
-SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
 OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
+R_DIR  <- paste0(OUT_DIR, 'R_objects/')
+SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
 CTD_DIR <- paste0(OUT_DIR, 'ctd_objects/')
 H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
 GENELIST_DIR <- paste0(OUT_DIR, 'gene_lists/')
@@ -28,76 +28,138 @@ MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
 LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
 
 ##  Load Data  ------------------------------------------------------------------------
-shi_data <- fread(paste0(SHI_DIR, "GSE135827_GE_mat_raw_count_with_week_info.txt"))
-shi_meta <- read_excel(paste0(SHI_DIR, "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"), 
-                       col_names = TRUE, 
-                       skip = 1) # Note added skip here to get rid of nonsense 1st line in excel sheet
+seurat.shi.bc <- readRDS(paste0(R_DIR, 'seurat_shi_bc.rds'))
 
+##  Create ctd object  ----------------------------------------------------------------
+# Requires raw count gene matrix - needs to be genes x cell and annotation data
+# Create annotations 
+annotations <- as.data.frame(cbind(as.vector(rownames(seurat.shi.bc@meta.data)),
+                                   as.vector(seurat.shi.bc$cluster_level_1), 
+                                   as.vector(seurat.shi.bc$cluster_level_2)))
+colnames(annotations) <- c('cell_id', 'level1class', 'level2class')
+rownames(annotations) <- NULL
+annotLevels <- list(level1class = annotations$level1class, 
+                    level2class = annotations$level2class)
 
-##  Check if the cell orders are identical in shi_meta and shi_data  ------------------
-shi_data[1:10, 1:10] # Note that fread added V1 as a col name for the genes column
-shi_meta[1:10, 1:5]
+##  Create object  ------------------------------------------------------------------
+dir.create(CTD_DIR)
+ctd <- EWCE::generate_celltype_data(exp = seurat.shi.bc@assays$RNA@counts, 
+                              annotLevels = annotLevels, 
+                              groupName = 'shi',
+                              savePath = CTD_DIR)
 
-# Pull out shi_data header so we don't have to deal with entire matrix
-shi_data_cell_IDs_df <- t(head(shi_data, 1)) %>% 
-  as.data.frame() %>%
-  rownames_to_column("ID") %>%
-  dplyr::slice(-1) %>% # Get rid of V1 row
-  separate(ID, c("cell_ID", "pcw"), ".GW") %>%
-  dplyr::select(-V1) %>%
-  as_tibble() # get rid of V1 column
+load(paste0(CTD_DIR, 'ctd_shi.rda'))
 
-# Get the metadata cell IDs and remove trailing number 
-shi_meta_cell_IDs_df <- shi_meta %>%
-  separate(Cells, c("cell_ID", "cell_ID_number"), "-", remove = FALSE) 
+##  Create specificity scores  ------------------------------------------------------
+# Pull out raw mean expression scores from ctd
 
-# Note that the cell IDs in the metadata table do not match that give in the 
-# colnames of the data matrix. The former have 1-11 assigned non uniformly
-unique(shi_meta_cell_IDs_df$cell_ID_number)
-table(shi_meta_cell_IDs_df$cell_ID_number) # Note these numbers are not uniform
-
-# This number might be important - check if there are any duplicated cell IDs 
-# in meta when that number is removed
-sum(duplicated(shi_meta_cell_IDs_df$cell_ID)) 
-
-# It's likely the numbers refer to different sequencing runs. Cells from 
-# different sequencing runs can be given the same ID as the barcodes
-# in each GEM are reused. We need to make sure the cell ID for each cell is unique
-# Now check cell IDs in shi_data
-sum(duplicated(shi_data_cell_IDs_df$cell_ID)) 
+for (LEVEL in c(1, 2)) { 
   
-# Good sign that duplicate cells match - now check if the cell IDs in shi_meta and 
-# shi_data are in the same order
-identical(shi_meta_cell_IDs_df$cell_ID, shi_data_cell_IDs_df$cell_ID)
+  exp_lvl <- as.data.frame(as.matrix(ctd[[LEVEL]]$mean_exp)) %>% 
+    rownames_to_column("Gene")
+  
+  # Gather data
+  exp_lvl <- exp_lvl %>%
+    gather(key = Lvl, value = Expr_sum_mean, -Gene) %>%
+    as_tibble()
+  
+  # Load gene coordinates
+  # Load hg19 gene coordinates and extend upstream and downstream coordinates by 100kb.
+  # File downloaded from MAGMA website (https://ctg.cncr.nl/software/magma).
+  # Filtered to remove extended MHC (chr6, 25Mb to 34Mb).
+  gene_coordinates <- 
+    read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt'),
+             col_names = FALSE, col_types = 'cciicc') %>%
+    dplyr::rename(chr = "X2", ENTREZ = "X1", chr = "X2", 
+                  start = 'X3', end = 'X4', HGNC = 'X6') %>%
+  #  mutate(start = ifelse(X3 - 100000 < 0, 0, X3 - 100000), end = X4 + 100000) %>%
+    dplyr::select(chr, start, end, ENTREZ) %>% 
+    mutate(chr = paste0("chr",chr))
+  
+  # Write dictionary for cell type names
+  dic_lvl <- dplyr::select(exp_lvl, Lvl) %>% 
+    base::unique() %>% 
+    mutate(makenames = make.names(Lvl))
+  
+  # Scale each cell type to the same total number of molecules (1M)
+  exp_scaled <- exp_lvl %>% 
+    group_by(Lvl) %>% 
+    mutate(Expr_sum_mean = Expr_sum_mean * 1e6 / sum(Expr_sum_mean))
+  
+  # Specificity Calculation
+  exp_specificity <- exp_scaled %>% group_by(Gene) %>% 
+    mutate(specificity = Expr_sum_mean / sum(Expr_sum_mean))
+  
+  # Sanity check
+  # exp_specificity %>%
+  #   ungroup() %>%
+  #   filter(Lvl == 'CGE') %>%
+  #   summarise(across(where(is.numeric), sum))
+  
+  
+  # Only keep MAGMA genes 
+  entrez2symbol <- AnnotationDbi::toTable(org.Hs.eg.db::org.Hs.egSYMBOL2EG) %>% 
+    dplyr::rename(Gene = "symbol", ENTREZ = "gene_id")
+  exp_specificity <- inner_join(exp_specificity, entrez2symbol, by = "Gene") 
+  exp_specificity <- inner_join(exp_specificity, gene_coordinates, by = "ENTREZ") 
+  
+  
+  # Get number of genes that represent 10% of the dataset
+  n_genes <- length(unique(exp_specificity$ENTREZ))
+  n_genes_to_keep <- (n_genes * 0.1) %>% round()
+  
+  assign(paste0('exp_specificity_lvl_', LEVEL), exp_specificity, .GlobalEnv)
+  assign(paste0('n_genes_to_keep_lvl_', LEVEL), n_genes_to_keep, .GlobalEnv)
 
-# Now check the format that CreateSeuratObject() needs the data in
-#?CreateSeuratObject()
+}
 
-# Get metadata into correct format - retain clusterIDs and pcw info
-shi_meta <- cbind(shi_meta, shi_data_cell_IDs_df)  %>%
-  column_to_rownames(var = "Cells") %>%
-  dplyr::select(`Major types`, pcw) %>%
-  dplyr::rename(ClusterID = `Major types`)
+ggplot(exp_specificity_lvl_1, aes(x = -log10(specificity), colour = Lvl)) + 
+  geom_density()
 
-# Now the count matrix
-shi_data <- shi_data %>% 
-  column_to_rownames(var = "V1")
+##  Write MAGMA/LDSR input files ------------------------------------------------------
+# Filter out genes with expression below 1 (uninformative genes)
+dir.create(MAGMA_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(LDSR_DIR, recursive = TRUE, showWarnings = FALSE)
 
-# We've already extracted the pcw info and we know the cell orderings are identical
-# so we can change the cell names in shi_data to exactly match that in the meta data
-colnames(shi_data) <- shi_meta_cell_IDs_df$Cells
+for (LEVEL in c(1, 2)) { 
+  
+  EXP_SPECIFICITY_DF <- get(paste0('exp_specificity_lvl_', LEVEL))
+  N_GENES_TO_KEEP <- get(paste0('n_genes_to_keep_lvl_', 1))
+  CELL_TYPE_CNT <- length(unique(EXP_SPECIFICITY_DF$Lvl))
+  
+  cat('\n\nRunning cluster level:', LEVEL, '...\n')
+  cat(N_GENES_TO_KEEP, 'genes per cluster ...\n' )
+  cat('Total cell type count:', CELL_TYPE_CNT, '...\n' )
 
-# Run Seurat analysis on Shi data
-seurat.shi <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
-seurat.shi <- NormalizeData(seurat.shi)
-seurat.shi <- subset(seurat.shi, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
-                                                        "Endothelial", "progenitor"))
-seurat.shi <- FindVariableFeatures(seurat.shi, selection.method = "vst", nfeatures = 2000) 
-seurat.shi <- ScaleData(seurat.shi) 
-seurat.shi <- RunPCA(seurat.shi, features = VariableFeatures(object = seurat.shi)) 
-seurat.shi <- FindNeighbors(seurat.shi) # default 
-seurat.shi <- FindClusters(seurat.shi) # Resolution default is 0.8
-seurat.shi <- RunUMAP(seurat.shi, dims = 1:30)
+  MAGMA <- EXP_SPECIFICITY_DF %>% 
+    filter(Expr_sum_mean > 1) %>% 
+    group_by(Lvl) %>% 
+    top_n(., N_GENES_TO_KEEP, specificity) %>%
+    select(Lvl, ENTREZ) %>%
+    ungroup() %>%
+    mutate(counts = rep(1:N_GENES_TO_KEEP, times = CELL_TYPE_CNT)) %>%
+    pivot_wider(names_from = counts, values_from = ENTREZ) %>%
+    write_tsv(paste0(MAGMA_DIR, 'shi_top10_lvl_', LEVEL, '.txt'), col_names = F)
+  
+  LDSR <- EXP_SPECIFICITY_DF %>% filter(Expr_sum_mean > 1) %>% 
+    group_by(Lvl) %>% 
+    top_n(., N_GENES_TO_KEEP, specificity) %>%
+    select(chr, start, end, ENTREZ) %>%
+    group_walk(~ write_tsv(.x[,1:4], paste0(LDSR_DIR, .y$Lvl, ".bed"), col_names = FALSE))
+
+}
+
+# Don't need this if using bed files for gene sets
+# Create gene coordinate file for LDSR
+# LDSR %>% 
+#   ungroup() %>%
+#   select(ENTREZ, chr, start, end) %>%
+#   write_tsv(paste0(LDSR_DIR, "LDSR_gene_coords.bed"))
+
+
+#--------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+
 
 # + **GAD1** - InN
 # + **GAD2** - InN
@@ -178,114 +240,3 @@ seurat.shi <- RunUMAP(seurat.shi, dims = 1:30)
 # # Use this to derive the ctd objects in the gene specificity script
 
 # saveRDS(seurat.shi, paste0(OUT_DIR, "seurat_shi.rds"))
-
-##  Create ctd object  ----------------------------------------------------------------
-# Requires raw count gene matrix - needs to be genes x cell and annotation data
-# Create annotations 
-annotations <- as.data.frame(cbind(rownames(shi_meta_filt),
-                                   shi_meta_filt$ClusterID, 
-                                   shi_meta_filt$ClusterID))
-colnames(annotations) <- c('cell_id', 'level1class', 'level2class')
-rownames(annotations) <- NULL
-annotLevels <- list(level1class = annotations$level2class, 
-                    level2class = annotations$level2class)
-##  Create object  ------------------------------------------------------------------
-dir.create(CTD_DIR)
-ctd <- EWCE::generate_celltype_data(exp = shi_data_filt, 
-                              annotLevels = annotLevels, 
-                              groupName = 'shi',
-                              savePath = CTD_DIR)
-
-load(paste0(CTD_DIR, 'ctd_shi.rda'))
-
-# Clean up
-rm(list = ls(pattern = '^shi_*'))
-
-##  Create specificity scores  ------------------------------------------------------
-# Pull out raw mean expression scores from ctd
-exp_lvl <- as.data.frame(as.matrix(ctd[[1]]$mean_exp)) %>% 
-  rownames_to_column("Gene")
-
-# Gather data
-exp_lvl <- exp_lvl %>%
-  gather(key = Lvl, value = Expr_sum_mean, -Gene) %>%
-  as_tibble()
-
-# Load gene coordinates
-# Load hg19 gene coordinates and extend upstream and downstream coordinates by 100kb.
-# File downloaded from MAGMA website (https://ctg.cncr.nl/software/magma).
-# Filtered to remove extended MHC (chr6, 25Mb to 34Mb).
-gene_coordinates <- 
-  read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt'),
-           col_names = FALSE, col_types = 'cciicc') %>%
-  dplyr::rename(chr = "X2", ENTREZ = "X1", chr = "X2", 
-                start = 'X3', end = 'X4', HGNC = 'X6') %>%
-#  mutate(start = ifelse(X3 - 100000 < 0, 0, X3 - 100000), end = X4 + 100000) %>%
-  dplyr::select(chr, start, end, ENTREZ) %>% 
-  mutate(chr = paste0("chr",chr))
-
-# Write dictionary for cell type names
-dic_lvl <- dplyr::select(exp_lvl, Lvl) %>% 
-  base::unique() %>% 
-  mutate(makenames = make.names(Lvl))
-
-# Scale each cell type to the same total number of molecules (1M)
-exp_scaled <- exp_lvl %>% 
-  group_by(Lvl) %>% 
-  mutate(Expr_sum_mean = Expr_sum_mean * 1e6 / sum(Expr_sum_mean))
-
-# Specificity Calculation
-exp_specificity <- exp_scaled %>% group_by(Gene) %>% 
-  mutate(specificity = Expr_sum_mean / sum(Expr_sum_mean))
-
-# Sanity check
-# exp_specificity %>%
-#   ungroup() %>%
-#   filter(Lvl == 'CGE') %>%
-#   summarise(across(where(is.numeric), sum))
-
-
-# Only keep MAGMA genes 
-entrez2symbol <- AnnotationDbi::toTable(org.Hs.eg.db::org.Hs.egSYMBOL2EG) %>% 
-  dplyr::rename(Gene = "symbol", ENTREZ = "gene_id")
-exp_specificity <- inner_join(exp_specificity, entrez2symbol, by = "Gene") 
-exp_specificity <- inner_join(exp_specificity, gene_coordinates, by = "ENTREZ") 
-
-
-# Get number of genes that represent 10% of the dataset
-n_genes <- length(unique(exp_specificity$ENTREZ))
-n_genes_to_keep <- (n_genes * 0.1) %>% round()
-
-
-##  Write MAGMA/LDSR input files ------------------------------------------------------
-# Filter out genes with expression below 1 (uninformative genes)
-dir.create(MAGMA_DIR, recursive = TRUE, showWarnings = FALSE)
-dir.create(LDSR_DIR, recursive = TRUE, showWarnings = FALSE)
-
-MAGMA <- exp_specificity %>% 
-  filter(Expr_sum_mean > 1) %>% 
-  group_by(Lvl) %>% 
-  top_n(., n_genes_to_keep, specificity) %>%
-  select(Lvl, ENTREZ) %>%
-  ungroup() %>%
-  mutate(counts = rep(1:n_genes_to_keep, times = 7)) %>%
-  pivot_wider(names_from = counts, values_from = ENTREZ) %>%
-  write_tsv(paste0(MAGMA_DIR, "shi_top10.txt"), col_names = F)
-
-LDSR <- exp_specificity %>% filter(Expr_sum_mean > 1) %>% 
-  group_by(Lvl) %>% 
-  top_n(., n_genes_to_keep, specificity) %>%
-  select(chr, start, end, ENTREZ) %>%
-  group_walk(~ write_tsv(.x[,1:4], paste0(LDSR_DIR, .y$Lvl, ".bed"), col_names = FALSE))
-
-
-# Create gene coordinate file for LDSR
-LDSR %>% 
-  ungroup() %>%
-  select(ENTREZ, chr, start, end) %>%
-  write_tsv(paste0(LDSR_DIR, "LDSR_gene_coords.bed"))
-
-
-#--------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------
-

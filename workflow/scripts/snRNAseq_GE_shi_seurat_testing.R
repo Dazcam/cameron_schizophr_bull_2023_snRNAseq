@@ -22,8 +22,10 @@ DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
 OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 SCRIPT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
 MARKDOWN_FILE <- paste0(SCRIPT_DIR, 'snRNAseq_GE_seurat_testing.Rmd')
+MARKDOWN_SUB_FILE <- paste0(SCRIPT_DIR, 'snRNAseq_GE_seurat_testing_sub_clust.Rmd')
 REPORT_DIR <- paste0(OUT_DIR, 'rmarkdown_reports/')
 REPORT_FILE <- 'snRNAseq_GE_seurat_testing.html'
+REPORT_SUB_FILE <- 'snRNAseq_GE_seurat_testing_sub_clust.html'
 
 ##  Load scripts an functions   -------------------------------------------------------
 source(paste0(SCRIPT_DIR, 'snRNAseq_GE_prep_shi_data_for_Seurat.R'))
@@ -105,25 +107,56 @@ seurat_resolution_test(seurat.shi.bc,
 render(MARKDOWN_FILE, output_file = REPORT_FILE, output_dir = REPORT_DIR)
 
 
-## Subset Shi data - remove pcw clusters  ---------------------------------------------
-seurat.shi.bc <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
-seurat.shi.bc <- subset(seurat.shi.bc, subset = pcw %in% c("09", "12_01", "13", "16", "18_01", 
-                                                           "12_02", "12_02.1"))
-seurat.shi.bc <- subset(seurat.shi.bc, subset = ClusterID %in% c("MGE","LGE", "CGE", "OPC", "Microglia",
-                                                                 "Endothelial", "progenitor"))
-seurat.shi.bc <- NormalizeData(seurat.shi.bc)
-seurat.shi.bc  <- FindVariableFeatures(seurat.shi.bc, selection.method = "vst", nfeatures = 2000)
-seurat.shi.bc  <- RunFastMNN(object.list = SplitObject(seurat.shi.bc, split.by = "pcw"))
-seurat.shi.bc  <- RunUMAP(seurat.shi.bc , reduction = "mnn", dims = 1:10)
-seurat.shi.bc  <- FindNeighbors(seurat.shi.bc , reduction = "mnn", dims = 1:10)
-seurat.shi.bc  <- FindClusters(seurat.shi.bc, resolution = c(0.2, 0.3, 0.4, 0.5))
+## Subset Shi data - sub-clusters  ---------------------------------------------
+for (REGION in c('MGE', 'LGE', 'CGE', 'progenitor')) {
+  
+  cat('\nRunning Seurat sub-cluster analysis for:', REGION, '...\n\n')
+  
+  if (REGION == 'MGE') {
+    
+    MARKERS <- mge_lvl2_markers
+    
+  } else if (REGION == 'LGE') {
+    
+    MARKERS <- lge_lvl2_markers
+    
+  } else if (REGION == 'CGE') {
+    
+    MARKERS <- cge_markers
+    
+  } else {
+    
+    MARKERS <- progenitor_lvl2_markers 
+    
+  }
+  
+  SEURAT_OBJ <- subset(seurat.shi.bc, subset = cluster_level_1 %in% c(REGION))
+  SEURAT_OBJ <- NormalizeData(SEURAT_OBJ)
+  SEURAT_OBJ  <- FindVariableFeatures(SEURAT_OBJ, selection.method = "vst", nfeatures = 2000)
+  SEURAT_OBJ  <- RunFastMNN(object.list = SplitObject(SEURAT_OBJ, split.by = "pcw"))
+  SEURAT_OBJ  <- RunUMAP(SEURAT_OBJ , reduction = "mnn", dims = 1:10)
+  SEURAT_OBJ  <- FindNeighbors(SEURAT_OBJ , reduction = "mnn", dims = 1:10)
+  SEURAT_OBJ  <- FindClusters(SEURAT_OBJ, resolution = c(0.3, 0.4, 0.5, 0.6))
+  
+  cat('\nGenerating plots ...\n')
+  seurat_resolution_test(SEURAT_OBJ, 
+                         'ClusterID',
+                         c(0.3, 0.4, 0.5, 0.6),
+                         'pcw',
+                         MARKERS,
+                         paste0('shi_', tolower(REGION)))
+  
+
+}
+
+render(MARKDOWN_SUB_FILE, output_file = REPORT_SUB_FILE, output_dir = REPORT_DIR)
 
 # Plotting
-basic_plot <- DimPlot_scCustom(seurat.shi.bc,
+basic_plot <- DimPlot_scCustom(seurat.sub,
                                DiscretePalette_scCustomize(num_colors = 26, 
                                                            palette = "ditto_seq"))
-pcw_plot <- DimPlot_scCustom(seurat.shi.bc, group.by = 'pcw')
-shi_plot <- DimPlot_scCustom(seurat.shi.bc, group.by = 'ClusterID')
+pcw_plot <- DimPlot_scCustom(seurat.sub, group.by = 'pcw')
+shi_plot <- DimPlot_scCustom(seurat.sub, group.by = 'ClusterID')
 group_plot <- plot_grid(basic_plot, pcw_plot, shi_plot)
 
 #--------------------------------------------------------------------------------------

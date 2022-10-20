@@ -71,10 +71,23 @@ seurat_resolution_test <- function(SEURAT_OBJECT,
     assign(paste0(UNIQUE_ID, '_median_stats_pcw_', RES), median_stats_pcw, envir = .GlobalEnv)
     assign(paste0(UNIQUE_ID, '_median_stats_clust_', RES), median_stats_clust, envir = .GlobalEnv)
     assign(paste0(UNIQUE_ID, '_group_plot_', RES), group_plot, envir = .GlobalEnv)
+    
     assign(paste0(UNIQUE_ID, '_ge_group_umap_', RES), ge_group_umap, envir = .GlobalEnv)
     assign(paste0(UNIQUE_ID, '_shi1C_umap_', RES), shi1C_feat_umap, envir = .GlobalEnv)
     assign(paste0(UNIQUE_ID, '_supp1C_umap_', RES), supp1C_feat_umap, envir = .GlobalEnv)
     assign(paste0(UNIQUE_ID, '_our_feat_umap_', RES), our_feat_umap, envir = .GlobalEnv)
+    
+    if (REGION == 'CGE') {
+      
+      lvl2_umap <- FeaturePlot(SEURAT_OBJECT, features = cge_markers)
+      assign(paste0(UNIQUE_ID, '_lvl2_umap_', RES), lvl2_umap, envir = .GlobalEnv)
+      
+    } else {
+      
+      lvl2_umap <- FeaturePlot(SEURAT_OBJECT, features = get(paste0(tolower(REGION), '_lvl2_markers')))
+      assign(paste0(UNIQUE_ID, '_lvl2_umap_', RES), lvl2_umap, envir = .GlobalEnv)
+      
+    }
     
   }
   
