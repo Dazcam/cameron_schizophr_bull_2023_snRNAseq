@@ -6,7 +6,7 @@
 
 ## Info  ------------------------------------------------------------------------------
 
-#  Code for figures 2, 3, 4
+#  Code for figures: clusters lvl 1 and lvl 2
 #  Issues: Region IDs encoded differently in MAGMA and LSDR analysis
 #          Much tweaking needed between ggplot and cowplot for FDR < 5% line
 
@@ -28,49 +28,26 @@ FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 
 
 
-results/magma/snRNAseq_GE_HEIGHT.magma.gsa.out
-workflow/rules/snRNAseq_GE_LDSR.smk
-
 # MAGMA - prepare df
 cat('\nPreparing MAGMA data ... \n')
-#for (MAGMA_REGION in MAGMA_REGIONS) {
-  
+for (LEVEL in c('1', '2')) {
+
   for (DISORDER in GWAS) {
     
-    magma_top10_df <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.magma.gsa.out'), header = FALSE) %>%
+    magma_top10_df <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.lvl_', 
+                                        LEVEL, '.magma.gsa.out'), header = FALSE) %>%
       janitor::row_to_names(row_number = 1) %>% 
       mutate(VARIABLE = gsub('\\.', '-', VARIABLE)) %>%
       mutate(MAGMA = -log10(as.numeric(P))) %>%
       select(VARIABLE, MAGMA) %>%
-      dplyr::rename(Category = VARIABLE) # Match LDSRs cell-type column
-    
-    # if (MAGMA_REGION == 'cer') {
-    #   
-    #   assign(paste0('magma_Cer_', DISORDER, '_df'), magma_top10_df, envir = .GlobalEnv) 
-    #   
-    #   } else if (MAGMA_REGION == 'hip') {
-    #   
-    #   assign(paste0('magma_Hipp_', DISORDER, '_df'), magma_top10_df, envir = .GlobalEnv) 
-    #   
-    #   } else if (MAGMA_REGION == 'pfc') {
-    #   
-    #   assign(paste0('magma_FC_', DISORDER, '_df'), magma_top10_df, envir = .GlobalEnv) 
-    #   
-    #   } else if (MAGMA_REGION == 'tha') {
-    #   
-    #   assign(paste0('magma_Thal_', DISORDER, '_df'), magma_top10_df, envir = .GlobalEnv) 
-    #   
-    #   } else {
-    #   
-    #   assign(paste0('magma_GE_', DISORDER, '_df'), magma_top10_df, envir = .GlobalEnv) 
-    #   
-    #   }
-    
-    assign(paste0('magma_GE_', DISORDER, '_df'), magma_top10_df, envir = .GlobalEnv) 
+      dplyr::rename(Category = VARIABLE) %>% # Match LDSRs cell-type column
+      mutate(across('Category', str_replace, 'Early', 'Early_InN'))
+             
+    assign(paste0('magma_GE_', DISORDER, '_lvl_', LEVEL, '_df'), magma_top10_df, envir = .GlobalEnv) 
  
   }
   
-#}
+}
 
 # LDSR - prepare df
 cat('\nPreparing LDSR data ... \n')
@@ -91,32 +68,32 @@ cat('\nPreparing LDSR data ... \n')
 
 # Plot
 cat('\nCreate plots ... \n')
-#for (LDSR_REGION in LDSR_REGIONS) {
+for (LEVEL in c('1', '2')) {
   
   for (DISORDER in GWAS) {
     
-    # if (LDSR_REGION == 'FC') {
-    #   REGION = 'Frontal Cortex'
-    # } else if (LDSR_REGION == 'GE') {
-    #   REGION = 'Ganglionic Eminence'
-    # } else if (LDSR_REGION == 'Hipp') {
-    #   REGION = 'Hippocampus'
-    # } else if (LDSR_REGION == 'Cer') {
-    #   REGION = 'Cerebellum'
-    # } else {
-    #   REGION = 'Thalamus'
-    # }
+    if (LEVEL == '1') {
       
-    
-    PLOT_DF <- left_join(get(paste0('magma_GE_', DISORDER, '_df')), 
-                        get(paste0('ldsr_', DISORDER, '_df')), 
-                        by = 'Category') %>% melt()
+      LDSR_DF <- get(paste0('ldsr_', DISORDER, '_df')) %>%
+        filter(Category %in% c('LGE', 'MGE', 'CGE', 'Early_InN', 'Progenitor', 'Microglia'))
+      PLOT_DF <- left_join(get(paste0('magma_GE_', DISORDER, '_lvl_', LEVEL, '_df')), 
+                           LDSR_DF, by = 'Category') %>% melt()
+      BF_CORR <- 0.05/6
       
+    } else {
+      
+      LDSR_DF <- get(paste0('ldsr_', DISORDER, '_df')) %>%
+        filter(!Category %in% c('LGE', 'MGE', 'CGE', 'Early_InN', 'Progenitor', 'Microglia'))
+      PLOT_DF <- left_join(get(paste0('magma_GE_', DISORDER, '_lvl_', LEVEL, '_df')), 
+                           LDSR_DF, by = 'Category') %>% melt()
+      BF_CORR <- 0.05/30
+      
+    }
         
     MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
                                                   fill = variable, group = rev(variable))) +
     geom_bar(stat = "identity", color = 'black', position = "dodge") +
-      geom_vline(xintercept=-log10(0.05/14), linetype = "dashed", color = "black") +
+      geom_vline(xintercept=-log10(BF_CORR), linetype = "dashed", color = "black") +
       geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
       theme_bw() +
       ggtitle(DISORDER) +
@@ -134,14 +111,15 @@ cat('\nCreate plots ... \n')
       ylab('Cell type') +
       xlim(0, 11.5) 
       
-    assign(paste0(DISORDER, '_magma_ldsr_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
+    assign(paste0(DISORDER, '_magma_ldsr_lvl_', LEVEL, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
     
   }
-  
-plot_grid(SCZ_magma_ldsr_plot, HEIGHT_magma_ldsr_plot)
 
+}
 
-#}
+plot_grid(SCZ_magma_ldsr_lvl_1_plot, HEIGHT_magma_ldsr_lvl_1_plot)
+plot_grid(SCZ_magma_ldsr_lvl_2_plot, HEIGHT_magma_ldsr_lvl_2_plot)
+
 
 legend <- get_legend(
   # create some space to the left of the legend
@@ -242,6 +220,21 @@ all_regions_HEIGHT_magma_ldsr_plot
 dev.off()
 
 
+# Is there a correlation between cell number and MAGMA / LDSR results?
+magma_GE_SCZ_lvl_2_df$cell_counts <- as.vector(table(seurat.shi.bc$cluster_level_2))
+
+cor(magma_GE_SCZ_lvl_2_df[, unlist(lapply(magma_GE_SCZ_lvl_2_df, is.numeric))])
+
+test <- left_join(magma_GE_SCZ_lvl_2_df, ldsr_SCZ_df %>%
+                    filter(!Category %in% c('LGE', 'MGE', 'CGE', 'Early_InN', 'Progenitor', 'Microglia')))
+
+cor.test(test$MAGMA, test$cell_counts)
+cor.test(test$LDSR, test$cell_counts)
+cor.test(test$LDSR, test$MAGMA)
+cor(test[, unlist(lapply(test, is.numeric))])
+plot(test$LDSR, test$cell_counts)
+plot(test$MAGMA, test$cell_counts)
+plot(test$MAGMA, test$LDSR)
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------

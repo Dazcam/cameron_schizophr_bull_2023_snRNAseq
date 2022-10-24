@@ -21,6 +21,7 @@ Require::Require(c("tidyverse", "readxl", "data.table", "ggdendro", "Seurat",
 DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
 OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 R_DIR <- paste0(OUT_DIR, 'R_objects/')
+H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
 SCRIPT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
 MARKDOWN_FILE <- paste0(SCRIPT_DIR, 'snRNAseq_GE_seurat.Rmd')
 REPORT_DIR <- paste0(OUT_DIR, 'rmarkdown_reports/')
@@ -49,7 +50,7 @@ seurat.shi.bc <- FindClusters(seurat.shi.bc, resolution = 0.5)
 # Rename clusters
 # Note we lose OPC and Endothelial here
 new_idents <- c('MGE', 'CGE', 'LGE', 'Progenitor', 'Progenitor', 
-                'LGE', 'Early InN', 'LGE', 'Progenitor', 'MGE', 
+                'LGE', 'Early_InN', 'LGE', 'Progenitor', 'MGE', 
                 'Progenitor', 'Microglia')
 seurat.shi.bc <- Rename_Clusters(seurat.shi.bc, new_idents)
 seurat.shi.bc$cluster_level_1 <- Idents(seurat.shi.bc)
@@ -154,6 +155,9 @@ seurat.shi.bc$cluster_level_2 <- seurat_lvl2_meta$cluster_level_2
 # Save R object
 saveRDS(object = seurat.shi.bc, paste0(R_DIR, 'seurat_shi_bc.rds'))
 
+# Convert to h5ad object for scDRS
+SaveH5Seurat(seurat.shi.bc, filename = paste0(H5AD_DIR, 'shi.bc.h5Seurat'))
+Convert(paste0(H5AD_DIR, 'shi.bc.h5Seurat'), dest = "h5ad")
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------

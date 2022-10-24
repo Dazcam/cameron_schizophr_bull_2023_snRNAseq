@@ -11,7 +11,7 @@ H5AD_DIR = DATA_DIR + 'h5ad_objects/'
 OUT_DIR = '../Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 
 # Load data this was generated in: 
-adata = sc.read(H5AD_DIR + 'shi2021_filt.h5ad')
+adata = sc.read(H5AD_DIR + 'shi.bc.h5ad')
 
 # Access cell / gene names
 adata.obs_names
