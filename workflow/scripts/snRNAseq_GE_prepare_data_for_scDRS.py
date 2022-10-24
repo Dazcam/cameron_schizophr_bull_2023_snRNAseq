@@ -39,6 +39,9 @@ cov_df.to_csv(COV_OUT, sep = "\t", index = False)
 # Test for failure of compute score on hawk
 sc.pp.normalize_per_cell(adata, counts_per_cell_after = 1e4)
 
+# This is required to avoid error see: https://github.com/theislab/scvelo/issues/255
+adata.__dict__['_raw'].__dict__['_var'] = adata.__dict__['_raw'].__dict__['_var'].rename(columns={'_index': 'features'})
+
 # Write h5ad
 adata.write(H5AD_OUT)
 
