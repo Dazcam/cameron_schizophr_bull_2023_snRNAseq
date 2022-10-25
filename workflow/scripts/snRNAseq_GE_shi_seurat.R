@@ -14,7 +14,8 @@
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
 Require::Require(c("tidyverse", "readxl", "data.table", "ggdendro", "Seurat", 
-                   "SeuratWrappers", "cowplot", "scCustomize", "rmarkdown")) # scCustomize for contrast in cols
+                   "SeuratWrappers", "cowplot", "scCustomize", "rmarkdown", "SeuratDisk")) 
+# scCustomize for contrast in cols
 # BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "scuttle", zellkonverter"))
 
 ##  Set Variables  --------------------------------------------------------------------

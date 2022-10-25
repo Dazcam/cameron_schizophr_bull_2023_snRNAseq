@@ -20,6 +20,23 @@ COV_OUT = snakemake.output[1]
 # Load data -------------------------------------------------------------------
 adata = sc.read_h5ad(SHI_H5AD)
 
+# Note that the Seurat to h5ad conversion alters cluster_level_1 mappings
+# Keeps eyes peeled for other conversion issues
+old_to_new = {
+    0:'MGE',
+    1:'CGE',
+    2:'LGE',
+    3:'Progenitor',
+    4:'Early_InN',
+    5:'Microglia'
+}
+
+adata.obs['cluster_level_1'] = (
+    adata.obs['cluster_level_1']
+    .map(old_to_new)
+    .astype('category')
+)
+
 # Access cell / gene names
 adata.obs_names
 adata.var_names
