@@ -17,21 +17,8 @@ scDRS_DIR = DATA_DIR + 'scDRS/'
 H5AD_DIR = DATA_DIR + 'h5ad_objects/'
 
 df_gs = pd.read_csv(scDRS_DIR + 'scDRS_genewise_Z_top1K.gs', sep = "\t", index_col = 0)
-score = pd.read_csv(scDRS_DIR+ "SCZ.full_score.gz", sep = "\t", index_col = 0)
-adata = sc.read(H5AD_DIR + 'shi2021_filt.h5ad')
-shi_meta = pd.read_excel(SHI_DIR + 'science.abj6641_table_s2.xlsx', index_col = 0, header = 1)
-
-
-# Add UMAP to adata
-adata.obsm['X_umap'] = shi_meta['UMAP-X']
-adata.obsm['Y_umap'] = shi_meta['UMAP-Y']
-adata.obsm['Z_umap'] = shi_meta['UMAP-Z']
-
-sc.pp.normalize_total(adata, target_sum=1e4)
-sc.pp.log1p(adata)
-sc.tl.pca(adata, svd_solver='arpack')
-sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
-sc.tl.umap(adata)
+score = pd.read_csv(scDRS_DIR + "SCZ.full_score.gz", sep = "\t", index_col = 0)
+adata = sc.read(H5AD_DIR + 'shi.bc.qc.h5ad')
 
 ## Analysis of disease enrichment for individual cells  -----------------------
 df_gs = df_gs.loc[
@@ -57,14 +44,13 @@ for trait in dict_score:
 
 adata.obs['SCZ'] = score["norm_score"]
 
-sc.set_figure_params(figsize=[2.5, 2.5], dpi=150)
 sc.pl.umap(
     adata, 
-    color=["ClusterID", 'SCZ'],
+    color=["cluster_level_1", "SCZ"],   
     ncols=1,
     color_map="RdBu_r",
     vmin=-5,
-    vmax=5,
+    vmax=5
 )
 
 sc.pl.umap(adata,
@@ -82,7 +68,7 @@ adata.obsm
 ## Group level stats ----------------------------------------------------------
 
 dict_df_stats = {
-    trait: pd.read_csv(scDRS_DIR + "SCZ.scdrs_group.ClusterID", sep="\t", index_col=0)
+    trait: pd.read_csv(scDRS_DIR + "SCZ.scdrs_group.cluster_level_1", sep="\t", index_col=0)
     for trait in ["SCZ"]
 }
 
@@ -90,10 +76,9 @@ dict_celltype_display_name = {
     "MGE": "MGE",
     "LGE": "LGE",
     "CGE": "CGE",
-    "OPC": "OPC",
-    "Endothelial": "Endothelial",
+    "Early_InN": "Early_InN",
     "Microglia": "Microglia",
-    "progenitor": "Progenitor",
+    "Progenitor": "Progenitor",
 }
 
 scdrs.util.plot_group_stats(
