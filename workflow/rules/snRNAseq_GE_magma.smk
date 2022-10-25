@@ -70,19 +70,19 @@ rule magma_gene_set_analysis:
 
              """
 
-#rule magma_conditional:
-#    input:   gene_list = "../results/gene_lists/q10_gene_lists/ALL_SIG_AND_SKENE_entrez_gene_list.tsv",
-#             scz_magma = MAGMA_DIR + "SCZ_hg19_magma_ready.sumstats.tsv.10UP.1.5DOWN.genes.raw"
-#    output:  "../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.gsa.out"
-#    params:  "../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}"
-#    message: "Running magma on all significant cell types conditioning on {wildcards.CONDITION}"
-#    log:     "../results/logs/magma_conditional/snRNAseq.magma.conditional.{CONDITION}.log"
-#    shell:
-#             """
+rule magma_conditional:
+    input:   gene_list = "../results/gene_lists/MAGMA/shi_top10_lvl_2_sig_plus_skene.txt",
+             scz_magma = "../results/magma/snRNAseq_GE_SCZ.magma.genes.raw" 
+    output:  "../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.gsa.out"
+    params:  "../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}"
+    message: "Running magma on all significant cell types conditioning on {wildcards.CONDITION}"
+    log:     "../results/logs/magma_conditional/snRNAseq.magma.conditional.{CONDITION}.log"
+    shell:
+             """
 
-#             magma --gene-results {input.scz_magma} --set-annot {input.gene_list} --model condition={wildcards.CONDITION} --out {params}
+             magma --gene-results {input.scz_magma} --set-annot {input.gene_list} --model condition={wildcards.CONDITION} --out {params}
 
-#             """
+             """
 
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------

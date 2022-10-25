@@ -12,9 +12,8 @@ configfile: "../config/config.yaml"
 
 # -------------  RULES  ---------------
 rule scDRS_create_h5ad_and_cov_files:
-    input:   "../resources/raw_data/shi_et_al_2021/GSE135827_GE_mat_raw_count_with_week_info.txt",
-             "../resources/raw_data/shi_et_al_2021/science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"
-    output:  "../results/h5ad_objects/shi2021_filt.h5ad",
+    input:   "../results/h5ad_objects/shi.bc.h5ad"
+    output:  "../results/h5ad_objects/shi.bc.qc.h5ad",
              "../results/scDRS/scDRS_covariates.tsv"
     log:     "../results/logs/magma/snRNAseq.GE.create_h5ad_and_cov.log"
     script:   "../scripts/snRNAseq_GE_prepare_data_for_scDRS.py"
@@ -64,7 +63,7 @@ rule scDRS_munge_gs:
 
 
 rule scDRS_compute_score:
-    input:   rna_data = "../results/h5ad_objects/shi2021_filt.h5ad", 
+    input:   rna_data = "../results/h5ad_objects/shi.bc.qc.h5ad", 
              gs = "../results/scDRS/scDRS_genewise_Z_top1K.gs",
              cov = "../results/scDRS/scDRS_covariates.tsv"
     output:  "../results/scDRS/SCZ.full_score.gz"
@@ -88,9 +87,9 @@ rule scDRS_compute_score:
               """
 
 rule scDRS_group_level_stats:
-    input:   rna_data =	"../results/h5ad_objects/shi2021_filt.h5ad",
+    input:   rna_data =	"../results/h5ad_objects/shi.bc.qc.h5ad",
              gwas_scores = "../results/scDRS/SCZ.full_score.gz"
-    output:  "../results/scDRS/SCZ.scdrs_group.ClusterID"
+    output:  "../results/scDRS/SCZ.scdrs_group.cluster_level_1"
     params:  "../results/scDRS/"
     log:     "../results/logs/magma/snRNAseq.GE.group_level_stats.log"
     shell:
@@ -100,7 +99,7 @@ rule scDRS_group_level_stats:
                --h5ad-file {input.rna_data} \
                --score-file {input.gwas_scores} \
                --out-folder {params} \
-               --group-analysis ClusterID \
+               --group-analysis cluster_level_1 \
                --flag-filter-data True \
                --flag-raw-count True &> {log}
       
