@@ -13,7 +13,7 @@ shi1C_markers <- c('HES1', 'MKI67', 'ASCL1', 'NKX2-1', 'LHX6',
                    'NEUROD2', 'TCF7L2')
 
 # Shi fig 4I top 5 rows, rest fig 4H
-lge_lvl2_markers <- c('MEIS2', 'TLE4', 'FOXP1', # 'ZNF503' (duplicate), # Striatal potential
+lge_level2_markers <- c('MEIS2', 'TLE4', 'FOXP1', # 'ZNF503' (duplicate), # Striatal potential
                       'CHD7', 'DLX5', 'ID2', 'PAX6', # OB precursor
                       'PENK', 'CXCL12', 'SP9', # D2 MSN precursor
                       'TAC1', 'EBF1', 'ISL1', 'ZNF503', 'PDYN', # D1 MSN precursor (PDYN)
@@ -24,29 +24,29 @@ lge_lvl2_markers <- c('MEIS2', 'TLE4', 'FOXP1', # 'ZNF503' (duplicate), # Striat
 )
 
 # Shi fig 5E top 4 rows, rest fig5B
-mge_lvl2_markers <- c('CRABP1', 'NKX2-1', 'ETV1', 'NFIA', # Striatal and CRT Ns
-                      'MEF2C', 'MAF', 'ARX', 'ZEB2', # Cortical interneurons
-                      'NR2F1', 'NR2F2', 'ZFHX3', # Subpallial and GABA Ns
-                      'LHX8', 'ISL1', 'ZIC1', 'GBX2', # Subpallial Cholin Ns
-                      'MDK', 'LHX6', 'SOX6', 'CXCR4', # Rest from Shi fig 5B
-                      'ERBB4', 'ANGPT2', 'CNTNAP2', 'GRIA2'
+mge_level2_markers <- c('CRABP1', 'NKX2-1', 'ETV1', 'NFIA', # Striatal and CRT Ns
+                        'MEF2C', 'MAF', 'ARX', 'ZEB2', # Cortical interneurons
+                        'NR2F1', 'NR2F2', 'ZFHX3', # Subpallial and GABA Ns
+                        'LHX8', 'ISL1', 'ZIC1', 'GBX2', # Subpallial Cholin Ns
+                        'MDK', 'LHX6', 'SOX6', 'CXCR4', # Rest from Shi fig 5B
+                        'ERBB4', 'ANGPT2', 'CNTNAP2', 'GRIA2'
                       
 )
 
 # Shi fig 2E 
-progenitor_lvl2_markers <- c('LHX6', 'SOX6', 'DLX6', 'SFTA3', 'NKX2-1',
-                      'RIC3', 'GSX1', 'MBIP', 'OLIG2', 'PCDH17',
-                      'NR2F1', 'NR2F2', 'NTRK2', 'DLX5', 'RBP1', 
-                      'VIP', 'CALB2', 'SCGN', 'ZFHX3', 'MEIS2', 
-                      'ZNF503', 'SIX3', 'PHLDA1', 'GLI3', 'LGALS1', 
-                      'PAX6', 'GSX2', 'HEY1'
+progenitor_level2_markers <- c('LHX6', 'SOX6', 'DLX6', 'SFTA3', 'NKX2-1',
+                               'RIC3', 'GSX1', 'MBIP', 'OLIG2', 'PCDH17',
+                               'NR2F1', 'NR2F2', 'NTRK2', 'DLX5', 'RBP1', 
+                               'VIP', 'CALB2', 'SCGN', 'ZFHX3', 'MEIS2', 
+                               'ZNF503', 'SIX3', 'PHLDA1', 'GLI3', 'LGALS1', 
+                               'PAX6', 'GSX2', 'HEY1'
                       
 )
 
-rgc_lvl2_markers <- c('FABP7', 'VIM', 'HES1', 'ID4', 'HES5',
-                      'PTPRZ1', 'FAM107A', 'SFRP1', 'LIX1', 'NTRK2'
+rgc_level2_markers <- c('FABP7', 'VIM', 'HES1', 'ID4', 'HES5',
+                        'PTPRZ1', 'FAM107A', 'SFRP1', 'LIX1', 'NTRK2'
 )
 
-ipc_lvl2_markers <- c('GAD2', 'DLX5', 'SOX4', 'DLX2', 'KPNA2',
-                      'DCX', 'ASCL1', 'SOX11', 'DLX6', 'SP9',
-                      'ARL4D', 'TMSB10', 'ARX')
+ipc_level2_markers <- c('GAD2', 'DLX5', 'SOX4', 'DLX2', 'KPNA2',
+                        'DCX', 'ASCL1', 'SOX11', 'DLX6', 'SP9',
+                        'ARL4D', 'TMSB10', 'ARX')

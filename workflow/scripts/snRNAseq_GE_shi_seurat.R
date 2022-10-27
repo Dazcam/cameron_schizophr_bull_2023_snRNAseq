@@ -6,10 +6,11 @@
 
 ##  Info  -----------------------------------------------------------------------------
 
-# Seurat testing for Shi et al (2021) data
-# Tested Shi parameters from methods as best I could - all clusters
-# Tested subset of data removing ExNs with / without batch correction 
-# Testing res levels: 'snRNAseq_GE_functions.R'
+# 1. Create Seurat object and QC markdown file for shi data - MGE cells only
+# 2. Sub-clusters Seurat object on MGE, LGE, CGE, and Progenitor cells
+# 3. Adds cluster levels 1 and 2 to main Seurat object
+# 4. Save main Seurat objects and objects for sub-clusters
+# 5. Converts Seurat objects to h5ad format for scDRS
 
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
@@ -94,7 +95,7 @@ for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
     
   } else if (REGION == 'LGE') {
     
-    MARKERS <- lge_lvl2_markers
+    MARKERS <- lge_level2_markers
     
   } else if (REGION == 'CGE') {
     
@@ -102,7 +103,7 @@ for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
     
   } else {
     
-    MARKERS <- progenitor_lvl2_markers 
+    MARKERS <- progenitor_level2_markers 
     
   }
   
@@ -132,6 +133,9 @@ for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
   
 }
 
+DimPlot_scCustom(seurat.shi.bc, reduction = 'umap')
+# Need to generate MARKDOWN for the final sub-clusterings
+
 ## Shi data - join subcluster annotations to main Seurat object  ----------------------
 seurat_shi_meta <- seurat.shi.bc@meta.data %>%
   mutate(cluster_level_2 = rep(NA, dim(seurat.shi.bc)[2])) %>%
@@ -157,8 +161,23 @@ seurat.shi.bc$cluster_level_2 <- seurat_lvl2_meta$cluster_level_2
 saveRDS(object = seurat.shi.bc, paste0(R_DIR, 'seurat_shi_bc.rds'))
 
 # Convert to h5ad object for scDRS
-SaveH5Seurat(seurat.shi.bc, filename = paste0(H5AD_DIR, 'shi.bc.h5Seurat'))
-Convert(paste0(H5AD_DIR, 'shi.bc.h5Seurat'), dest = "h5ad")
+SaveH5Seurat(seurat.shi.bc, filename = paste0(H5AD_DIR, 'shi_bc.h5Seurat'))
+Convert(paste0(H5AD_DIR, 'shi_bc.h5Seurat'), dest = "h5ad")
+
+# Save R object and h5ad clusters for subclusters
+for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
+  
+  cat('\nGenerating h5ad file for:', REGION, '...\n\n')
+  
+  SEURAT_OBJ <- get(paste0('seurat_', REGION))
+  
+  saveRDS(SEURAT_OBJ, paste0(R_DIR, 'seurat_shi_bc_', REGION, '.rds'))
+  
+  # Convert to h5ad object for scDRS
+  SaveH5Seurat(SEURAT_OBJ, filename = paste0(H5AD_DIR, 'shi_bc_', REGION, '.h5Seurat'))
+  Convert(paste0(H5AD_DIR, 'shi_bc_', REGION, '.h5Seurat'), dest = "h5ad")
+  
+}
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------

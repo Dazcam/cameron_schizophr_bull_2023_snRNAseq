@@ -61,12 +61,8 @@ sc.pl.umap(adata,
     s=20,
 )
 
-        
-sc.tl.leiden(adata)
-adata.obsm
 
 ## Group level stats ----------------------------------------------------------
-
 dict_df_stats = {
     trait: pd.read_csv(scDRS_DIR + "SCZ.scdrs_group.cluster_level_1", sep="\t", index_col=0)
     for trait in ["SCZ"]

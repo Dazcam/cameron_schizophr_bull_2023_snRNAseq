@@ -23,6 +23,7 @@ LDSR_REGIONS <- c("Cer", "FC", "GE", "Hipp", "Thal")
 GWAS <- c('SCZ', 'HEIGHT')
 RESULTS_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 MAGMA_DATA_DIR <- paste0(RESULTS_DIR, 'magma/')
+MAGMA_COND_DATA_DIR <- paste0(RESULTS_DIR, 'magma_conditional/')
 LDSC_DATA_DIR <- paste0(RESULTS_DIR, 'LDSR_part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 
@@ -51,22 +52,57 @@ for (LEVEL in c('1', '2')) {
 
 # LDSR - prepare df
 cat('\nPreparing LDSR data ... \n')
-#for (LDSR_REGION in LDSR_REGIONS) {
+for (DISORDER in GWAS) {
   
-  for (DISORDER in GWAS) {
-
-    # LDSR                                           snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv
-    ldsr_df <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
-      mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
-      select(Category, LDSR)
+  # LDSR                                           snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv
+  ldsr_df <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
+    mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
+    select(Category, LDSR)
     
-    assign(paste0('ldsr_', DISORDER, '_df'), ldsr_df, envir = .GlobalEnv) 
+  assign(paste0('ldsr_', DISORDER, '_df'), ldsr_df, envir = .GlobalEnv) 
     
-  }
+}
   
-#}
 
-# Plot
+# MAGMA conditional - prepare df
+cat('\nPreparing MAGMA conditional data ... \n')
+for (CELL_TYPE in c('InN', 'MSN')) {
+    
+  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_skene_', 
+                                        CELL_TYPE, '.gsa.out'), header = TRUE) %>%
+      mutate(MAGMA = -log10(as.numeric(P))) %>%
+      select(VARIABLE, MAGMA) %>%
+      dplyr::rename(Category = VARIABLE) %>%
+      filter(!grepl('skene', Category))
+  
+  MAGMA_PLOT <- ggplot(data = MAGMA_DF, aes(x = MAGMA, y = factor(Category, rev(levels(factor(Category)))), 
+                                                  fill = '#F8766D')) +
+      geom_bar(stat = "identity", color = 'black', position = "dodge") +
+      geom_vline(xintercept=-log10(0.05/30), linetype = "dashed", color = "black") +
+      geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+      theme_bw() +
+      ggtitle(CELL_TYPE) +
+      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.border = element_rect(colour = "black", size = 1),
+            plot.title = element_text(hjust = 0.5, face = 'bold'),
+            axis.title.x = element_text(colour = "#000000", size = 14),
+            axis.title.y = element_text(colour = "#000000", size = 14),
+            axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+            axis.text.y  = element_text(colour = "#000000", size = 13),
+            legend.position = "none") +
+      xlab(expression(-log[10](P))) +
+      ylab('Cell type') +
+      xlim(0, 11.5) 
+      
+    
+    assign(paste0('magma_cond_GE_', CELL_TYPE, '_df'), MAGMA_DF, envir = .GlobalEnv) 
+    assign(paste0('magma_cond_GE_', CELL_TYPE, '_plot'), MAGMA_PLOT, envir = .GlobalEnv)
+  
+}
+  
+# Plot MAGMA and LDSR barplot
 cat('\nCreate plots ... \n')
 for (LEVEL in c('1', '2')) {
   
@@ -117,8 +153,15 @@ for (LEVEL in c('1', '2')) {
 
 }
 
+
 plot_grid(SCZ_magma_ldsr_lvl_1_plot, HEIGHT_magma_ldsr_lvl_1_plot)
 plot_grid(SCZ_magma_ldsr_lvl_2_plot, HEIGHT_magma_ldsr_lvl_2_plot)
+plot_grid(magma_cond_GE_MSN_plot, magma_cond_GE_InN_plot)
+plot_grid(SCZ_magma_ldsr_lvl_2_plot, HEIGHT_magma_ldsr_lvl_2_plot)
+
+plot_grid(SCZ_magma_ldsr_lvl_2_plot, 
+          plot_grid(magma_cond_GE_MSN_plot, 
+                    magma_cond_GE_InN_plot, ncol = 1))
 
 
 legend <- get_legend(
