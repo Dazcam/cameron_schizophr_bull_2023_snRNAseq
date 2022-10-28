@@ -45,7 +45,7 @@ rule ldsr_ld_scores:
         "--annot {input.annot} --out {params.ldscores} --print-snps {params.snps} 2> {log}"
 
 
-rule partitioned_heritability_baseline_v12:
+rule ldsr_stratified_baseline_v12:
     input:   GWAS = "../results/GWAS_for_ldsr/{GWAS}_hg19_ldsc_ready.sumstats.gz",
              LDSR = expand("../results/LDSR_annotation_files/snRNAseq.{CELL_TYPE}.{CHR}.l2.ldscore.gz", CELL_TYPE = config["RNA_CELL_TYPES"], CHR = range(1,23))
     output:  "../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{CELL_TYPE}_{GWAS}_baseline.v1.2.results"
@@ -63,7 +63,7 @@ rule partitioned_heritability_baseline_v12:
              "--frqfile-chr {params.frqfile} --out {params.out_file} --print-coefficients 2> {log}"
 
 
-rule create_partHerit_summary:
+rule ldsr_stratified_summary:
     # This is still optimised for multiple quantiles so creating > 100 single line files
     input:   expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{CELL_TYPE}_{GWAS}_baseline.v1.2.results", CELL_TYPE = config["RNA_CELL_TYPES"], GWAS = config["GWAS"])
     output:  "../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
