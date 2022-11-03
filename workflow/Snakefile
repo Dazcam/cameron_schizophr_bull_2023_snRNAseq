@@ -6,10 +6,10 @@ include: 'rules/snRNAseq_GE_LDSR.smk'
 
 rule all:
     input:
-        expand("../results/magma/snRNAseq_GE_{GWAS}.lvl_{LEVEL}.magma.gsa.out", GWAS = config['GWAS'], LEVEL = [1,2]),
-        expand("../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.gsa.out", CONDITION = config['MAGMA_CONDITIONS']),
-        expand("../results/scDRS/scDRS_{H5AD_OBJ}/SCZ.full_score.gz", H5AD_OBJ = config['H5AD_OBJ']),
-        "../results/scDRS/scDRS_shi_bc/SCZ.scdrs_group.cluster_level_1",
-        expand("../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/SCZ.scdrs_group.cluster_level_2", H5AD_OBJ_SUBCLUST = config['H5AD_OBJ_SUBCLUST']),
+        expand("../results/magma/snRNAseq_GE_{GWAS}.lvl_{LEVEL}.magma.{MAGMA_WINDOW}.gsa.out", GWAS = config['GWAS'], LEVEL = [1,2], MAGMA_WINDOW = config['MAGMA_WINDOW']),
+        expand("../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{MAGMA_WINDOW}.gsa.out", CONDITION = config['MAGMA_CONDITIONS'], MAGMA_WINDOW = config['MAGMA_WINDOW']),
+        expand("../results/scDRS/scDRS_{H5AD_OBJ}/{MAGMA_WINDOW}/{GWAS}.full_score.gz", MAGMA_WINDOW = config['MAGMA_WINDOW'], GWAS = config['GWAS'], H5AD_OBJ = config['H5AD_OBJ']),
+        expand("../results/scDRS/scDRS_shi_bc/{MAGMA_WINDOW}/{GWAS}.scdrs_group.cluster_level_1", MAGMA_WINDOW = config['MAGMA_WINDOW'], GWAS = config['GWAS']),
+        expand("../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/{MAGMA_WINDOW}/{GWAS}.scdrs_group.cluster_level_2", MAGMA_WINDOW = config['MAGMA_WINDOW'], GWAS = config['GWAS'], H5AD_OBJ_SUBCLUST = config['H5AD_OBJ_SUBCLUST']),
         expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS'])
         

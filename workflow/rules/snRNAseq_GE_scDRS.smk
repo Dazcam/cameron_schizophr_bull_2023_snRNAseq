@@ -20,16 +20,17 @@ rule scDRS_create_h5ad_and_cov_files:
 
 
 rule scDRS_create_zscore_files:
-    input:   "../results/magma/snRNAseq_GE_SCZ.magma.genes.out", 
+    input:   "../results/magma/snRNAseq_GE_SCZ.magma.{MAGMA_WINDOW}.genes.out", 
+             "../results/magma/snRNAseq_GE_HEIGHT.magma.{MAGMA_WINDOW}.genes.out",
              "../resources/refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt"
-    output:  "../results/scDRS/scDRS_genewise_Z.tsv"
-    log:     "../results/logs/scDRS/snRNAseq.GE.create_zscore_files.log"
+    output:  "../results/scDRS/scDRS_genewise_Z.{MAGMA_WINDOW}.tsv"
+    log:     "../results/logs/scDRS/snRNAseq.GE.create_zscore_files.{MAGMA_WINDOW}.log"
     script:  "../scripts/snRNAseq_GE_create_z_scores.py"
 
 rule scDRS_munge_gs:
-    input:   "../results/scDRS/scDRS_genewise_Z.tsv"
-    output:  "../results/scDRS/scDRS_genewise_Z_top1K.gs"
-    log:     "../results/logs/scDRS/snRNAseq.GE.munge_gs.log"
+    input:   "../results/scDRS/scDRS_genewise_Z.{MAGMA_WINDOW}.tsv"
+    output:  "../results/scDRS/scDRS_genewise_Z_top1K.{MAGMA_WINDOW}.gs"
+    log:     "../results/logs/scDRS/snRNAseq.GE.munge_gs.{MAGMA_WINDOW}.log"
     shell:
              """
              
@@ -43,11 +44,12 @@ rule scDRS_munge_gs:
 
 rule scDRS_compute_score:
     input:   rna_data = "../results/h5ad_objects/{H5AD_OBJ}.qc.h5ad", 
-             gs = "../results/scDRS/scDRS_genewise_Z_top1K.gs",
-             cov = "../results/scDRS_{H5AD_OBJ}/scDRS_{H5AD_OBJ}_covariates.tsv"
-    output:  "../results/scDRS/scDRS_{H5AD_OBJ}/SCZ.full_score.gz"
-    params:  "../results/scDRS/scDRS_{H5AD_OBJ}/"
-    log:     "../results/logs/scDRS/snRNAseq.GE.compute.scores_{H5AD_OBJ}.log"
+             gs = "../results/scDRS/scDRS_genewise_Z_top1K.{MAGMA_WINDOW}.gs",
+             cov = "../results/scDRS/scDRS_{H5AD_OBJ}/scDRS_{H5AD_OBJ}_covariates.tsv"
+    output:  "../results/scDRS/scDRS_{H5AD_OBJ}/{MAGMA_WINDOW}/SCZ.full_score.gz",
+             "../results/scDRS/scDRS_{H5AD_OBJ}/{MAGMA_WINDOW}/HEIGHT.full_score.gz"
+    params:  "../results/scDRS/scDRS_{H5AD_OBJ}/{MAGMA_WINDOW}/"
+    log:     "../results/logs/scDRS/snRNAseq.GE.compute.scores_{H5AD_OBJ}.{MAGMA_WINDOW}.log"
     shell:
              """
           
@@ -67,10 +69,10 @@ rule scDRS_compute_score:
 
 rule scDRS_group_level_stats_all:
     input:   rna_data =	"../results/h5ad_objects/shi_bc.qc.h5ad",
-             gwas_scores = "../results/scDRS/scDRS_shi_bc/SCZ.full_score.gz"
-    output:  "../results/scDRS/scDRS_shi_bc/SCZ.scdrs_group.cluster_level_1"
-    params:  "../results/scDRS/scDRS_shi_bc/"
-    log:     "../results/logs/scDRS/snRNAseq.GE.group_level_stats_shi_bc.log"
+             gwas_scores = "../results/scDRS/scDRS_shi_bc/{MAGMA_WINDOW}/{GWAS}.full_score.gz"
+    output:  "../results/scDRS/scDRS_shi_bc/{MAGMA_WINDOW}/{GWAS}.scdrs_group.cluster_level_1"
+    params:  "../results/scDRS/scDRS_shi_bc/{MAGMA_WINDOW}/"
+    log:     "../results/logs/scDRS/snRNAseq.GE.{GWAS}_group_level_stats_shi_bc.{MAGMA_WINDOW}.log"
     shell:
              """
 
@@ -86,10 +88,10 @@ rule scDRS_group_level_stats_all:
 
 rule scDRS_group_level_stats_subclust:
     input:   rna_data = "../results/h5ad_objects/{H5AD_OBJ_SUBCLUST}.qc.h5ad",
-             gwas_scores = "../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/SCZ.full_score.gz"
-    output:  "../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/SCZ.scdrs_group.cluster_level_2"
-    params:  "../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/"
-    log:     "../results/logs/scDRS/snRNAseq.GE.group_level_stats_{H5AD_OBJ_SUBCLUST}.log"
+             gwas_scores = "../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/{MAGMA_WINDOW}/{GWAS}.full_score.gz"
+    output:  "../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/{MAGMA_WINDOW}/{GWAS}.scdrs_group.cluster_level_2"
+    params:  "../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/{MAGMA_WINDOW}/"
+    log:     "../results/logs/scDRS/snRNAseq.GE.{GWAS}_group_level_stats_{H5AD_OBJ_SUBCLUST}.{MAGMA_WINDOW}.log"
     shell:
              """
 
