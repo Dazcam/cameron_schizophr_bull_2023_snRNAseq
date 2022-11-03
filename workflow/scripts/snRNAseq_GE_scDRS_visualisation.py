@@ -10,15 +10,33 @@ import matplotlib.pyplot as plt
 import os
 import warnings
 
-RAW_DIR = '/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/resources/raw_data/shi_et_al_2021/'
-DATA_DIR = '/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
-SHI_DIR = RAW_DIR + 'science.abj6641_tables_s2_to_s9/'
+DATA_DIR = "/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/results/"
 scDRS_DIR = DATA_DIR + 'scDRS/'
+scDRS_SUBDIR = scDRS_DIR + "scDRS_shi_bc_"
 H5AD_DIR = DATA_DIR + 'h5ad_objects/'
+REGIONS = ["MGE", "LGE", "CGE", "Progenitor"]
 
+## Load data  -----------------------------------------------------------------
+# Level 1 - main clusters
+all_score = pd.read_csv(scDRS_DIR + "scDRS_shi_bc/SCZ.full_score.gz", sep = "\t", index_col = 0)
+all_group = pd.read_csv(scDRS_DIR + "scDRS_shi_bc/SCZ.scdrs_group.cluster_level_1", sep="\t", index_col = 0)
+all_adata = sc.read(H5AD_DIR + 'shi_bc.h5ad')
+
+
+# Level 2 - subclusters
+for REGION in REGIONS:
+  score = pd.read_csv(scDRS_SUBDIR + REGION + '/SCZ.full_score.gz', sep = "\t", index_col = 0)
+  group = pd.read_csv(scDRS_SUBDIR + REGION + "/SCZ.scdrs_group.cluster_level_2", sep="\t", index_col = 0)
+  adata = sc.read(H5AD_DIR + "shi_bc_" + REGION + ".h5ad")
+  locals()[str(REGION) + "_score" ] = score
+  locals()[str(REGION) + "_group" ] = group
+  locals()[str(REGION) + "_adata" ] = adata
+  
+del adata, group, score  
+
+# Top genes
 df_gs = pd.read_csv(scDRS_DIR + 'scDRS_genewise_Z_top1K.gs', sep = "\t", index_col = 0)
-score = pd.read_csv(scDRS_DIR + "SCZ.full_score.gz", sep = "\t", index_col = 0)
-adata = sc.read(H5AD_DIR + 'shi.bc.qc.h5ad')
+
 
 ## Analysis of disease enrichment for individual cells  -----------------------
 df_gs = df_gs.loc[
@@ -64,7 +82,7 @@ sc.pl.umap(adata,
 
 ## Group level stats ----------------------------------------------------------
 dict_df_stats = {
-    trait: pd.read_csv(scDRS_DIR + "SCZ.scdrs_group.cluster_level_1", sep="\t", index_col=0)
+    trait: Progenitor_group
     for trait in ["SCZ"]
 }
 
@@ -75,6 +93,49 @@ dict_celltype_display_name = {
     "Early_InN": "Early_InN",
     "Microglia": "Microglia",
     "Progenitor": "Progenitor",
+}
+
+dict_celltype_display_name = {
+    "MGE_0": "MGE_0",
+    "MGE_1":  "MGE_1",
+    "MGE_2":  "MGE_2",
+    "MGE_3":  "MGE_3",
+    "MGE_4":  "MGE_4",
+    "MGE_5":  "MGE_5",
+
+}
+
+dict_celltype_display_name = {
+    "LGE_0": "LGE_0",
+    "LGE_1": "LGE_1",
+    "LGE_2": "LGE_2",
+    "LGE_3": "LGE_3",
+    "LGE_4": "LGE_4",
+    "LGE_5": "LGE_5",
+    "LGE_6": "LGE_6",
+    "LGE_7": "LGE_7",
+}
+
+dict_celltype_display_name = {
+    "CGE_0": "CGE_0",
+    "CGE_1": "CGE_1",
+    "GGE_2": "CGE_2",
+    "CGE_3": "CGE_3",
+
+}
+
+dict_celltype_display_name = {
+    "Progenitor_0": "Progenitor_0",
+    "Progenitor_1": "Progenitor_1",
+    "Progenitor_2": "Progenitor_2",
+    "Progenitor_3": "Progenitor_3",
+    "Progenitor_4": "Progenitor_4",
+    "Progenitor_5": "Progenitor_5",
+    "Progenitor_6": "Progenitor_6",
+    "Progenitor_7": "Progenitor_7",
+    "Progenitor_8": "Progenitor_8",
+    "Progenitor_9": "Progenitor_9",
+    "Progenitor_10": "Progenitor_10",
 }
 
 scdrs.util.plot_group_stats(

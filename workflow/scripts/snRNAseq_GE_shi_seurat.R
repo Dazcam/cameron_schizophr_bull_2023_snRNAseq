@@ -157,8 +157,13 @@ seurat.shi.bc$cluster_level_2 <- seurat_lvl2_meta$cluster_level_2
 # Sanity check
 # identical(colnames(seurat.shi.bc), seurat_shi_meta$Cells)
 
-# Save R object
+# Downsample R object
+table(seurat.shi.bc$cluster_level_1)
+seurat.shi.bc_dwnSmpl  <- subset(seurat.shi.bc, downsample = min(table(seurat.shi.bc$cluster_level_1)))
+
+# Save R objects
 saveRDS(object = seurat.shi.bc, paste0(R_DIR, 'seurat_shi_bc.rds'))
+saveRDS(object = seurat.shi.bc_dwnSmpl, paste0(R_DIR, 'seurat_shi_bc_dwnSmpl.rds'))
 
 # Convert to h5ad object for scDRS
 SaveH5Seurat(seurat.shi.bc, filename = paste0(H5AD_DIR, 'shi_bc.h5Seurat'))
@@ -171,6 +176,14 @@ for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
   
   SEURAT_OBJ <- get(paste0('seurat_', REGION))
   
+  # Add cluster_level_2 annotations to Seurat object
+  SEURAT_META <- SEURAT_OBJ@meta.data %>% unite(cluster_level_2, c("cluster_level_1", "RNA_snn_res.0.5"),
+                                                remove = FALSE) %>%
+    rownames_to_column('Cells')
+  
+  SEURAT_OBJ$cluster_level_2 <- SEURAT_META$cluster_level_2
+  
+  # Save Seurat object
   saveRDS(SEURAT_OBJ, paste0(R_DIR, 'seurat_shi_bc_', REGION, '.rds'))
   
   # Convert to h5ad object for scDRS
@@ -181,3 +194,16 @@ for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
+
+for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
+  
+  SEURAT_OBJ <- readRDS(paste0(R_DIR, 'seurat_shi_bc_', REGION, '.rds'))
+
+  # 
+  # saveRDS(SEURAT_OBJ, paste0(R_DIR, 'seurat_shi_bc_', REGION, '.rds'))
+  # Convert to h5ad object for scDRS
+  SaveH5Seurat(SEURAT_OBJ, filename = paste0(H5AD_DIR, 'shi_bc_', REGION, '.h5Seurat'))
+  Convert(paste0(H5AD_DIR, 'shi_bc_', REGION, '.h5Seurat'), dest = "h5ad")
+  
+  
+}
