@@ -1,0 +1,28 @@
+---
+title: "snRNAseq GE downstream tests report"
+author: "Darren Cameron"
+date: "`r format(Sys.time(), '%d/%m/%y')`"
+output: 
+  html_document:
+    theme: paper
+---
+
+MAGMA, sLDSR, scDRS results for Shi et al (2021) data
+
+*** 
+
+### **Results** {.tabset}
+
+#### **scDRS** {.tabset}
+
+```{r MGE, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(REGION in c('all', 'MGE', 'LGE', 'CGE', 'Progenitor')) {
+  cat("  \n##### **", REGION , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('scDRS_', REGION, '_umap')))
+  cat("\n *** \n", sep = "")
+  cat("  \n")
+}
+```
+
+

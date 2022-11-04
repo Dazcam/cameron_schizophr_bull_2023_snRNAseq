@@ -12,42 +12,55 @@ import warnings
 
 DATA_DIR = "/Users/darren/Desktop/fetal_brain_snRNAseq_GE_270922/results/"
 scDRS_DIR = DATA_DIR + 'scDRS/'
-scDRS_SUBDIR = scDRS_DIR + "scDRS_shi_bc_"
+scDRS_SUBDIR = DATA_DIR + 'scDRS_shi_bc'
 H5AD_DIR = DATA_DIR + 'h5ad_objects/'
 REGIONS = ["MGE", "LGE", "CGE", "Progenitor"]
+GENE_WINDOWS = ["10UP_10DOWN", "10UP_35DOWN"]
 
 ## Load data  -----------------------------------------------------------------
 # Level 1 - main clusters
-all_score = pd.read_csv(scDRS_DIR + "scDRS_shi_bc/SCZ.full_score.gz", sep = "\t", index_col = 0)
-all_group = pd.read_csv(scDRS_DIR + "scDRS_shi_bc/SCZ.scdrs_group.cluster_level_1", sep="\t", index_col = 0)
-all_adata = sc.read(H5AD_DIR + 'shi_bc.h5ad')
+for WINDOW in GENE_WINDOWS:
+    all_score = pd.read_csv(scDRS_SUBDIR + "/" + WINDOW + 
+                            "/SCZ.full_score.gz", sep = "\t", index_col = 0)
+    all_group = pd.read_csv(scDRS_SUBDIR + "/" + WINDOW + 
+                            "/SCZ.scdrs_group.cluster_level_1", 
+                            sep="\t", index_col = 0)
+    locals()["all_score_" + WINDOW] = all_score
+    locals()["all_group_" + WINDOW] = all_group
 
+all_adata = sc.read(H5AD_DIR + 'shi_bc.h5ad')
 
 # Level 2 - subclusters
 for REGION in REGIONS:
-  score = pd.read_csv(scDRS_SUBDIR + REGION + '/SCZ.full_score.gz', sep = "\t", index_col = 0)
-  group = pd.read_csv(scDRS_SUBDIR + REGION + "/SCZ.scdrs_group.cluster_level_2", sep="\t", index_col = 0)
-  adata = sc.read(H5AD_DIR + "shi_bc_" + REGION + ".h5ad")
-  locals()[str(REGION) + "_score" ] = score
-  locals()[str(REGION) + "_group" ] = group
-  locals()[str(REGION) + "_adata" ] = adata
-  
-del adata, group, score  
+    adata = sc.read(H5AD_DIR + "shi_bc_" + REGION + ".h5ad")
+    locals()[str(REGION) + "_adata" ] = adata
+
+for WINDOW in GENE_WINDOWS:
+    for REGION in REGIONS:
+        score = pd.read_csv(scDRS_SUBDIR + '_' + REGION + '/' + WINDOW + '/SCZ.full_score.gz', sep = "\t", index_col = 0)
+        group = pd.read_csv(scDRS_SUBDIR + '_' + REGION + '/' + WINDOW + 
+                            "/SCZ.scdrs_group.cluster_level_2",
+                            sep="\t", index_col = 0)
+        locals()[str(REGION) + "_score" + WINDOW] = score
+        locals()[str(REGION) + "_group" + WINDOW] = group
+
+del adata, group, score, all_score, all_group
 
 # Top genes
-df_gs = pd.read_csv(scDRS_DIR + 'scDRS_genewise_Z_top1K.gs', sep = "\t", index_col = 0)
+df_gs = pd.read_csv(scDRS_DIR + '/scDRS_genewise_Z_top1K.10UP_35DOWN.gs', sep = "\t", index_col = 0)
 
 
 ## Analysis of disease enrichment for individual cells  -----------------------
-df_gs = df_gs.loc[
+df_gs2 = df_gs.loc[
     [
-        "SCZ"
+        "SCZ",
+        "HEIGHT"
     ],
     :,
 ].rename(
     {
-        "SCZ": "SCZ"
-
+        "SCZ": "SCZ",
+        "HEIGHT": "HEIGHT"
     }
 )
 display(df_gs)

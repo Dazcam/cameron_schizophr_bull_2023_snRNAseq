@@ -26,7 +26,7 @@ MAGMA_DATA_DIR <- paste0(RESULTS_DIR, 'magma/')
 MAGMA_COND_DATA_DIR <- paste0(RESULTS_DIR, 'magma_conditional/')
 LDSC_DATA_DIR <- paste0(RESULTS_DIR, 'LDSR_part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
-
+GENE_WINDOW <- c('10UP_10DOWN', '10UP_35DOWN')
 
 
 # MAGMA - prepare df
@@ -35,8 +35,10 @@ for (LEVEL in c('1', '2')) {
 
   for (DISORDER in GWAS) {
     
-    magma_top10_df <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.lvl_', 
-                                        LEVEL, '.magma.gsa.out'), header = FALSE) %>%
+    for (WINDOW in GENE_WINDOW) {
+    
+    MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.lvl_', 
+                                        LEVEL, '.magma.', WINDOW, '.gsa.out'), header = FALSE) %>%
       janitor::row_to_names(row_number = 1) %>% 
       mutate(VARIABLE = gsub('\\.', '-', VARIABLE)) %>%
       mutate(MAGMA = -log10(as.numeric(P))) %>%
@@ -44,7 +46,9 @@ for (LEVEL in c('1', '2')) {
       dplyr::rename(Category = VARIABLE) %>% # Match LDSRs cell-type column
       mutate(across('Category', str_replace, 'Early', 'Early_InN'))
              
-    assign(paste0('magma_GE_', DISORDER, '_lvl_', LEVEL, '_df'), magma_top10_df, envir = .GlobalEnv) 
+    assign(paste0('magma_GE_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv) 
+    
+    }
  
   }
   
@@ -54,52 +58,13 @@ for (LEVEL in c('1', '2')) {
 cat('\nPreparing LDSR data ... \n')
 for (DISORDER in GWAS) {
   
-  # LDSR                                           snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv
-  ldsr_df <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
+  # LDSR                                         
+  LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
     mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
     select(Category, LDSR)
     
-  assign(paste0('ldsr_', DISORDER, '_df'), ldsr_df, envir = .GlobalEnv) 
+  assign(paste0('ldsr_', DISORDER, '_df'), LDSR_DF, envir = .GlobalEnv) 
     
-}
-  
-
-# MAGMA conditional - prepare df
-cat('\nPreparing MAGMA conditional data ... \n')
-for (CELL_TYPE in c('InN', 'MSN')) {
-    
-  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_skene_', 
-                                        CELL_TYPE, '.gsa.out'), header = TRUE) %>%
-      mutate(MAGMA = -log10(as.numeric(P))) %>%
-      select(VARIABLE, MAGMA) %>%
-      dplyr::rename(Category = VARIABLE) %>%
-      filter(!grepl('skene', Category))
-  
-  MAGMA_PLOT <- ggplot(data = MAGMA_DF, aes(x = MAGMA, y = factor(Category, rev(levels(factor(Category)))), 
-                                                  fill = '#F8766D')) +
-      geom_bar(stat = "identity", color = 'black', position = "dodge") +
-      geom_vline(xintercept=-log10(0.05/30), linetype = "dashed", color = "black") +
-      geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-      theme_bw() +
-      ggtitle(CELL_TYPE) +
-      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(),
-            panel.border = element_rect(colour = "black", size = 1),
-            plot.title = element_text(hjust = 0.5, face = 'bold'),
-            axis.title.x = element_text(colour = "#000000", size = 14),
-            axis.title.y = element_text(colour = "#000000", size = 14),
-            axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-            axis.text.y  = element_text(colour = "#000000", size = 13),
-            legend.position = "none") +
-      xlab(expression(-log[10](P))) +
-      ylab('Cell type') +
-      xlim(0, 11.5) 
-      
-    
-    assign(paste0('magma_cond_GE_', CELL_TYPE, '_df'), MAGMA_DF, envir = .GlobalEnv) 
-    assign(paste0('magma_cond_GE_', CELL_TYPE, '_plot'), MAGMA_PLOT, envir = .GlobalEnv)
-  
 }
   
 # Plot MAGMA and LDSR barplot
@@ -173,95 +138,98 @@ legend <- get_legend(
           legend.title = element_blank()) 
 )
 
-
-## Add FDR significance lines
-FC_SCZ_magma_ldsr_plot <- FC_SCZ_magma_ldsr_plot +
-  geom_segment(aes(x = 11, y = 13.6, xend = 11, yend = 14.4)) + # FC-ExN-2
-  annotate("text", x = 11.5, y = 13.8, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 12.6, xend = 11, yend = 13.4)) + # FC-ExN-3
-  annotate("text", x = 11.5, y = 12.8, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 11.6, xend = 11, yend = 12.4)) + # FC-ExN-4
-  annotate("text", x = 11.5, y = 11.8, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 10.6, xend = 11, yend = 11.4)) + # FC-ExN-5
-  annotate("text", x = 11.5, y = 10.8, label = "*", size = 7)  
+# MAGMA conditional - prepare df
+cat('\nPreparing MAGMA conditional data ... \n')
+for (CELL_TYPE in c('InN', 'MSN')) {
   
-GE_SCZ_magma_ldsr_plot <- GE_SCZ_magma_ldsr_plot +
-  geom_segment(aes(x = 11, y = 9.6, xend = 11, yend = 10.4)) + # GE-InN-1
-  annotate("text", x = 11.5, y = 9.9, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 8.6, xend = 11, yend = 9.4)) + # GE-InN-2
-  annotate("text", x = 11.5, y = 8.9, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 6.6, xend = 11, yend = 7.4)) + # GE-InN-4
-  annotate("text", x = 11.5, y = 6.9, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 5.6, xend = 11, yend = 6.4)) + # GE-InN-5
-  annotate("text", x = 11.5, y = 5.9, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 3.6, xend = 11, yend = 4.4)) + # GE-InN-7
-  annotate("text", x = 11.5, y = 3.9, label = "*", size = 7) 
-
-Hipp_SCZ_magma_ldsr_plot <- Hipp_SCZ_magma_ldsr_plot +
-  geom_segment(aes(x = 11, y = 12.6, xend = 11, yend = 13.4)) + # Hipp-InN-3
-  annotate("text", x = 11.5, y = 12.8, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 10.6, xend = 11, yend = 11.4)) + # GE-InN-5
-  annotate("text", x = 11.5, y = 10.8, label = "*", size = 7)
-
-Thal_SCZ_magma_ldsr_plot <- Thal_SCZ_magma_ldsr_plot +
-  geom_segment(aes(x = 11, y = 20.6, xend = 11, yend = 21.4)) + # Thal-InN-1
-  annotate("text", x = 11.5, y = 20.7, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 18.6, xend = 11, yend = 19.4)) + # Thal-InN-3
-  annotate("text", x = 11.5, y = 18.7, label = "*", size = 7) +
-  geom_segment(aes(x = 11, y = 11.6, xend = 11, yend = 12.4)) + # Thal-InN-7
-  annotate("text", x = 11.5, y = 11.7, label = "*", size = 7)
-
-cat('\nCreating group plots ... \n')
-for (DISORDER in GWAS) {
+  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_skene_', 
+                                CELL_TYPE, '.gsa.out'), header = TRUE) %>%
+    mutate(MAGMA = -log10(as.numeric(P))) %>%
+    select(VARIABLE, MAGMA) %>%
+    dplyr::rename(Category = VARIABLE) %>%
+    filter(!grepl('skene', Category))
   
-  magma_ldsr_plot <- plot_grid(get(paste0('FC_', DISORDER, '_magma_ldsr_plot')),
-                               get(paste0('GE_', DISORDER, '_magma_ldsr_plot')),
-                               get(paste0('Hipp_', DISORDER, '_magma_ldsr_plot')), 
-                               get(paste0('Thal_', DISORDER, '_magma_ldsr_plot')),
-                               get(paste0('Cer_', DISORDER, '_magma_ldsr_plot')),
-                               legend, label_size = 16)
+  MAGMA_PLOT <- ggplot(data = MAGMA_DF, aes(x = MAGMA, y = factor(Category, rev(levels(factor(Category)))), 
+                                            fill = '#F8766D')) +
+    geom_bar(stat = "identity", color = 'black', position = "dodge") +
+    geom_vline(xintercept=-log10(0.05/30), linetype = "dashed", color = "black") +
+    geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+    theme_bw() +
+    ggtitle(CELL_TYPE) +
+    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 1),
+          plot.title = element_text(hjust = 0.5, face = 'bold'),
+          axis.title.x = element_text(colour = "#000000", size = 14),
+          axis.title.y = element_text(colour = "#000000", size = 14),
+          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.position = "none") +
+    xlab(expression(-log[10](P))) +
+    ylab('Cell type') +
+    xlim(0, 11.5) 
   
-  assign(paste0('all_regions_', DISORDER, '_magma_ldsr_plot'), magma_ldsr_plot, envir = .GlobalEnv)
+  
+  assign(paste0('magma_cond_GE_', CELL_TYPE, '_df'), MAGMA_DF, envir = .GlobalEnv) 
+  assign(paste0('magma_cond_GE_', CELL_TYPE, '_plot'), MAGMA_PLOT, envir = .GlobalEnv)
+  
+}
+# MAGMA downsampled
+# MAGMA - prepare df
+cat('\nPreparing MAGMA data ... \n')
+for (LEVEL in c('1')) {
+  
+  for (DISORDER in GWAS) {
+    
+    for (GENE_WINDOW in (c('10UP_10DOWN', '10UP_35DOWN'))) {
+    
+      MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, 
+                                        '.shi_bc_dwnSmpl.lvl_', LEVEL, '.magma.', 
+                                        GENE_WINDOW, '.gsa.out'), 
+                                 header = FALSE) %>%
+      janitor::row_to_names(row_number = 1) %>% 
+      mutate(VARIABLE = gsub('\\.', '-', VARIABLE)) %>%
+      mutate(MAGMA = -log10(as.numeric(P))) %>%
+      select(VARIABLE, MAGMA) %>%
+      dplyr::rename(Category = VARIABLE) %>% # Match LDSRs cell-type column
+      mutate(across('Category', str_replace, 'Early', 'Early_InN'))
+    
+      MAGMA_PLOT <- ggplot(data = MAGMA_DF, aes(x = MAGMA, y = factor(Category, rev(levels(factor(Category)))), 
+                                                   fill = '#F8766D')) +
+      geom_bar(stat = "identity", color = 'black', position = "dodge") +
+      geom_vline(xintercept=-log10(0.05/30), linetype = "dashed", color = "black") +
+      geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+      theme_bw() +
+      ggtitle(paste0(DISORDER, "_", GENE_WINDOW)) +
+      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.border = element_rect(colour = "black", size = 1),
+            plot.title = element_text(hjust = 0.5, face = 'bold'),
+            axis.title.x = element_text(colour = "#000000", size = 14),
+            axis.title.y = element_text(colour = "#000000", size = 14),
+            axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+            axis.text.y  = element_text(colour = "#000000", size = 13),
+            legend.position = "none") +
+      xlab(expression(-log[10](P))) +
+      ylab('Cell type') +
+      xlim(0, 11.5) 
+      
+      assign(paste0('magma_dwnSmpl_GE_', DISORDER, '_lvl_', LEVEL, '_', GENE_WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv)   
+      assign(paste0('magma_dwnSmpl_GE_', DISORDER, '_lvl_', LEVEL, '_', GENE_WINDOW, '_plot'), MAGMA_PLOT, envir = .GlobalEnv) 
+    
+
+    
+    }
+    
+  }
   
 }
 
-# Save plots
-# Fig 2 - SCZ
-tiff(paste0(FIG_DIR, "Fig_2.tiff"), height = 30, width = 30, units='cm', 
-     compression = "lzw", res = 300)
-all_regions_SCZ_magma_ldsr_plot
-dev.off()
 
-# Fig 3 - ASD
-tiff(paste0(FIG_DIR, "Fig_3.tiff"), height = 30, width = 30, units='cm', 
-     compression = "lzw", res = 300)
-all_regions_ASD_magma_ldsr_plot
-dev.off()
-
-# Fig 4 - HEIGHT
-tiff(paste0(FIG_DIR, "Fig_4.tiff"), height = 30, width = 30, units='cm', 
-     compression = "lzw", res = 300)
-all_regions_HEIGHT_magma_ldsr_plot
-dev.off()
-
-
-
-# Jpegs
-jpeg(paste0(FIG_DIR, "Fig_2.jpg"), width = 960, height = 960, 
-     units = "px", pointsize = 12, quality = 150)
-all_regions_SCZ_magma_ldsr_plot
-dev.off()
-
-jpeg(paste0(FIG_DIR, "Fig_3.jpg"), width = 960, height = 960, 
-     units = "px", pointsize = 12, quality = 150)
-all_regions_ASD_magma_ldsr_plot
-dev.off()
-
-jpeg(paste0(FIG_DIR, "Fig_4.jpg"), width = 960, height = 960, 
-     units = "px", pointsize = 12, quality = 150)
-all_regions_HEIGHT_magma_ldsr_plot
-dev.off()
-
+plot_grid(magma_GE_SCZ_lvl_1_10UP_10DOWN_plot, magma_GE_SCZ_lvl_1_10UP_35DOWN_plot,
+          magma_GE_HEIGHT_lvl_1_10UP_10DOWN_plot, magma_GE_HEIGHT_lvl_1_10UP_35DOWN_plot)
 
 # Is there a correlation between cell number and MAGMA / LDSR results?
 magma_GE_SCZ_lvl_2_df$cell_counts <- as.vector(table(seurat.shi.bc$cluster_level_2))
