@@ -1,0 +1,83 @@
+# ------------  GWAS  ----------------
+GWAS:
+    SCZ:
+    HEIGHT:
+
+# -----  OBJECT AND CLUSTER LEVEL -----
+# Level 1 only for dwnSmpl
+SEURAT_OBJ:
+    shi_bc:
+    shi_bc_dwnSmpl:
+
+# ------------  SLDSR  ----------------
+RNA_CELL_TYPES:
+    CGE_0:
+    CGE_1:
+    CGE_2:
+    CGE_3:
+    CGE:
+    Early_InN:
+    LGE_0:
+    LGE_1:
+    LGE_2:
+    LGE_3:
+    LGE_4:
+    LGE_5:
+    LGE_6:
+    LGE_7:
+    LGE:
+    MGE_0:
+    MGE_1:
+    MGE_2:
+    MGE_3:
+    MGE_4:
+    MGE_5:
+    MGE:
+    Microglia:
+    Other:
+    Progenitor_0:
+    Progenitor_10:
+    Progenitor_1:
+    Progenitor_2:
+    Progenitor_3:
+    Progenitor_4:
+    Progenitor_5:
+    Progenitor_6:
+    Progenitor_7:
+    Progenitor_8:
+    Progenitor_9:
+    Progenitor:
+
+# ------------  MAGMA  -----------------
+MAGMA_CONDITIONS:
+    skene_InN:
+    skene_MSN:
+
+GENE_WINDOW:
+    10UP_10DOWN:
+    35UP_10DOWN:
+    100UP_100DOWN:
+
+# Note that level 2 cannot be run with shi_bc_dwnSmpl as
+# Level 2 object for downsample currently doesn't exist
+# Level only required for MAGMA
+LEVEL:
+    1:
+#    2:
+
+# ------------  scDRS  -----------------
+H5AD_OBJ:
+    shi_bc:
+    shi_bc_LGE:
+    shi_bc_MGE:
+    shi_bc_CGE:
+    shi_bc_Progenitor:
+
+H5AD_OBJ_SUBCLUST:
+    shi_bc_LGE:
+    shi_bc_MGE:
+    shi_bc_CGE:
+    shi_bc_Progenitor:
+
+
+

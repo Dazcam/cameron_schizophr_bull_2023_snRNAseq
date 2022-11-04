@@ -12,7 +12,7 @@ configfile: "../config/config.yaml"
 # -------------  RULES  ---------------
 rule ldsr_make_annot:
     # Input can be bed file with gene boundaries or gene set with separate gene coord file
-    input:   gene_set = "../results/gene_lists/LDSR/{CELL_TYPE}.bed",
+    input:   gene_set = "../results/gene_lists/shi_bc/LDSR/{CELL_TYPE}.bed",
              bim_file = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink/1000G.EUR.QC.{CHR}.bim" 
     output:  "../results/LDSR_annotation_files/snRNAseq.{CELL_TYPE}.{CHR}.annot.gz"
     conda:   "../envs/ldsr.yml"    
