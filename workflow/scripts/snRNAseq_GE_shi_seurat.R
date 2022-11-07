@@ -158,12 +158,18 @@ seurat.shi.bc$cluster_level_2 <- seurat_lvl2_meta$cluster_level_2
 # identical(colnames(seurat.shi.bc), seurat_shi_meta$Cells)
 
 # Downsample R object
-table(seurat.shi.bc$cluster_level_1)
-seurat.shi.bc_dwnSmpl  <- subset(seurat.shi.bc, downsample = min(table(seurat.shi.bc$cluster_level_1)))
+table(seurat.shi.bc$cluster_level_1) # Lowest cnt MG at 242 cells
+seurat.shi.bc_dwnSmpl_lvl1  <- subset(seurat.shi.bc, downsample = min(table(seurat.shi.bc$cluster_level_1)))
+
+seurat.shi.bc_dwnSmpl_lvl2 <- seurat.shi.bc
+Idents(seurat.shi.bc_dwnSmpl_lvl2) <- seurat.shi.bc_dwnSmpl_lvl2$cluster_level_2 
+seurat.shi.bc_dwnSmpl_lvl2  <- subset(seurat.shi.bc_dwnSmpl_lvl2, downsample = 300)
+table(seurat.shi.bc_dwnSmpl_lvl2$cluster_level_2) # 28 out of 30 cell types 300 cells 
 
 # Save R objects
 saveRDS(object = seurat.shi.bc, paste0(R_DIR, 'seurat_shi_bc.rds'))
-saveRDS(object = seurat.shi.bc_dwnSmpl, paste0(R_DIR, 'seurat_shi_bc_dwnSmpl.rds'))
+saveRDS(object = seurat.shi.bc_dwnSmpl_lvl1, paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl1.rds'))
+saveRDS(object = seurat.shi.bc_dwnSmpl_lvl2, paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl2.rds'))
 
 # Convert to h5ad object for scDRS
 SaveH5Seurat(seurat.shi.bc, filename = paste0(H5AD_DIR, 'shi_bc.h5Seurat'))
@@ -194,16 +200,3 @@ for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
-
-for (REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
-  
-  SEURAT_OBJ <- readRDS(paste0(R_DIR, 'seurat_shi_bc_', REGION, '.rds'))
-
-  # 
-  # saveRDS(SEURAT_OBJ, paste0(R_DIR, 'seurat_shi_bc_', REGION, '.rds'))
-  # Convert to h5ad object for scDRS
-  SaveH5Seurat(SEURAT_OBJ, filename = paste0(H5AD_DIR, 'shi_bc_', REGION, '.h5Seurat'))
-  Convert(paste0(H5AD_DIR, 'shi_bc_', REGION, '.h5Seurat'), dest = "h5ad")
-  
-  
-}

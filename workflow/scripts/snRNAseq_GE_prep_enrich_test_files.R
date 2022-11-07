@@ -28,11 +28,12 @@ LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
 
 ##  Load Data  ------------------------------------------------------------------------
 seurat.shi.bc <- readRDS(paste0(R_DIR, 'seurat_shi_bc.rds'))
-seurat.shi.bc_dwnSmpl <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl.rds'))
+seurat.shi.bc_dwnSmpl_lvl1 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl1.rds'))
+seurat.shi.bc_dwnSmpl_lvl2 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl2.rds'))
 
 ##  Create ctd object  ----------------------------------------------------------------
 # Requires raw count gene matrix - needs to be genes x cell and annotation data
-for (ROBJ in c("", "_dwnSmpl")) {
+for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
   SEURAT_OBJ <- get(paste0('seurat.shi.bc', ROBJ))
   
@@ -46,7 +47,7 @@ for (ROBJ in c("", "_dwnSmpl")) {
                       level2class = annotations$level2class)
   
   # Create object - saves ctd obj to folder
-  dir.create(CTD_DIR)
+  dir.create(CTD_DIR, showWarnings = FALSE)
   ctd <- EWCE::generate_celltype_data(exp = SEURAT_OBJ@assays$RNA@counts, 
                                       annotLevels = annotLevels, 
                                       groupName = paste0('shi', ROBJ),
@@ -57,12 +58,27 @@ for (ROBJ in c("", "_dwnSmpl")) {
 
 ##  Create specificity scores  ------------------------------------------------------
 # Pull out raw mean expression scores from ctd
-for (CTD_OBJ in c("", "_dwnSmpl")) {
+for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
   # Loads CTD object in as 'ctd'
   load(paste0(CTD_DIR, 'ctd_shi', CTD_OBJ, '.rda'))
   
-  for (LEVEL in c(1, 2)) { 
+  if (CTD_OBJ == "_dwnSmpl_lvl1") {
+    
+    LEVELS <- 1 
+    
+  } else if (CTD_OBJ == "_dwnSmpl_lvl2") {
+    
+    LEVELS <- 2
+    
+  } else {
+    
+    LEVELS <- c(1, 2)
+    
+  }
+    
+
+  for (LEVEL in LEVELS) { 
     
     exp_lvl <- as.data.frame(as.matrix(ctd[[LEVEL]]$mean_exp)) %>% 
       rownames_to_column("Gene")
@@ -135,13 +151,27 @@ plot_grid(spec_lvl1_plot, spec_lvl2_plot)
 
 ##  Write MAGMA/LDSR input files ------------------------------------------------------
 # Filter out genes with expression below 1 (uninformative genes)
-for (CTD_OBJ in c("", "_dwnSmpl")) {
+for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
   cat(paste0('\n\nRunning shi_bc', CTD_OBJ, ' df ...\n'))
   
-  # Note that level 2 downsampling doesn't work - need to investigate 
-  # Also levels only relavant to MAGMA as cluster names explicit bed file name for LDSR
-  LEVELS <- if (CTD_OBJ == "") c(1, 2) else 1
+  # Levels only relevant to MAGMA as cluster names explicit bed file name for LDSR
+  if (CTD_OBJ == "_dwnSmpl_lvl1") {
+    
+    LEVELS <- 1 
+    SUB_DIR <- 'shi_bc_dwnSmpl/'
+    
+  } else if (CTD_OBJ == "_dwnSmpl_lvl2") {
+    
+    LEVELS <- 2
+    SUB_DIR <- 'shi_bc_dwnSmpl/'
+    
+  } else {
+    
+    LEVELS <- c(1, 2)
+    SUB_DIR <- 'shi_bc/'
+    
+  }
   
   for (LEVEL in LEVELS) { 
     
@@ -153,21 +183,19 @@ for (CTD_OBJ in c("", "_dwnSmpl")) {
     cat(N_GENES_TO_KEEP, 'genes per cluster ...\n' )
     cat('Total cell type count:', CELL_TYPE_CNT, '...\n' )
     
-    SUB_DIR <- if (CTD_OBJ == "") 'shi_bc/' else 'shi_bc_dwnSmpl/'
-    
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/'),  recursive = TRUE, showWarnings = FALSE)
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/'), recursive = TRUE, showWarnings = FALSE)
   
     MAGMA <- EXP_SPECIFICITY_DF %>% 
-      filter(Expr_sum_mean > 1) %>% 
-      group_by(Lvl) %>% 
+      filter(Expr_sum_mean > 1) %>%
+      group_by(Lvl) %>%
       top_n(., N_GENES_TO_KEEP, specificity) %>%
       select(Lvl, ENTREZ) %>%
       ungroup() %>%
       mutate(counts = rep(1:N_GENES_TO_KEEP, times = CELL_TYPE_CNT)) %>%
       pivot_wider(names_from = counts, values_from = ENTREZ) %>%
       write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/shi_top10_lvl_', LEVEL, '.txt'), col_names = F)
-    
+
     
     for (WINDOW in c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
       
@@ -195,7 +223,7 @@ for (CTD_OBJ in c("", "_dwnSmpl")) {
         top_n(., N_GENES_TO_KEEP, specificity) %>%
         select(chr, start, end, ENTREZ) %>%
         group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', 
-                                                .y$Lvl, '_', WINDOW, '.bed'), col_names = FALSE))
+                                                .y$Lvl, '.', WINDOW, '.bed'), col_names = FALSE))
       
     }
   
