@@ -33,7 +33,18 @@ rule magma_map_snps_to_genes:
     message: "Running magma annotation step to map SNPs to genes. Gene window: {wildcards.GENE_WINDOW}"
     log:     "../results/logs/magma/snRNAseq.GE.annotate.snps2genes.{GENE_WINDOW}.log"
     run: 
-        if "10UP_10DOWN" in wildcards.GENE_WINDOW:
+        if "0UP_0DOWN" in wildcards.GENE_WINDOW:
+
+            print("\nMap SNPs to genes for gene window: ", wildcards.GENE_WINDOW, "\n")
+
+            shell("""
+
+            module load magma/1.10
+            magma --annotate window=0,0 --snp-loc {input.snp_loc} --gene-loc {input.gene_loc} --out {params} &> {log}
+
+            """)
+
+        elif "10UP_10DOWN" in wildcards.GENE_WINDOW:
         
             print("\nMap SNPs to genes for gene window: ", wildcards.GENE_WINDOW, "\n")
                            

@@ -18,33 +18,32 @@ rule ldsr_make_annot:
     conda:   "../envs/ldsr.yml"
     message: "Creating annotation files for snRNAseq: {wildcards.CELL_TYPE}, {wildcards.GENE_WINDOW}, Chr {wildcards.CHR}"
     log:     "../results/logs/ldsc/make_annot.snRNAseq.{CELL_TYPE}.{GENE_WINDOW}.Chr{CHR}.log"
-    run:
-        if "0UP_0DOWN" in wildcards.GENE_WINDOW:
+    shell:
+             """
+             WINDOW=({wildcards.GENE_WINDOW})
+             if [ "${{WINDOW}}" == "0UP_0DOWN" ]; then
+             
+             echo $WINDOW
 
-            print("\nMap SNPs to genes for gene window: ", wildcards.GENE_WINDOW, "\n")
-
-            shell("""
-
+             python ../resources/ldsr/make_annot.py \
+             --bed-file {input.gene_set} \
+             --windowsize 100000 \
+             --bimfile {input.bim_file} \
+             --annot-file {output} 2> {log}
+             
+             else 
+          
+             echo $WINDOW
+             
             python ../resources/ldsr/make_annot.py \
             --bed-file {input.gene_set} \
             --windowsize 100000 \
             --bimfile {input.bim_file} \
-            --annot-file {output} 2> {log}
+            --annot-file {output} 2> {log}             
 
-            """)
 
-        else:
-
-            print("\nMap SNPs to genes for gene window: ", wildcards.GENE_WINDOW, "\n")
-
-            shell("""
-
-            python ../resources/ldsr/make_annot.py \
-            --bed-file {input.gene_set} \
-            --bimfile {input.bim_file} \
-            --annot-file {output} 2> {log}            
-
-            """)        
+             fi
+             """
         
 rule ldsr_ld_scores:
     input:   annot = "../results/LDSR_annotation_files/snRNAseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.annot.gz",
