@@ -24,3 +24,5 @@ results/magma/*.genes.annot
 results/magma_conditional/*.gsa.genes.out
 results/magma_conditional/*.gsa.sets.genes.out
 results/magma_conditional/*.log
+results/LDSR_part_herit/baseline_v1.2/*.log
+results/LDSR_part_herit/baseline_v1.2/*.results

@@ -79,7 +79,7 @@ rule ldsr_stratified_summary:
              Lines=$(cat $File)
              for Line in $Lines
              do
-             grep L2_1 {params.dir}snRNAseq_LDSR_"$Line"_{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_1/$Line/g" >> {output}
+             grep L2_1 ../results/LDSR_part_herit/baseline_v1.2/snRNAseq."$Line".HEIGHT_baseline.v1.2.results | sed "s/L2_1/$Line/g" >> {output} 2> {log}
              done
 
              """
