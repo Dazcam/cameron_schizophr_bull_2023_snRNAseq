@@ -1,0 +1,10 @@
+# TOTAL_GENES = 18144
+# TEST_DIRECTION = one-sided, positive (set), two-sided (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+VARIABLE        TYPE  NGENES         BETA     BETA_STD           SE            P
+CGE              SET    1406      0.17925     0.047926       0.0308   3.0078e-09
+Early_InN        SET    1423     0.073716     0.019819     0.031143    0.0089722
+LGE              SET    1409      0.21424      0.05734      0.03169     7.12e-12
+MGE              SET    1387      0.17501     0.046502     0.031681   1.6846e-08
+Microglia        SET    1434     -0.16767    -0.045237     0.031097            1
+Progenitor       SET    1416    -0.002231  -0.00059846     0.030855      0.52882
