@@ -13,16 +13,50 @@ MAGMA, sLDSR, scDRS results for Shi et al (2021) data
 
 ### **Results** {.tabset}
 
-#### **scDRS** {.tabset}
+#### **MAGMA** {.tabset}
 
-```{r MGE, fig.dim = c(15, 10), echo = FALSE, results="asis"}
-for(REGION in c('all', 'MGE', 'LGE', 'CGE', 'Progenitor')) {
+```{r Magma, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(REGION in c('lvl1', 'lvl2', 'cond_lvl2')) {
   cat("  \n##### **", REGION , "**\n", sep = "")
   cat("\n***\n", sep = "")
-  plot(get(paste0('scDRS_', REGION, '_umap')))
+  plot(get(paste0('magma_ldsr_', REGION,'_plot')))
   cat("\n *** \n", sep = "")
   cat("  \n")
 }
 ```
 
+
+##### **lv1_dwnSmpl**
+
+```{r Magma_downsample, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+magma_dwnSmple_lvl1_plot 
+```
+
+
+```{r Gene_windows, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(WINDOW in c('magma_windows', 'ldsr_windows')) {
+  cat("  \n##### **", WINDOW , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0(WINDOW, '_lvl1_plot')))
+  cat("\n *** \n", sep = "")
+  cat("  \n")
+}
+```
+
+#### **scDRS_umap** {.tabset}
+
+```{r scDRS, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(REGION in c('all', 'MGE', 'LGE', 'CGE', 'Progenitor')) {
+  cat("  \n##### **", REGION , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('scDRS_', REGION, '_umap')))
+  cat("\n")
+  cat("SCZ group table reults")
+  print(knitr::kable(get(paste0('scDRS_', REGION, '_SCZ_group'))))
+  cat("HEIGHT group table reults")
+  print(knitr::kable(get(paste0('scDRS_', REGION, '_HEIGHT_group'))))
+  cat("\n *** \n", sep = "")
+  cat("  \n")
+}
+```
 
