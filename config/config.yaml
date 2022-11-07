@@ -7,7 +7,7 @@ GWAS:
 # Level 1 only for dwnSmpl
 SEURAT_OBJ:
     shi_bc:
-    shi_bc_dwnSmpl:
+#    shi_bc_dwnSmpl:
 
 # ------------  SLDSR  ----------------
 RNA_CELL_TYPES:
@@ -63,7 +63,7 @@ GENE_WINDOW:
 # Level only required for MAGMA
 LEVEL:
     1:
-#    2:
+    2:
 
 # ------------  scDRS  -----------------
 H5AD_OBJ:
