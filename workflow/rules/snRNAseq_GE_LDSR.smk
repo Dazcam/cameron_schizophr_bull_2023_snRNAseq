@@ -12,22 +12,40 @@ configfile: "../config/config.yaml"
 # -------------  RULES  ---------------
 rule ldsr_make_annot:
     # Input can be bed file with gene boundaries or gene set with separate gene coord file
-    input:   gene_set = "../results/gene_lists/shi_bc/LDSR/{CELL_TYPE}_{GENE_WINDOW}.bed",
+    input:   gene_set = "../results/gene_lists/shi_bc/LDSR/{CELL_TYPE}.{GENE_WINDOW}.bed",
              bim_file = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink/1000G.EUR.QC.{CHR}.bim"
     output:  "../results/LDSR_annotation_files/snRNAseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.annot.gz"
     conda:   "../envs/ldsr.yml"
     message: "Creating annotation files for snRNAseq: {wildcards.CELL_TYPE}, {wildcards.GENE_WINDOW}, Chr {wildcards.CHR}"
     log:     "../results/logs/ldsc/make_annot.snRNAseq.{CELL_TYPE}.{GENE_WINDOW}.Chr{CHR}.log"
-    shell:
-        """
-        
-        python ../resources/ldsr/make_annot.py \
-        --bed-file {input.gene_set} \
-        --bimfile {input.bim_file} \
-        --annot-file {output} 2> {log} \
-        
-        """
+    run:
+        if "0UP_0DOWN" in wildcards.GENE_WINDOW:
 
+            print("\nMap SNPs to genes for gene window: ", wildcards.GENE_WINDOW, "\n")
+
+            shell("""
+
+            python ../resources/ldsr/make_annot.py \
+            --bed-file {input.gene_set} \
+            --windowsize 100000 \
+            --bimfile {input.bim_file} \
+            --annot-file {output} 2> {log}
+
+            """)
+
+        else:
+
+            print("\nMap SNPs to genes for gene window: ", wildcards.GENE_WINDOW, "\n")
+
+            shell("""
+
+            python ../resources/ldsr/make_annot.py \
+            --bed-file {input.gene_set} \
+            --bimfile {input.bim_file} \
+            --annot-file {output} 2> {log}            
+
+            """)        
+        
 rule ldsr_ld_scores:
     input:   annot = "../results/LDSR_annotation_files/snRNAseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.annot.gz",
              bfile_folder = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink",
