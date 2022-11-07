@@ -81,7 +81,6 @@ for (CTD_OBJ in c("", "_dwnSmpl")) {
                col_names = FALSE, col_types = 'cciicc') %>%
       dplyr::rename(chr = "X2", ENTREZ = "X1", chr = "X2", 
                     start = 'X3', end = 'X4', HGNC = 'X6') %>%
-    #  mutate(start = ifelse(X3 - 100000 < 0, 0, X3 - 100000), end = X4 + 100000) %>%
       dplyr::select(chr, start, end, ENTREZ) %>% 
       mutate(chr = paste0("chr",chr))
     
@@ -141,6 +140,7 @@ for (CTD_OBJ in c("", "_dwnSmpl")) {
   cat(paste0('\n\nRunning shi_bc', CTD_OBJ, ' df ...\n'))
   
   # Note that level 2 downsampling doesn't work - need to investigate 
+  # Also levels only relavant to MAGMA as cluster names explicit bed file name for LDSR
   LEVELS <- if (CTD_OBJ == "") c(1, 2) else 1
   
   for (LEVEL in LEVELS) { 
@@ -168,12 +168,36 @@ for (CTD_OBJ in c("", "_dwnSmpl")) {
       pivot_wider(names_from = counts, values_from = ENTREZ) %>%
       write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/shi_top10_lvl_', LEVEL, '.txt'), col_names = F)
     
-    LDSR <- EXP_SPECIFICITY_DF %>% filter(Expr_sum_mean > 1) %>% 
-      group_by(Lvl) %>% 
-      top_n(., N_GENES_TO_KEEP, specificity) %>%
-      select(chr, start, end, ENTREZ) %>%
-      group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', 
-                                              .y$Lvl, ".bed"), col_names = FALSE))
+    
+    for (WINDOW in c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
+      
+      if (WINDOW == '10UP_10DOWN') {
+        
+        UPSTREAM <- 10000
+        DOWNSTREAM <- 10000
+        
+      } else if (WINDOW == '35UP_10DOWN') {
+        
+        UPSTREAM <- 35000
+        DOWNSTREAM <- 10000
+        
+      } else {
+        
+        UPSTREAM <- 100000
+        DOWNSTREAM <- 100000
+        
+      }
+      
+      LDSR <- EXP_SPECIFICITY_DF %>% 
+        mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
+        filter(Expr_sum_mean > 1) %>% 
+        group_by(Lvl) %>% 
+        top_n(., N_GENES_TO_KEEP, specificity) %>%
+        select(chr, start, end, ENTREZ) %>%
+        group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', 
+                                                .y$Lvl, '_', WINDOW, '.bed'), col_names = FALSE))
+      
+    }
   
   }
 

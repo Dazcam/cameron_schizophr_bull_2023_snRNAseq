@@ -37,7 +37,7 @@ for (LEVEL in c('1', '2')) {
     
     for (WINDOW in GENE_WINDOW) {
     
-    MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.lvl_', 
+    MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.shi_bc.lvl_', 
                                         LEVEL, '.magma.', WINDOW, '.gsa.out'), header = FALSE) %>%
       janitor::row_to_names(row_number = 1) %>% 
       mutate(VARIABLE = gsub('\\.', '-', VARIABLE)) %>%

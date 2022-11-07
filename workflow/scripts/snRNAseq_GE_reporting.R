@@ -24,6 +24,4 @@ scDRS_LGE_umap <- plot_grid(scDRS_LGE_SCZ_group_umap, scDRS_LGE_HEIGHT_group_uma
 scDRS_CGE_umap <- plot_grid(scDRS_CGE_SCZ_group_umap, scDRS_CGE_HEIGHT_group_umap, ncol = 1)
 scDRS_Progenitor_umap <- plot_grid(scDRS_Progenitor_SCZ_group_umap, scDRS_Progenitor_HEIGHT_group_umap, ncol = 1)
 
-
-
 render(MARKDOWN_FILE, output_file = REPORT_FILE, output_dir = REPORT_DIR)
