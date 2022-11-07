@@ -142,11 +142,11 @@ for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
 
 
 # Check specificity distributions
-spec_lvl1_plot <- ggplot(exp_specificity_lvl_1, aes(x = -log10(specificity), colour = Lvl)) + 
-  geom_density()
-spec_lvl2_plot <- ggplot(exp_specificity_lvl_1_dwnSmpl, aes(x = -log10(specificity), colour = Lvl)) + 
-  geom_density()
-plot_grid(spec_lvl1_plot, spec_lvl2_plot)
+# spec_lvl1_plot <- ggplot(exp_specificity_lvl_1, aes(x = -log10(specificity), colour = Lvl)) + 
+#   geom_density()
+# spec_lvl2_plot <- ggplot(exp_specificity_lvl_1_dwnSmpl, aes(x = -log10(specificity), colour = Lvl)) + 
+#   geom_density()
+# plot_grid(spec_lvl1_plot, spec_lvl2_plot)
 
 
 ##  Write MAGMA/LDSR input files ------------------------------------------------------
@@ -197,24 +197,28 @@ for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
       write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/shi_top10_lvl_', LEVEL, '.txt'), col_names = F)
 
     
-    for (WINDOW in c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
+    for (WINDOW in c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
       
-      if (WINDOW == '10UP_10DOWN') {
+      if (WINDOW == '0UP_0DOWN') {
+        
+        UPSTREAM <- 0
+        DOWNSTREAM <- 0
+        
+        } else if (WINDOW == '10UP_10DOWN') {
         
         UPSTREAM <- 10000
         DOWNSTREAM <- 10000
         
-      } else if (WINDOW == '35UP_10DOWN') {
+        } else if (WINDOW == '35UP_10DOWN') {
         
         UPSTREAM <- 35000
         DOWNSTREAM <- 10000
         
-      } else {
+        } else {
         
         UPSTREAM <- 100000
         DOWNSTREAM <- 100000
-        
-      }
+        }
       
       LDSR <- EXP_SPECIFICITY_DF %>% 
         mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%

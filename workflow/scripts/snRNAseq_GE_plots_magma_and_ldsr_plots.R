@@ -198,7 +198,7 @@ for (LEVEL in c('1', '2')) {
     
     PLOT_DF <- left_join(get(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df')), 
                          get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
-                         by = 'Category') %>% melt()
+                         by = 'Category') %>% reshape2::melt()
         
     MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
                                                   fill = variable, group = rev(variable))) +
@@ -291,7 +291,7 @@ for (CELL_TYPE in c('InN', 'MSN')) {
 # MAGMA downsampled
 # MAGMA - prepare df
 cat('\nPreparing MAGMA data ... \n')
-for (LEVEL in c('1')) {
+for (LEVEL in c('1', '2')) {
   
   for (DISORDER in GWAS) {
     

@@ -18,8 +18,10 @@ MARKDOWN_FILE <- paste0(SCRIPT_DIR, 'snRNAseq_GE_reporting.Rmd')
 REPORT_DIR <- paste0(OUT_DIR, 'rmarkdown_reports/')
 REPORT_FILE <- 'snRNAseq_GE_reporting.html'
 
-
+##  Load Seurat Objects  --------------------------------------------------------------
 seurat.shi.bc <- readRDS(paste0(R_DIR, 'seurat_shi_bc.rds'))
+seurat.shi.bc_dwnSmpl_lvl1 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl1.rds'))
+seurat.shi.bc_dwnSmpl_lvl2 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl2.rds'))
 
 ##  MAGMA & LDSR  ---------------------------------------------------------------------
 # Default MAGMA 35UP_10DOWN, LDSR 100UP_100DOWN
@@ -45,11 +47,30 @@ plot(merge_lvl1$MAGMA, merge_lvl1$cnts)
 
 # Cluster level 2
 cnts_lvl2 <- as.data.frame(table(seurat.shi.bc$cluster_level_2))
+cnts_lvl2_dwnSmpl <- as.data.frame(table(seurat.shi.bc_dwnSmpl_lvl2$cluster_level_2))
 colnames(cnts_lvl2) <- c('Category', 'cnts')
-merge_lvl2 <- magma_SCZ_lvl_2_35UP_10DOWN_df %>% left_join(cnts_lvl2)
-merge_lvl2 <- merge_lvl2 %>% left_join(ldsr_SCZ_lvl_2_100UP_100DOWN_df)
-
+colnames(cnts_lvl2_dwnSmpl) <- c('Category', 'cnts_ds')
+merge_lvl2 <- magma_SCZ_lvl_2_35UP_10DOWN_df %>% 
+  left_join(cnts_lvl2) %>%
+  left_join(cnts_lvl2_dwnSmpl) %>%
+  left_join(ldsr_SCZ_lvl_2_100UP_100DOWN_df) 
+  
 cor(merge_lvl2[, unlist(lapply(merge_lvl2, is.numeric))])
+
+magma_pre_ds <- ggscatter(merge_lvl2, x = "MAGMA", y = "cnts", 
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "MAGMA", ylab = "Cell counts", 
+                          title = 'Cluster level 2')
+
+magma_post_ds <- ggscatter(merge_lvl2, x = "MAGMA", y = "cnts_ds",
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "MAGMA", ylab = "Cell counts", 
+                           title = 'Cluster level 2 - downsampled')
+
+plot_grid(magma_pre_ds, magma_post_ds)
+
 
 cor.test(merge_lvl2$MAGMA, merge_lvl2$cnts)
 cor.test(merge_lvl2$LDSR, merge_lvl2$cnts)
@@ -59,6 +80,7 @@ plot(merge_lvl2$MAGMA, merge_lvl2$cnts)
 
 # Downsampled  
 magma_dwnSmple_lvl1_plot <- plot_grid(magma_SCZ_lvl_1_35UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_1_35UP_10DOWN_plot)
+magma_dwnSmple_lvl2_plot <- plot_grid(magma_SCZ_lvl_2_35UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_2_35UP_10DOWN_plot)
 
 # magma_dwnSmple_lvl1_all_plot <- plot_grid(magma_dwnSmpl_SCZ_lvl_1_10UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_1_35UP_10DOWN_plot, 
 #           magma_dwnSmpl_SCZ_lvl_1_100UP_100DOWN_plot, magma_dwnSmpl_HEIGHT_lvl_1_10UP_10DOWN_plot, 
@@ -67,11 +89,11 @@ magma_dwnSmple_lvl1_plot <- plot_grid(magma_SCZ_lvl_1_35UP_10DOWN_plot, magma_dw
 # Gene_windows
 magma_windows_lvl1_plot <- plot_grid(magma_SCZ_lvl_1_10UP_10DOWN_plot, magma_SCZ_lvl_1_35UP_10DOWN_plot, 
                                      magma_SCZ_lvl_1_100UP_100DOWN_plot, magma_HEIGHT_lvl_1_10UP_10DOWN_plot, 
-                                     magma_HEIGHT_lvl_1_35UP_10DOWN_plot, magma_HEIGHT_lvl_1_100UP_100DOWN_plot, ncol=3)
+                                     magma_HEIGHT_lvl_1_35UP_10DOWN_plot, magma_HEIGHT_lvl_1_100UP_100DOWN_plot, ncol = 3)
 
 ldsr_windows_lvl1_plot <- plot_grid(ldsr_SCZ_lvl_1_10UP_10DOWN_plot, ldsr_SCZ_lvl_1_35UP_10DOWN_plot, 
                                     ldsr_SCZ_lvl_1_100UP_100DOWN_plot, ldsr_HEIGHT_lvl_1_10UP_10DOWN_plot, 
-                                    ldsr_HEIGHT_lvl_1_35UP_10DOWN_plot, ldsr_HEIGHT_lvl_1_100UP_100DOWN_plot, ncol=3)
+                                    ldsr_HEIGHT_lvl_1_35UP_10DOWN_plot, ldsr_HEIGHT_lvl_1_100UP_100DOWN_plot, ncol = 3)
 
 
 
