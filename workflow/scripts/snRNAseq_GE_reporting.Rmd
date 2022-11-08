@@ -13,14 +13,27 @@ MAGMA, sLDSR, scDRS results for Shi et al (2021) data
 
 ### **Results** {.tabset}
 
+#### **Cell counts** {.tabset}
+
+```{r Cell counts, fig.dim = c(5, 5), echo = FALSE, results="asis"}
+for(LEVEL in c('lvl1', 'lvl2')) {
+  cat("  \n##### **", LEVEL, "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  print(knitr::kable(get(paste0('cnts_', LEVEL)), format = "html", table.attr = "style='width:30%;'"))
+  cat("\n\n***\n", sep = "")
+  cat("  \n")
+}
+```
+
 #### **MAGMA** {.tabset}
 
 ```{r Magma, fig.dim = c(15, 10), echo = FALSE, results="asis"}
 for(REGION in c('lvl1', 'lvl2', 'cond_lvl2')) {
   cat("  \n##### **", REGION, "**\n", sep = "")
+  cat("\nMAGMA: 35UP_10_DOWN\n\nLDSR: 100UP_100DOWN\n")
   cat("\n***\n", sep = "")
   plot(get(paste0('magma_ldsr_', REGION,'_plot')))
-  cat("\n *** \n", sep = "")
+  cat("\n\n***\n", sep = "")
   cat("  \n")
 }
 ```
@@ -31,9 +44,12 @@ for(REGION in c('lvl1', 'lvl2', 'cond_lvl2')) {
 ```{r Magma_downsample, fig.dim = c(15, 10), echo = FALSE, results="asis"}
 for(LEVEL in c('lvl1', 'lvl2')) {
   cat("  \n##### **", LEVEL, "**\n", sep = "")
-  cat("\n***\n", sep = "")
+  cat("\nLevel 1: Downsampled to 254 cells (number of MG cells)\n\nLevel: - Downsampled to 300 cells (28 of 30 cells)\n")
+  cat("\n\n***\n", sep = "")
+  plot(get(paste0('magma_dnwSmple_scatter_', LEVEL, '_plot')))
+  cat("\n\n***\n", sep = "")
   plot(get(paste0('magma_dwnSmple_', LEVEL, '_plot')))
-  cat("\n *** \n", sep = "")
+  cat("\n\n*** \n", sep = "")
   cat("  \n")
 }
 ```
@@ -43,26 +59,31 @@ for(LEVEL in c('lvl1', 'lvl2')) {
 ```{r Gene_windows, fig.dim = c(15, 10), echo = FALSE, results="asis"}
 for(WINDOW in c('magma_windows', 'ldsr_windows')) {
   cat("  \n##### **", WINDOW , "**\n", sep = "")
-  cat("\n***\n", sep = "")
+  cat("\n\n***\n", sep = "")
   plot(get(paste0(WINDOW, '_lvl1_plot')))
-  cat("\n *** \n", sep = "")
+  cat("\n\n*** \n", sep = "")
   cat("  \n")
 }
 ```
 
 #### **scDRS** {.tabset}
 
-```{r scDRS, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+```{r scDRS, fig.dim = c(15, 10), echo = FALSE, results="asis", warning=FALSE}
 for(REGION in c('all', 'MGE', 'LGE', 'CGE', 'Progenitor')) {
   cat("  \n##### **", REGION , "**\n", sep = "")
-  cat("\n***\n", sep = "")
+  cat("\n\n***\n", sep = "")
   plot(get(paste0('scDRS_', REGION, '_umap')))
-  cat("\n")
+  cat("\n\n***\n", sep = "")
+  cat("SCZ group heatmap")
+  cat("\nNote: Table reports raw values, heatmap show FDR corrected values\n\nSquare: Sig group GWAS assoc.\n\nCross: Sig hetero GWAS assoc.")
+  plot(get(paste0('scDRS_', REGION, '_group_heatmap')))
+  cat("\n\n***\n", sep = "")
   cat("SCZ group table results")
   print(knitr::kable(get(paste0('scDRS_', REGION, '_SCZ_group'))))
+  cat("\n\n***\n", sep = "")
   cat("HEIGHT group table results")
   print(knitr::kable(get(paste0('scDRS_', REGION, '_HEIGHT_group'))))
-  cat("\n *** \n", sep = "")
+  cat("\n\n*** \n", sep = "")
   cat("  \n")
 }
 ```

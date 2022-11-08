@@ -26,7 +26,7 @@ MAGMA_DATA_DIR <- paste0(RESULTS_DIR, 'magma/')
 MAGMA_COND_DATA_DIR <- paste0(RESULTS_DIR, 'magma_conditional/')
 LDSC_DATA_DIR <- paste0(RESULTS_DIR, 'LDSR_part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
-GENE_WINDOW <- c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
+GENE_WINDOW <- c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
 
 
 # MAGMA - prepare df
@@ -67,7 +67,7 @@ for (LEVEL in c('1', '2')) {
         theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
               panel.grid.major = element_blank(), 
               panel.grid.minor = element_blank(),
-              panel.border = element_rect(colour = "black", size = 1),
+              panel.border = element_rect(colour = "black", linewidth = 1),
               plot.title = element_text(hjust = 0.5, face = 'bold'),
               axis.title.x = element_text(colour = "#000000", size = 14),
               axis.title.y = element_text(colour = "#000000", size = 14),
@@ -102,11 +102,13 @@ for (DISORDER in GWAS) {
         BF_CORR <- 0.05/6
         
         # LDSR                                         
-        LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
+        LDSR_FULL_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
           mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
           separate(Category, into=c('Category', 'Window'), sep = '\\.') %>%
           filter(Category %in% c('LGE', 'MGE', 'CGE', 'Early_InN', 'Progenitor', 'Microglia')) %>%
-          filter(Window == (!!WINDOW)) %>%
+          filter(Window == (!!WINDOW)) 
+        
+        LDSR_DF <- LDSR_FULL_DF %>%
           select(Category, LDSR)
         
         LDSR_PLOT <- ggplot(data = LDSR_DF, aes(x = LDSR, y = factor(Category, rev(levels(factor(Category)))), 
@@ -132,18 +134,21 @@ for (DISORDER in GWAS) {
           
         
         assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
+        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv)
         assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_plot'), LDSR_PLOT, envir = .GlobalEnv) 
         
       } else {
         
         BF_CORR <- 0.05/30
         
-        LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
+        LDSR_FULL_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
           mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
           separate(Category, into=c('Category', 'Window'), sep = '\\.') %>%
           filter(str_detect(Category, "_|Other")) %>%
           filter(!str_detect(Category, "Early_InN")) %>%
-          filter(Window == (!!WINDOW)) %>%
+          filter(Window == (!!WINDOW)) 
+        
+        LDSR_DF <- LDSR_FULL_DF %>%
           select(Category, LDSR)
         
         LDSR_PLOT <- ggplot(data = LDSR_DF, aes(x = LDSR, y = factor(Category, rev(levels(factor(Category)))), 
@@ -169,6 +174,7 @@ for (DISORDER in GWAS) {
         
         
         assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
+        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv) 
         assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_plot'), LDSR_PLOT, envir = .GlobalEnv) 
         
       }
@@ -197,7 +203,7 @@ for (LEVEL in c('1', '2')) {
     }
     
     PLOT_DF <- left_join(get(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df')), 
-                         get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
+                         get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_0UP_0DOWN_df')),
                          by = 'Category') %>% reshape2::melt()
         
     MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
@@ -228,23 +234,23 @@ for (LEVEL in c('1', '2')) {
 }
 
 
-plot_grid(SCZ_magma_ldsr_lvl_1_plot, HEIGHT_magma_ldsr_lvl_1_plot)
-plot_grid(SCZ_magma_ldsr_lvl_2_plot, HEIGHT_magma_ldsr_lvl_2_plot)
-plot_grid(magma_cond_GE_MSN_plot, magma_cond_GE_InN_plot)
-
-plot_grid(SCZ_magma_ldsr_lvl_2_plot, 
-          plot_grid(magma_cond_GE_MSN_plot, 
-                    magma_cond_GE_InN_plot, ncol = 1))
-
-
-legend <- get_legend(
-  # create some space to the left of the legend
-  ggplot(data = PLOT_DF, aes(x = value, y = Category, fill = variable, group = rev(variable))) +
-    geom_bar(stat = "identity", color = 'black', position = "dodge") +
-    theme(legend.key.size = unit(1.5, 'cm'),
-          legend.text = element_text(size = 14),
-          legend.title = element_blank()) 
-)
+# plot_grid(SCZ_magma_ldsr_lvl_1_plot, HEIGHT_magma_ldsr_lvl_1_plot)
+# plot_grid(SCZ_magma_ldsr_lvl_2_plot, HEIGHT_magma_ldsr_lvl_2_plot)
+# plot_grid(magma_cond_GE_MSN_plot, magma_cond_GE_InN_plot)
+# 
+# plot_grid(SCZ_magma_ldsr_lvl_2_plot, 
+#           plot_grid(magma_cond_GE_MSN_plot, 
+#                     magma_cond_GE_InN_plot, ncol = 1))
+# 
+# 
+# legend <- get_legend(
+#   # create some space to the left of the legend
+#   ggplot(data = PLOT_DF, aes(x = value, y = Category, fill = variable, group = rev(variable))) +
+#     geom_bar(stat = "identity", color = 'black', position = "dodge") +
+#     theme(legend.key.size = unit(1.5, 'cm'),
+#           legend.text = element_text(size = 14),
+#           legend.title = element_blank()) 
+# )
 
 # MAGMA conditional - prepare df
 cat('\nPreparing MAGMA conditional data ... \n')
@@ -339,25 +345,6 @@ for (LEVEL in c('1', '2')) {
   
 }
 
-
-plot_grid(magma_dwnSmpl_SCZ_lvl_1_10UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_1_35UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_1_100UP_100DOWN_plot, 
-          magma_dwnSmpl_HEIGHT_lvl_1_10UP_10DOWN_plot, magma_dwnSmpl_HEIGHT_lvl_1_35UP_10DOWN_plot, magma_dwnSmpl_HEIGHT_lvl_1_100UP_100DOWN_plot) 
-
-# Is there a correlation between cell number and MAGMA / LDSR results?
-magma_GE_SCZ_lvl_2_df$cell_counts <- as.vector(table(seurat.shi.bc$cluster_level_2))
-
-cor(magma_GE_SCZ_lvl_2_df[, unlist(lapply(magma_GE_SCZ_lvl_2_df, is.numeric))])
-
-test <- left_join(magma_GE_SCZ_lvl_2_df, ldsr_SCZ_df %>%
-                    filter(!Category %in% c('LGE', 'MGE', 'CGE', 'Early_InN', 'Progenitor', 'Microglia')))
-
-cor.test(test$MAGMA, test$cell_counts)
-cor.test(test$LDSR, test$cell_counts)
-cor.test(test$LDSR, test$MAGMA)
-cor(test[, unlist(lapply(test, is.numeric))])
-plot(test$LDSR, test$cell_counts)
-plot(test$MAGMA, test$cell_counts)
-plot(test$MAGMA, test$LDSR)
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
