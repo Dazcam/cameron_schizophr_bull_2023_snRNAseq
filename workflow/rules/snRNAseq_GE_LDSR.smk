@@ -35,11 +35,11 @@ rule ldsr_make_annot:
           
              echo $WINDOW
              
-            python ../resources/ldsr/make_annot.py \
-            --bed-file {input.gene_set} \
-            --windowsize 100000 \
-            --bimfile {input.bim_file} \
-            --annot-file {output} 2> {log}             
+             python ../resources/ldsr/make_annot.py \
+             --bed-file {input.gene_set} \
+             --windowsize 100000 \
+             --bimfile {input.bim_file} \
+             --annot-file {output} 2> {log}             
 
 
              fi
@@ -96,7 +96,7 @@ rule ldsr_stratified_summary:
              Lines=$(cat $File)
              for Line in $Lines
              do
-             grep L2_1 ../results/LDSR_part_herit/baseline_v1.2/snRNAseq."$Line".HEIGHT_baseline.v1.2.results | sed "s/L2_1/$Line/g" >> {output} 2> {log}
+             grep L2_1 ../results/LDSR_part_herit/baseline_v1.2/snRNAseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_1/$Line/g" >> {output} 2> {log}
              done
 
              """
