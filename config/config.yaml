@@ -53,6 +53,14 @@ RNA_CELL_TYPES:
 MAGMA_CONDITIONS:
     skene_InN:
     skene_MSN:
+    CGE_1:
+    CGE_2:
+    LGE_0:
+    LGE_2:
+    LGE_4:
+    MGE_2:
+    MGE_3:
+
 
 GENE_WINDOW:
     0UP_0DOWN:

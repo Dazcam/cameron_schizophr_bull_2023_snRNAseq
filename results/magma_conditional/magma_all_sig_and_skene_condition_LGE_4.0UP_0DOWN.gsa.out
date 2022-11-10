@@ -1,0 +1,21 @@
+# TOTAL_GENES = 17877
+# TEST_DIRECTION = one-sided, positive (set), two-sided (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_VARIABLES = LGE_4 (set)
+VARIABLE       TYPE  MODEL  NGENES         BETA     BETA_STD           SE            P
+LGE_4           SET      1    1415     0.068711     0.018551     0.029982     0.010966
+skene_InN       SET      1    1323     0.093236     0.024408     0.030682    0.0011896
+LGE_4           SET      2    1415     0.057871     0.015624     0.030168     0.027543
+skene_MSN       SET      2    1354      0.13491     0.035695     0.030896   6.3479e-06
+LGE_4           SET      3    1415     0.068158     0.018401     0.029942      0.01142
+CGE_1           SET      3    1406       0.1126     0.030313     0.029047    5.315e-05
+LGE_4           SET      4    1415     0.052591     0.014199     0.030565     0.042671
+CGE_2           SET      4    1387      0.11146     0.029818     0.030102   0.00010698
+LGE_4           SET      5    1415     0.065976     0.017812     0.029943     0.013792
+LGE_0           SET      5    1412      0.13587     0.036647     0.029185    1.628e-06
+LGE_4           SET      6    1415     0.017967    0.0048508     0.032645      0.29103
+LGE_2           SET      6    1410      0.14524     0.039149     0.032626   4.2877e-06
+LGE_4           SET      7    1415      0.03386    0.0091416     0.031301      0.13969
+MGE_2           SET      7    1393      0.15047     0.040334     0.033001   2.5808e-06
+LGE_4           SET      8    1415      0.05544     0.014968     0.030504     0.034583
+MGE_3           SET      8    1392      0.10456     0.028019     0.030536   0.00030908
