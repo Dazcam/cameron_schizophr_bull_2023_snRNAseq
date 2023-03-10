@@ -6,9 +6,8 @@ A snakemake pipeline to process snRNAseq data.
 
 ***
 
-Data for this study this study from Shi et al. (2021) - DOI: 10.1126/science.abj6641:
+Data for this study this study from [Shi et al. (2021)](https://www.science.org/doi/10.1126/science.abj6641):
 
-+ [Paper](https://www.science.org/doi/10.1126/science.abj6641)
 + [GEO](GSE135827)
 + [Metadata](https://www.science.org/doi/suppl/10.1126/science.abj6641/suppl_file/science.abj6641_tables_s2_to_s9.zip)
 + [GeX Matrix](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE135nnn/GSE135827/suppl/GSE135827%5FGE%5Fmat%5Fraw%5Fcount%5Fwith%5Fweek%5Finfo%2Etxt%2Egz)
