@@ -46,6 +46,15 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   annotLevels <- list(level1class = annotations$level1class, 
                       level2class = annotations$level2class)
   
+  # Need to test with withouth the following new EWCE functions:
+  # cortex_mrna$exp_scT_normed <- EWCE::sct_normalize(cortex_mrna$exp) 
+  
+  # exp_CortexOnly_DROPPED <- EWCE::drop_uninformative_genes(
+  # exp = cortex_mrna$exp, 
+  # input_species = "mouse",
+  # output_species = "human",
+  # level2annot = cortex_mrna$annot$level2class) 
+  
   # Create object - saves ctd obj to folder
   dir.create(CTD_DIR, showWarnings = FALSE)
   ctd <- EWCE::generate_celltype_data(exp = SEURAT_OBJ@assays$RNA@counts, 
