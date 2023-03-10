@@ -46,10 +46,10 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   annotLevels <- list(level1class = annotations$level1class, 
                       level2class = annotations$level2class)
   
-  # Need to test with withouth the following new EWCE functions:
-  # cortex_mrna$exp_scT_normed <- EWCE::sct_normalize(cortex_mrna$exp) 
+  # Need to test with withouth the following EWCE functions:
+  # cortex_mrna$exp_scT_normed <- sct_normalize(cortex_mrna$exp) 
   
-  # exp_CortexOnly_DROPPED <- EWCE::drop_uninformative_genes(
+  # exp_CortexOnly_DROPPED <- drop_uninformative_genes(
   # exp = cortex_mrna$exp, 
   # input_species = "mouse",
   # output_species = "human",
