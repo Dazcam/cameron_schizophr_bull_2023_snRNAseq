@@ -6,7 +6,7 @@ A snakemake pipeline to process snRNAseq data.
 
 ***
 
-Data for this study this study from [Shi et al. (2021)](https://www.science.org/doi/10.1126/science.abj6641):
+snRNAses data for this study this study is taken from [Shi et al. (2021)](https://www.science.org/doi/10.1126/science.abj6641):
 
 + [GEO - GSE135827](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135827)
 + [Metadata](https://www.science.org/doi/suppl/10.1126/science.abj6641/suppl_file/science.abj6641_tables_s2_to_s9.zip)
@@ -16,10 +16,10 @@ Data for this study this study from [Shi et al. (2021)](https://www.science.org/
 
 **Scripts**
 
-1. [snRNAseq_GE_get_shi_data.sh]() - Download Shi data
-2. [snRNAseq_GE_prep_shi_data_for_Seurat.R]() - Clean and prepare Shi data
-3. [snRNAseq_GE_shi_seurat.R]() - Generate Seurat objects (with batch correction) for cluster levels 1 and 2
-4. [snRNAseq_GE_prep_enrich_test_files.R]() - Generate specificity scores and top 10% genesets for enrichment testing
+1. [snRNAseq_GE_get_shi_data.sh](scripts/snRNAseq_GE_get_shi_data.sh) - Download Shi data
+2. [snRNAseq_GE_prep_shi_data_for_Seurat.R](scripts/snRNAseq_GE_prep_shi_data_for_Seurat.R) - Clean and prepare Shi data
+3. [snRNAseq_GE_shi_seurat.R](scripts/snRNAseq_GE_shi_seurat.R) - Generate Seurat objects (with batch correction) for cluster levels 1 and 2
+4. [snRNAseq_GE_prep_enrich_test_files.R](scripts/snRNAseq_GE_prep_enrich_test_files.R) - Generate specificity scores and top 10% genesets for enrichment testing
 
 
 
