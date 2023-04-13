@@ -12,3 +12,14 @@ Data for this study this study from [Shi et al. (2021)](https://www.science.org/
 + [Metadata](https://www.science.org/doi/suppl/10.1126/science.abj6641/suppl_file/science.abj6641_tables_s2_to_s9.zip)
 + [GeX Matrix](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE135nnn/GSE135827/suppl/GSE135827%5FGE%5Fmat%5Fraw%5Fcount%5Fwith%5Fweek%5Finfo%2Etxt%2Egz)
 
+***
+
+**Scripts**
+
+1. [snRNAseq_GE_get_shi_data.sh]() - Download Shi data
+2. [snRNAseq_GE_prep_shi_data_for_Seurat.R]() - Clean and prepare Shi data
+3. [snRNAseq_GE_shi_seurat.R]() - Generate Seurat objects (with batch correction) for cluster levels 1 and 2
+4. [snRNAseq_GE_prep_enrich_test_files.R]() - Generate specificity scores and top 10% genesets for enrichment testing
+
+
+
