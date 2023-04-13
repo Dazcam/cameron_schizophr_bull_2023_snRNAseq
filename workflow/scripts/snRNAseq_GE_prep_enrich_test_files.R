@@ -108,17 +108,7 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   #     '\nNO_NORM_DROP_GENES:', dim(DROP_GENES_RAW)[1],
   #     '\nSCT_DROP_GENES:', dim( DROP_GENES_SCT)[1],
   #     '\nCPM_DROP_GENES:', dim(DROP_GENES_CPM)[1])
-=======
-  # Need to test with withouth the following EWCE functions:
-  # cortex_mrna$exp_scT_normed <- sct_normalize(cortex_mrna$exp) 
-  
-  # exp_CortexOnly_DROPPED <- drop_uninformative_genes(
-  # exp = cortex_mrna$exp, 
-  # input_species = "mouse",
-  # output_species = "human",
-  # level2annot = cortex_mrna$annot$level2class) 
->>>>>>> 8e6370213e9edd4d85c53326eb8a79d0e4f75248
-  
+
   # Create object - saves ctd obj to folder
   cat('\nCreating CTD object ... \n\n')
   dir.create(CTD_DIR, showWarnings = FALSE)
