@@ -12,7 +12,7 @@
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
 Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro",
-                   "Seurat")) # Last 2 for AnnData objects
+                   "Seurat", "biomaRt")) # Last 2 for AnnData objects
 # BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "scuttle", zellkonverter"))
 
 ##  Set Variables  --------------------------------------------------------------------
@@ -25,17 +25,39 @@ H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
 GENELIST_DIR <- paste0(OUT_DIR, 'gene_lists/')
 MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
 LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
+dir.create(paste0(DATA_DIR, 'refs/'))
 
-##  Load Data  ------------------------------------------------------------------------
-seurat.shi.bc <- readRDS(paste0(R_DIR, 'seurat_shi_bc.rds'))
-seurat.shi.bc_dwnSmpl_lvl1 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl1.rds'))
-seurat.shi.bc_dwnSmpl_lvl2 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl2.rds'))
+# Get MHC genes -----------------------------------------------------------------------
+mart <- useMart("ensembl")
+mart <- useDataset("hsapiens_gene_ensembl", mart)
+mhc_genes <- getBM(attributes = c("hgnc_symbol", "chromosome_name", "start_position", "end_position"), 
+                   filters = c("chromosome_name","start","end"), 
+                   values = list(chromosome = "6", start = "28510120", end = "33480577"), 
+                   mart = mart)
+mhc_genes_uniq <- stringi::stri_remove_empty(unique(mhc_genes$hgnc_symbol), na_empty = FALSE)
+cat('\n\nMHC genes:', length(mhc_genes_uniq), '\n')
+
+# Remove MHC gene from gene coordinate reference file (and write to file)  ------------
+gene_coordinates <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
+                             col_names = FALSE, col_types = 'cciicc') %>%
+  dplyr::rename(chr = "X2", entrez = "X1", chr = "X2", 
+                start = 'X3', end = 'X4', hgnc = 'X6') %>%
+  dplyr::select(chr, start, end, entrez, hgnc) %>% 
+  filter(!hgnc %in% mhc_genes_uniq) %>%
+  write_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.MHCremoved.gene.loc.txt'), col_names = FALSE) %>%
+  mutate(chr = paste0("chr", chr))
+
 
 ##  Create ctd object  ----------------------------------------------------------------
 # Requires raw count gene matrix - needs to be genes x cell and annotation data
 for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
-  SEURAT_OBJ <- get(paste0('seurat.shi.bc', ROBJ))
+  cat('\n\nCreating CTD object for:', paste0('seurat.shi.bc', ROBJ))
+  
+  SEURAT_OBJ <- readRDS(paste0(R_DIR, 'seurat_shi_bc', ROBJ, '.rds'))
+  RAW_COUNTS <- SEURAT_OBJ@assays$RNA@counts
+  RAW_COUNTS_NO_MHC <- RAW_COUNTS[!(rownames(RAW_COUNTS) %in% mhc_genes_uniq), ]
+  cat('\nMHC genes removed:', dim(RAW_COUNTS)[1] - dim(RAW_COUNTS_NO_MHC)[1])
   
   # Create annotations 
   annotations <- as.data.frame(cbind(as.vector(rownames(SEURAT_OBJ@meta.data)),
@@ -46,122 +68,71 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   annotLevels <- list(level1class = annotations$level1class, 
                       level2class = annotations$level2class)
   
+  # Normalize - this is optional, was not used in the original EWCE publication
+  # cat('\nRunning SCT ... ', '\n\n')
+  # COUNTS_SCT <- EWCE::sct_normalize(RAW_COUNTS_NO_MHC) 
+  
+  cat('\nRunning CPM ... ', '\n')
+  COUNTs_CPM <- edgeR::cpm(RAW_COUNTS_NO_MHC)
+  
+  # cat('\nDropping uninformative genes raw ... ', '\n\n')
+  # DROP_GENES_RAW <- EWCE::drop_uninformative_genes(
+  #   exp = RAW_COUNTS_NO_MHC, 
+  #   input_species = "human",
+  #   output_species = "human",
+  #   level2annot = annotLevels$level2class) 
+  # 
+  # cat('\nDropping uninformative genes sct norm ... ', '\n\n')
+  # DROP_GENES_SCT <- EWCE::drop_uninformative_genes(
+  #   exp = COUNTS_SCT, 
+  #   input_species = "human",
+  #   output_species = "human",
+  #   level2annot = annotLevels$level2class) 
+  
+  cat('\nDropping uninformative genes cpm norm ... ', '\n\n')
+  DROP_GENES_CPM <- EWCE::drop_uninformative_genes(
+    exp = COUNTs_CPM, 
+    input_species = "human",
+    output_species = "human",
+    level2annot = annotLevels$level2class) 
+  
+  cat('\nGene counts:',
+      '\n\nRAW:', dim(RAW_COUNTS)[1],
+      '\nRAW_NO_MHC:', dim(RAW_COUNTS_NO_MHC)[1],
+      '\nCPM_DROP_GENES:', dim(DROP_GENES_CPM)[1])
+  
+  # cat('\nGene counts:',
+  #     '\n\nRAW:', dim(RAW_COUNTS)[1],
+  #     '\nRAW_NO_MHC:', dim(RAW_COUNTS_NO_MHC)[1],
+  #     '\nNO_NORM_DROP_GENES:', dim(DROP_GENES_RAW)[1],
+  #     '\nSCT_DROP_GENES:', dim( DROP_GENES_SCT)[1],
+  #     '\nCPM_DROP_GENES:', dim(DROP_GENES_CPM)[1])
+  
   # Create object - saves ctd obj to folder
+  cat('\nCreating CTD object ... \n\n')
   dir.create(CTD_DIR, showWarnings = FALSE)
-  ctd <- EWCE::generate_celltype_data(exp = SEURAT_OBJ@assays$RNA@counts, 
+  ctd <- EWCE::generate_celltype_data(exp = DROP_GENES_CPM, 
                                       annotLevels = annotLevels, 
                                       groupName = paste0('shi', ROBJ),
-                                      savePath = CTD_DIR)
+                                      savePath = CTD_DIR,
+                                      numberOfBins = 10)
 
   
 }
-
-##  Create specificity scores  ------------------------------------------------------
-# Pull out raw mean expression scores from ctd
-for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
-  
-  # Loads CTD object in as 'ctd'
-  load(paste0(CTD_DIR, 'ctd_shi', CTD_OBJ, '.rda'))
-  
-  if (CTD_OBJ == "_dwnSmpl_lvl1") {
-    
-    LEVELS <- 1 
-    
-  } else if (CTD_OBJ == "_dwnSmpl_lvl2") {
-    
-    LEVELS <- 2
-    
-  } else {
-    
-    LEVELS <- c(1, 2)
-    
-  }
-    
-
-  for (LEVEL in LEVELS) { 
-    
-    exp_lvl <- as.data.frame(as.matrix(ctd[[LEVEL]]$mean_exp)) %>% 
-      rownames_to_column("Gene")
-    
-    # Gather data
-    exp_lvl <- exp_lvl %>%
-      gather(key = Lvl, value = Expr_sum_mean, -Gene) %>%
-      as_tibble()
-    
-    # Load gene coordinates
-    # Load hg19 gene coordinates and extend upstream and downstream coordinates by 100kb.
-    # File downloaded from MAGMA website (https://ctg.cncr.nl/software/magma).
-    # Filtered to remove extended MHC (chr6, 25Mb to 34Mb).
-    gene_coordinates <- 
-      read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt'),
-               col_names = FALSE, col_types = 'cciicc') %>%
-      dplyr::rename(chr = "X2", ENTREZ = "X1", chr = "X2", 
-                    start = 'X3', end = 'X4', HGNC = 'X6') %>%
-      dplyr::select(chr, start, end, ENTREZ) %>% 
-      mutate(chr = paste0("chr",chr))
-    
-    # Write dictionary for cell type names
-    dic_lvl <- dplyr::select(exp_lvl, Lvl) %>% 
-      base::unique() %>% 
-      mutate(makenames = make.names(Lvl))
-    
-    # Scale each cell type to the same total number of molecules (1M)
-    exp_scaled <- exp_lvl %>% 
-      group_by(Lvl) %>% 
-      mutate(Expr_sum_mean = Expr_sum_mean * 1e6 / sum(Expr_sum_mean))
-    
-    # Specificity Calculation
-    exp_specificity <- exp_scaled %>% group_by(Gene) %>% 
-      mutate(specificity = Expr_sum_mean / sum(Expr_sum_mean)) %>%
-      mutate(specificity = coalesce(specificity, 0))
-    
-    # Sanity check
-    # exp_specificity %>%
-    #   ungroup() %>%
-    #   filter(Lvl == 'CGE') %>%
-    #   summarise(across(where(is.numeric), sum))
-    
-    
-    # Only keep MAGMA genes 
-    entrez2symbol <- AnnotationDbi::toTable(org.Hs.eg.db::org.Hs.egSYMBOL2EG) %>% 
-      dplyr::rename(Gene = "symbol", ENTREZ = "gene_id")
-    exp_specificity <- inner_join(exp_specificity, entrez2symbol, by = "Gene") 
-    exp_specificity <- inner_join(exp_specificity, gene_coordinates, by = "ENTREZ") 
-    
-    
-    # Get number of genes that represent 10% of the dataset
-    n_genes <- length(unique(exp_specificity$ENTREZ))
-    n_genes_to_keep <- (n_genes * 0.1) %>% round()
-    
-    assign(paste0('exp_specificity_lvl_', LEVEL, CTD_OBJ), exp_specificity, .GlobalEnv)
-    assign(paste0('n_genes_to_keep_lvl_', LEVEL, CTD_OBJ), n_genes_to_keep, .GlobalEnv)
-  
-  }
-  
-}
-
-
-# Check specificity distributions
-# spec_lvl1_plot <- ggplot(exp_specificity_lvl_1, aes(x = -log10(specificity), colour = Lvl)) + 
-#   geom_density()
-# spec_lvl2_plot <- ggplot(exp_specificity_lvl_1_dwnSmpl, aes(x = -log10(specificity), colour = Lvl)) + 
-#   geom_density()
-# plot_grid(spec_lvl1_plot, spec_lvl2_plot)
 
 
 ##  Write MAGMA/LDSR input files ------------------------------------------------------
-# Filter out genes with expression below 1 (uninformative genes)
-for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
+for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
-  cat(paste0('\n\nRunning shi_bc', CTD_OBJ, ' df ...\n'))
+  cat(paste0('\n\nRunning shi_bc', CTD_EXT, ' df ...\n\n'))
   
   # Levels only relevant to MAGMA as cluster names explicit bed file name for LDSR
-  if (CTD_OBJ == "_dwnSmpl_lvl1") {
+  if (CTD_EXT == "_dwnSmpl_lvl1") {
     
     LEVELS <- 1 
     SUB_DIR <- 'shi_bc_dwnSmpl/'
     
-  } else if (CTD_OBJ == "_dwnSmpl_lvl2") {
+  } else if (CTD_EXT == "_dwnSmpl_lvl2") {
     
     LEVELS <- 2
     SUB_DIR <- 'shi_bc_dwnSmpl/'
@@ -175,28 +146,31 @@ for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
   for (LEVEL in LEVELS) { 
     
-    EXP_SPECIFICITY_DF <- get(paste0('exp_specificity_lvl_', LEVEL, CTD_OBJ))
-    N_GENES_TO_KEEP <- get(paste0('n_genes_to_keep_lvl_', LEVEL, CTD_OBJ))
-    CELL_TYPE_CNT <- length(unique(EXP_SPECIFICITY_DF$Lvl))
-    
-    cat('Running cluster level:', LEVEL, '...\n')
-    cat(N_GENES_TO_KEEP, 'genes per cluster ...\n' )
-    cat('Total cell type count:', CELL_TYPE_CNT, '...\n' )
+    cat('Running cluster level:', LEVEL, '...\n\n')
+    load(paste0(CTD_DIR, 'ctd_shi', CTD_EXT, '.rda'))
     
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/'),  recursive = TRUE, showWarnings = FALSE)
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/'), recursive = TRUE, showWarnings = FALSE)
   
-    MAGMA <- EXP_SPECIFICITY_DF %>% 
-      filter(Expr_sum_mean > 1) %>%
-      group_by(Lvl) %>%
-      top_n(., N_GENES_TO_KEEP, specificity) %>%
-      select(Lvl, ENTREZ) %>%
-      ungroup() %>%
-      mutate(counts = rep(1:N_GENES_TO_KEEP, times = CELL_TYPE_CNT)) %>%
-      pivot_wider(names_from = counts, values_from = ENTREZ) %>%
-      write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/shi_top10_lvl_', LEVEL, '.txt'), col_names = F)
-
+    CELL_TYPES <- colnames(ctd[[LEVEL]]$specificity_quantiles)
     
+    # Note the inner join reduces number of genes by about 2-5K per cell type
+    MAGMA <- as_tibble(ctd[[LEVEL]]$specificity_quantiles, rownames = 'hgnc') %>%
+      inner_join(gene_coordinates) %>%
+      pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
+      filter(quantile == 10) %>%
+      select(cell_type, entrez) %>%
+      with(., split(entrez, cell_type))
+    
+    for(i in names(MAGMA)) {
+      
+      cat(i, " ", paste(MAGMA[[i]], collapse = " "), "\n", 
+          file = paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/shi_top10_lvl_', LEVEL, '.txt')
+          , sep = '', append = TRUE)
+      
+    }
+    
+
     for (WINDOW in c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
       
       if (WINDOW == '0UP_0DOWN') {
@@ -218,17 +192,19 @@ for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
         
         UPSTREAM <- 100000
         DOWNSTREAM <- 100000
+        
         }
       
-      LDSR <- EXP_SPECIFICITY_DF %>% 
+      LDSR <- as_tibble(ctd[[LEVEL]]$specificity_quantiles, rownames = 'hgnc') %>%
+        inner_join(gene_coordinates) %>%
+        pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
+        filter(quantile == 10) %>%
         mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
-        filter(Expr_sum_mean > 1) %>% 
-        group_by(Lvl) %>% 
-        top_n(., N_GENES_TO_KEEP, specificity) %>%
-        select(chr, start, end, ENTREZ) %>%
+        select(chr, start, end, entrez, cell_type) %>%
+        group_by(cell_type) %>%
         group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', 
-                                                .y$Lvl, '.', WINDOW, '.bed'), col_names = FALSE))
-      
+                                                .y$cell_type, '.', WINDOW, '.bed'), col_names = FALSE))
+        
     }
   
   }
@@ -238,3 +214,6 @@ for (CTD_OBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 
+load(paste0(CTD_DIR, 'ctd_shi_dwnSmpl_lvl1.rda'))
+head(as.data.frame(as.matrix(ctd[[2]]$mean_exp)))
+              
