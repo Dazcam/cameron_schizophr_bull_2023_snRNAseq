@@ -1,5 +1,5 @@
 ---
-title: "snRNAseq GE downstream tests report"
+title: "snRNAseq GE downstream analyses report"
 author: "Darren Cameron"
 date: "`r format(Sys.time(), '%d/%m/%y')`"
 output: 
@@ -12,6 +12,23 @@ MAGMA, sLDSR, scDRS results for Shi et al (2021) data
 *** 
 
 ### **Results** {.tabset}
+
+#### **Sub-clusters** {.tabset}
+
+```{r Subclusters, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(REGION in c('MGE', 'LGE', 'CGE', 'Progenitor')) {
+  cat("  \n##### **", REGION , "**\n", sep = "")
+  cat("\n***\n", sep = "")
+  plot(get(paste0('shi_', REGION, '_group_plot_0.5')))
+  cat("\n\n***\n", sep = "")
+  plot(get(paste0('shi_', REGION, '_lvl2_umap_0.5')))
+  cat("\n\n***\n", sep = "")
+  plot(get(paste0('shi_', REGION, '_cluster_stats_0.5')))
+  cat("\n\n***\n", sep = "")
+  cat("  \n")
+}
+```
+
 
 #### **Cell counts** {.tabset}
 
@@ -28,7 +45,7 @@ for(LEVEL in c('lvl1', 'lvl2')) {
 #### **MAGMA** {.tabset}
 
 ```{r Magma, fig.dim = c(15, 10), echo = FALSE, results="asis"}
-for(REGION in c('lvl1', 'lvl2', 'cond_lvl2')) {
+for(REGION in c('lvl1', 'lvl2', 'cond_lvl2', 'cond_lvl2_internal')) {
   cat("  \n##### **", REGION, "**\n", sep = "")
   cat("\nMAGMA: 35UP_10_DOWN\n\nLDSR: 100UP_100DOWN\n")
   cat("\n***\n", sep = "")
@@ -38,6 +55,26 @@ for(REGION in c('lvl1', 'lvl2', 'cond_lvl2')) {
 }
 ```
 
+#### **Cell IDs** {.tabset}
+
+**Suggested encoding**:
+
++ MGE - Str-Ctx-InNs - Striatal and cortical interneurons
++ MGE - SubP-Chol-InNs - Subpallial cholinergic neurons
++ MGE - Ctx-InNs - Cortical interneurons
+
++ LGE - OB-N - Olfactory Bulb neuron precursor
++ LGE - D1-MSN-A - D1 MSN (PDYN) precursor
++ LGE - D1-MSN-B - D1 MSN (TSHZ1) precursor
++ LGE - D2-MSN - D2 MSN precursor
+
+***
+
+```{r Cell IDs, fig.dim = c(5, 5), echo = FALSE, results="asis"}
+print(knitr::kable(lvl2_cell_types, format = "html", table.attr = "style='width:30%;'"))
+cat("\n\n***\n", sep = "")
+cat("  \n")
+```
 
 #### **MAGMA downsample** {.tabset}
 
@@ -49,6 +86,21 @@ for(LEVEL in c('lvl1', 'lvl2')) {
   plot(get(paste0('magma_dnwSmple_scatter_', LEVEL, '_plot')))
   cat("\n\n***\n", sep = "")
   plot(get(paste0('magma_dwnSmple_', LEVEL, '_plot')))
+  cat("\n\n*** \n", sep = "")
+  cat("  \n")
+}
+```
+
+#### **LDSR downsample** {.tabset}
+
+```{r LDSR_downsample, fig.dim = c(15, 10), echo = FALSE, results="asis"}
+for(LEVEL in c('lvl1', 'lvl2')) {
+  cat("  \n##### **", LEVEL, "**\n", sep = "")
+  cat("\nLevel 1: Downsampled to 254 cells (number of MG cells)\n\nLevel: - Downsampled to 300 cells (28 of 30 cells)\n")
+  cat("\n\n***\n", sep = "")
+  plot(get(paste0('ldsr_dnwSmple_scatter_', LEVEL, '_plot')))
+  cat("\n\n***\n", sep = "")
+  #plot(get(paste0('ldsr_dwnSmple_', LEVEL, '_plot')))
   cat("\n\n*** \n", sep = "")
   cat("  \n")
 }

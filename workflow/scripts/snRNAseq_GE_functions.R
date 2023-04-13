@@ -86,7 +86,7 @@ seurat_resolution_test <- function(SEURAT_OBJECT,
         
       } else {
         
-        lvl2_umap <- FeaturePlot(SEURAT_OBJECT, features = get(paste0(tolower(REGION), '_lvl2_markers')))
+        lvl2_umap <- FeaturePlot(SEURAT_OBJECT, features = get(paste0(tolower(REGION), '_level2_markers')))
         assign(paste0(UNIQUE_ID, '_lvl2_umap_', RES), lvl2_umap, envir = .GlobalEnv)
         
       }

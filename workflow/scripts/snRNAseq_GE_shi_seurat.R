@@ -50,7 +50,7 @@ seurat.shi.bc <- FindNeighbors(seurat.shi.bc, reduction = "mnn", dims = 1:10)
 seurat.shi.bc <- FindClusters(seurat.shi.bc, resolution = 0.5)
 
 # Rename clusters
-# Note we lose OPC and Endothelial here
+# Note: we lose OPC and Endothelial here
 new_idents <- c('MGE', 'CGE', 'LGE', 'Progenitor', 'Progenitor', 
                 'LGE', 'Early_InN', 'LGE', 'Progenitor', 'MGE', 
                 'Progenitor', 'Microglia')

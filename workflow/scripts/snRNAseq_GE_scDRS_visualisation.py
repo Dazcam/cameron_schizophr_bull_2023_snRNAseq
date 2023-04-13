@@ -15,7 +15,8 @@ scDRS_DIR = DATA_DIR + 'scDRS/'
 scDRS_SUBDIR = scDRS_DIR + 'scDRS_shi_bc'
 H5AD_DIR = DATA_DIR + 'h5ad_objects/'
 REGIONS = ["MGE", "LGE", "CGE", "Progenitor"]
-GENE_WINDOWS = ["10UP_10DOWN", "10UP_35DOWN"]
+GENE_WINDOWS = ["0UP_0DOWN", "10UP_10DOWN", "10UP_35DOWN", "100UP_100DOWN"]
+GENE_WINDOWS = ["10UP_10DOWN"]
 
 ## Load data  -----------------------------------------------------------------
 # Level 1 - main clusters
@@ -47,7 +48,7 @@ for WINDOW in GENE_WINDOWS:
 del adata, group, score, all_score, all_group
 
 # Top genes
-df_gs = pd.read_csv(scDRS_DIR + '/scDRS_genewise_Z_top1K.10UP_35DOWN.gs', sep = "\t", index_col = 0)
+df_gs = pd.read_csv(scDRS_DIR + '/scDRS_genewise_Z_top1K.10UP_10DOWN.gs', sep = "\t", index_col = 0)
 
 
 ## Analysis of disease enrichment for individual cells  -----------------------
@@ -82,77 +83,91 @@ sc.pl.umap(adata,
 
 
 ## Group level stats ----------------------------------------------------------
-        dict_celltype_display_name = {
-            "MGE": "MGE",
-            "LGE": "LGE",
-            "CGE": "CGE",
-            "Early_InN": "Early_InN",
-            "Microglia": "Microglia",
-            "Progenitor": "Progenitor",
-            }
+dict_df_stats = {
+    trait: pd.read_csv(f"{scDRS_SUBDIR}/10UP_10DOWN/{trait}.scdrs_group.cluster_level_1", sep="\t", index_col=0)
+    for trait in ["SCZ", "HEIGHT"]
+    } 
 
+dict_celltype_display_name = {
+    "MGE": "MGE",
+    "LGE": "LGE",
+    "CGE": "CGE",
+    "Early_InN": "Early_InN",
+    "Microglia": "Microglia",
+    "Progenitor": "Progenitor"
+    }
+
+
+scdrs.util.plot_group_stats(
+    {
+     trait: df_stats.rename(index = dict_celltype_display_name)
+     for trait, df_stats in dict_df_stats.items()
+     }
+    )
 
 for REGION in REGIONS:
+    
+    for WINDOW in ['10UP_10DOWN']:
 
-    dict_df_stats = {
-        trait: pd.read_csv(f"{scDRS_SUBDIR}_{REGION}/{WINDOW}/{trait}.scdrs_group.cluster_level_2", sep="\t", index_col=0)
-        for trait in ["SCZ", "HEIGHT"]
-        }
-    
-    if 'MGE' in REGION:
+        dict_df_stats = {
+            trait: pd.read_csv(f"{scDRS_SUBDIR}/{WINDOW}/{trait}.scdrs_group.cluster_level_2", sep="\t", index_col=0)
+            for trait in ["SCZ", "HEIGHT"]
+            }
         
-        dict_celltype_display_name = {
-            "MGE_0": "MGE_0",
-            "MGE_1":  "MGE_1",
-            "MGE_2":  "MGE_2",
-            "MGE_3":  "MGE_3",
-            "MGE_4":  "MGE_4",
-            "MGE_5":  "MGE_5",
-    
-        }
-        
-    elif 'LGE' in REGION:
+        if 'MGE' in REGION:
             
-        dict_celltype_display_name = {
-            "LGE_0": "LGE_0",
-            "LGE_1": "LGE_1",
-            "LGE_2": "LGE_2",
-            "LGE_3": "LGE_3",
-            "LGE_4": "LGE_4",
-            "LGE_5": "LGE_5",
-            "LGE_6": "LGE_6",
-            "LGE_7": "LGE_7",
-            }
+            dict_celltype_display_name = {
+                "MGE_0": "MGE_0",
+                "MGE_1":  "MGE_1",
+                "MGE_2":  "MGE_2",
+                "MGE_3":  "MGE_3",
+                "MGE_4":  "MGE_4",
+                "MGE_5":  "MGE_5",
         
-    elif 'CGE' in REGION:
-    
-        dict_celltype_display_name = {
-            "CGE_0": "CGE_0",
-            "CGE_1": "CGE_1",
-            "GGE_2": "CGE_2",
-            "CGE_3": "CGE_3",
-    
-        }
-        
-    else:   
-         
-        dict_celltype_display_name = {
-            "Progenitor_0": "Progenitor_0",
-            "Progenitor_1": "Progenitor_1",
-            "Progenitor_2": "Progenitor_2",
-            "Progenitor_3": "Progenitor_3",
-            "Progenitor_4": "Progenitor_4",
-            "Progenitor_5": "Progenitor_5",
-            "Progenitor_6": "Progenitor_6",
-            "Progenitor_7": "Progenitor_7",
-            "Progenitor_8": "Progenitor_8",
-            "Progenitor_9": "Progenitor_9",
-            "Progenitor_10": "Progenitor_10",
             }
-
-    scdrs.util.plot_group_stats(
-        {
-            trait: df_stats.rename(index = dict_celltype_display_name)
-            for trait, df_stats in dict_df_stats.items()
-        }
-        )
+            
+        elif 'LGE' in REGION:
+                
+            dict_celltype_display_name = {
+                "LGE_0": "LGE_0",
+                "LGE_1": "LGE_1",
+                "LGE_2": "LGE_2",
+                "LGE_3": "LGE_3",
+                "LGE_4": "LGE_4",
+                "LGE_5": "LGE_5",
+                "LGE_6": "LGE_6",
+                "LGE_7": "LGE_7",
+                }
+            
+        elif 'CGE' in REGION:
+        
+            dict_celltype_display_name = {
+                "CGE_0": "CGE_0",
+                "CGE_1": "CGE_1",
+                "GGE_2": "CGE_2",
+                "CGE_3": "CGE_3",
+        
+            }
+            
+        else:   
+             
+            dict_celltype_display_name = {
+                "Progenitor_0": "Progenitor_0",
+                "Progenitor_1": "Progenitor_1",
+                "Progenitor_2": "Progenitor_2",
+                "Progenitor_3": "Progenitor_3",
+                "Progenitor_4": "Progenitor_4",
+                "Progenitor_5": "Progenitor_5",
+                "Progenitor_6": "Progenitor_6",
+                "Progenitor_7": "Progenitor_7",
+                "Progenitor_8": "Progenitor_8",
+                "Progenitor_9": "Progenitor_9",
+                "Progenitor_10": "Progenitor_10",
+                }
+    
+        scdrs.util.plot_group_stats(
+            {
+                trait: df_stats.rename(index = dict_celltype_display_name)
+                for trait, df_stats in dict_df_stats.items()
+            }
+            )

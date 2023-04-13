@@ -14,7 +14,7 @@ SHI_DIR <- paste0(RES_DIR, 'raw_data/shi_et_al_2021/')
 
 ##  Load Data  ------------------------------------------------------------------------
 shi_data <- fread(paste0(SHI_DIR, "GSE135827_GE_mat_raw_count_with_week_info.txt"))
-shi_meta <- read_excel(paste0(SHI_DIR, "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"), 
+shi_meta <- readxl::read_excel(paste0(SHI_DIR, "science.abj6641_tables_s2_to_s9/science.abj6641_table_s2.xlsx"), 
                        col_names = TRUE, 
                        skip = 1) # Note added skip here to get rid of nonsense 1st line in excel sheet
 

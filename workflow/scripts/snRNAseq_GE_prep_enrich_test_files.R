@@ -68,7 +68,6 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   annotLevels <- list(level1class = annotations$level1class, 
                       level2class = annotations$level2class)
   
-<<<<<<< HEAD
   # Normalize - this is optional, was not used in the original EWCE publication
   # cat('\nRunning SCT ... ', '\n\n')
   # COUNTS_SCT <- EWCE::sct_normalize(RAW_COUNTS_NO_MHC) 
@@ -108,7 +107,7 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   #     '\nNO_NORM_DROP_GENES:', dim(DROP_GENES_RAW)[1],
   #     '\nSCT_DROP_GENES:', dim( DROP_GENES_SCT)[1],
   #     '\nCPM_DROP_GENES:', dim(DROP_GENES_CPM)[1])
-
+  
   # Create object - saves ctd obj to folder
   cat('\nCreating CTD object ... \n\n')
   dir.create(CTD_DIR, showWarnings = FALSE)
@@ -215,6 +214,4 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 
-load(paste0(CTD_DIR, 'ctd_shi_dwnSmpl_lvl1.rda'))
-head(as.data.frame(as.matrix(ctd[[2]]$mean_exp)))
               

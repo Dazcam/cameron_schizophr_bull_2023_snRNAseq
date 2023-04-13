@@ -27,7 +27,8 @@ MAGMA_COND_DATA_DIR <- paste0(RESULTS_DIR, 'magma_conditional/')
 LDSC_DATA_DIR <- paste0(RESULTS_DIR, 'LDSR_part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 GENE_WINDOW <- c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
-
+COND_CELL_TYPES <- c('skene_InN', 'skene_MSN', 'CGE_1', 'CGE_2', 'LGE_0',
+                     'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')
 
 # MAGMA - prepare df
 cat('\nPreparing MAGMA data ... \n')
@@ -104,38 +105,9 @@ for (DISORDER in GWAS) {
         # LDSR                                         
         LDSR_FULL_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
           mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
-          separate(Category, into=c('Category', 'Window'), sep = '\\.') %>%
+          separate(Category, into = c('Category', 'Window'), sep = '\\.') %>%
           filter(Category %in% c('LGE', 'MGE', 'CGE', 'Early_InN', 'Progenitor', 'Microglia')) %>%
           filter(Window == (!!WINDOW)) 
-        
-        LDSR_DF <- LDSR_FULL_DF %>%
-          select(Category, LDSR)
-        
-        LDSR_PLOT <- ggplot(data = LDSR_DF, aes(x = LDSR, y = factor(Category, rev(levels(factor(Category)))), 
-                                                  fill = '#F8766D')) +
-          geom_bar(stat = "identity", color = 'black', position = "dodge") +
-          geom_vline(xintercept=-log10(BF_CORR), linetype = "dashed", color = "black") +
-          geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-          theme_bw() +
-          ggtitle(paste0(DISORDER, '_', WINDOW)) +
-          theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-                panel.grid.major = element_blank(), 
-                panel.grid.minor = element_blank(),
-                panel.border = element_rect(colour = "black", size = 1),
-                plot.title = element_text(hjust = 0.5, face = 'bold'),
-                axis.title.x = element_text(colour = "#000000", size = 14),
-                axis.title.y = element_text(colour = "#000000", size = 14),
-                axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-                axis.text.y  = element_text(colour = "#000000", size = 13),
-                legend.position = "none") +
-          xlab(expression(-log[10](P))) +
-          ylab('Cell type') +
-          xlim(0, 11.5) 
-          
-        
-        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
-        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv)
-        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_plot'), LDSR_PLOT, envir = .GlobalEnv) 
         
       } else {
         
@@ -148,45 +120,44 @@ for (DISORDER in GWAS) {
           filter(!str_detect(Category, "Early_InN")) %>%
           filter(Window == (!!WINDOW)) 
         
-        LDSR_DF <- LDSR_FULL_DF %>%
-          select(Category, LDSR)
-        
-        LDSR_PLOT <- ggplot(data = LDSR_DF, aes(x = LDSR, y = factor(Category, rev(levels(factor(Category)))), 
-                                                 fill = '#F8766D')) +
-          geom_bar(stat = "identity", color = 'black', position = "dodge") +
-          geom_vline(xintercept=-log10(BF_CORR), linetype = "dashed", color = "black") +
-          geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-          theme_bw() +
-          ggtitle(paste0(DISORDER, '_', WINDOW)) +
-          theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-                panel.grid.major = element_blank(), 
-                panel.grid.minor = element_blank(),
-                panel.border = element_rect(colour = "black", size = 1),
-                plot.title = element_text(hjust = 0.5, face = 'bold'),
-                axis.title.x = element_text(colour = "#000000", size = 14),
-                axis.title.y = element_text(colour = "#000000", size = 14),
-                axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-                axis.text.y  = element_text(colour = "#000000", size = 13),
-                legend.position = "none") +
-          xlab(expression(-log[10](P))) +
-          ylab('Cell type') +
-          xlim(0, 11.5) 
-        
-        
-        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
-        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv) 
-        assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_plot'), LDSR_PLOT, envir = .GlobalEnv) 
-        
       }
-    
-    
+        
+      LDSR_DF <- LDSR_FULL_DF %>%
+        select(Category, LDSR)
+      
+      LDSR_PLOT <- ggplot(data = LDSR_DF, aes(x = LDSR, y = factor(Category, rev(levels(factor(Category)))), 
+                                                fill = '#F8766D')) +
+        geom_bar(stat = "identity", color = 'black', position = "dodge") +
+        geom_vline(xintercept=-log10(BF_CORR), linetype = "dashed", color = "black") +
+        geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+        theme_bw() +
+        ggtitle(paste0(DISORDER, '_', WINDOW)) +
+        theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+              panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(),
+              panel.border = element_rect(colour = "black", size = 1),
+              plot.title = element_text(hjust = 0.5, face = 'bold'),
+              axis.title.x = element_text(colour = "#000000", size = 14),
+              axis.title.y = element_text(colour = "#000000", size = 14),
+              axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+              axis.text.y  = element_text(colour = "#000000", size = 13),
+              legend.position = "none") +
+        xlab(expression(-log[10](P))) +
+        ylab('Cell type') +
+        xlim(0, 11.5) 
+        
+      
+      assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
+      assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv)
+      assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_plot'), LDSR_PLOT, envir = .GlobalEnv) 
+      
     }
     
   }
     
 }
   
-# Plot MAGMA and LDSR barplot - using MAGMA 35UP_10DOWN and LDSR 100UP_100DOWN
+# Plot MAGMA and LDSR barplot 
 cat('\nCreate plots ... \n')
 for (LEVEL in c('1', '2')) {
   
@@ -254,16 +225,27 @@ for (LEVEL in c('1', '2')) {
 
 # MAGMA conditional - prepare df
 cat('\nPreparing MAGMA conditional data ... \n')
-for (CELL_TYPE in c('InN', 'MSN')) {
+for (CELL_TYPE in COND_CELL_TYPES) {
   
   for (WINDOW in GENE_WINDOW) { 
   
-  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_skene_', 
+  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_', 
                                 CELL_TYPE, '.', WINDOW, '.gsa.out'), header = TRUE) %>%
     mutate(MAGMA = -log10(as.numeric(P))) %>%
     select(VARIABLE, MAGMA) %>%
-    dplyr::rename(Category = VARIABLE) %>%
-    filter(!grepl('skene', Category))
+    dplyr::rename(Category = VARIABLE) 
+  
+  if (grepl('skene', CELL_TYPE)) {
+    
+    MAGMA_DF <- MAGMA_DF %>%
+    filter(!grepl('skene', Category)) 
+      
+    } else {
+      
+      MAGMA_DF <- MAGMA_DF %>%
+      filter(!grepl(paste0('skene|', CELL_TYPE), Category))
+      
+    }
   
   MAGMA_PLOT <- ggplot(data = MAGMA_DF, aes(x = MAGMA, y = factor(Category, rev(levels(factor(Category)))), 
                                             fill = '#F8766D')) +
