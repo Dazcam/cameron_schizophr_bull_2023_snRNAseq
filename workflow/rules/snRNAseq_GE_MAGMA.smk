@@ -27,7 +27,7 @@ rule magma_download_refs:
 
 rule magma_map_snps_to_genes:
     input:   snp_loc = "../resources/refs/g1000_eur.bim",
-             gene_loc = "../resources/refs/NCBI37.3.gene.loc.extendedMHCexcluded.txt"
+             gene_loc = "../resources/refs/NCBI37.3.MHCremoved.gene.loc.txt"
     output:  "../results/magma/snRNAseq_GE.magma.{GENE_WINDOW}.genes.annot"
     params:  "../results/magma/snRNAseq_GE.magma.{GENE_WINDOW}"
     message: "Running magma annotation step to map SNPs to genes. Gene window: {wildcards.GENE_WINDOW}"
