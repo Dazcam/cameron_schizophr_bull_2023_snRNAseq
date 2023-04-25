@@ -110,7 +110,7 @@ rule magma_gene_set_analysis:
              """
 
 rule magma_conditional:
-    input:   gene_list = "../results/gene_lists/MAGMA/shi_top10_lvl_2_sig_plus_skene.txt",
+    input:   gene_list = "../results/gene_lists/shi_bc/MAGMA_CONDITIONAL/ALL_LEVEL_1_SIG_AND_SKENE_INs_entrez_gene_list.tsv",
              scz_magma = "../results/magma/snRNAseq_GE_SCZ.magma.{GENE_WINDOW}.genes.raw" 
     output:  "../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{GENE_WINDOW}.gsa.out"
     params:  "../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{GENE_WINDOW}"
