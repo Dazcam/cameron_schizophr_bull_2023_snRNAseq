@@ -25,6 +25,7 @@ H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
 GENELIST_DIR <- paste0(OUT_DIR, 'gene_lists/')
 MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
 LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
+PUBLIC_DATA <- paste0(DATA_DIR, 'public_data/ALL_SIG_AND_SKENE_entrez_gene_list.tsv')
 dir.create(paste0(DATA_DIR, 'refs/'))
 
 # Get MHC genes -----------------------------------------------------------------------
@@ -155,7 +156,7 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
     CELL_TYPES <- colnames(ctd[[LEVEL]]$specificity_quantiles)
     
     # Note the inner join reduces number of genes by about 2-5K per cell type
-    MAGMA <- as_tibble(ctd[[LEVEL]]$specificity_quantiles, rownames = 'hgnc') %>%
+    MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
       inner_join(gene_coordinates) %>%
       pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
       filter(quantile == 10) %>%
@@ -195,7 +196,7 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
         
         }
       
-      LDSR <- as_tibble(ctd[[LEVEL]]$specificity_quantiles, rownames = 'hgnc') %>%
+      LDSR <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
         inner_join(gene_coordinates) %>%
         pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
         filter(quantile == 10) %>%
@@ -211,6 +212,43 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
 
 }
 
+# Prepare file for MAGMA conditional analyses - need to check which cells are sig. first
+for (CTD_EXT in c("")) {
+  
+  cat(paste0('\n\nRunning shi_bc', CTD_EXT, ' df ...\n\n'))
+    
+  LEVEL <- 2
+  SUB_DIR <- 'shi_bc/'
+  COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_CONDITIONAL/')
+  SIG_CELL_TYPES <- c("CGE_1", "CGE_2","LGE_1", "LGE_2", "LGE_4", 
+                      "MGE_2", "MGE_3")
+  FILE_NAME <- 'ALL_LEVEL_1_SIG_AND_SKENE_INs_entrez_gene_list.tsv'
+  dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
+  file.copy(PUBLIC_DATA, paste0(COND_DIR, FILE_NAME))
+  
+  cat('Running cluster level:', LEVEL, '...\n\n')
+  load(paste0(CTD_DIR, 'ctd_shi', CTD_EXT, '.rda'))
+    
+  # Note the inner join reduces number of genes by about 2-5K per cell type
+  MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
+    inner_join(gene_coordinates) %>%
+    select(chr, start, end, entrez, hgnc, any_of(SIG_CELL_TYPES)) %>%
+    pivot_longer(all_of(SIG_CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
+    filter(quantile == 10) %>%
+    select(cell_type, entrez) %>%
+    with(., split(entrez, cell_type))
+    
+    for(i in names(MAGMA)) {
+      
+      cat(i, " ", paste(MAGMA[[i]], collapse = " "), "\n", 
+          file = paste0(COND_DIR, FILE_NAME)
+          , sep = '', append = TRUE)
+      
+      }
+    
+    
+}
+  
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 
