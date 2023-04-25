@@ -27,7 +27,7 @@ MAGMA_COND_DATA_DIR <- paste0(RESULTS_DIR, 'magma_conditional/')
 LDSC_DATA_DIR <- paste0(RESULTS_DIR, 'LDSR_part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 GENE_WINDOW <- c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
-COND_CELL_TYPES <- c('skene_InN', 'skene_MSN', 'CGE_1', 'CGE_2', 'LGE_0',
+COND_CELL_TYPES <- c('skene_InN', 'skene_MSN', 'CGE_1', 'CGE_2', 'LGE_1',
                      'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')
 
 # MAGMA - prepare df
