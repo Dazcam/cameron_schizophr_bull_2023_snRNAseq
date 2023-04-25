@@ -174,7 +174,7 @@ for (LEVEL in c('1', '2')) {
     }
     
     PLOT_DF <- left_join(get(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df')), 
-                         get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_0UP_0DOWN_df')),
+                         get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
                          by = 'Category') %>% reshape2::melt()
         
     MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
