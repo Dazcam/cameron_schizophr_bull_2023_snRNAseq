@@ -140,7 +140,7 @@ magma_ldsr_cond_lvl2_plot <- plot_grid(SCZ_magma_ldsr_lvl_2_plot,
                                        plot_grid(magma_cond_GE_skene_MSN_35UP_10DOWN_plot, 
                                                  magma_cond_GE_skene_InN_35UP_10DOWN_plot, ncol = 1))
 magma_ldsr_cond_lvl2_internal_plot <- plot_grid(magma_cond_GE_CGE_1_35UP_10DOWN_plot, magma_cond_GE_CGE_2_35UP_10DOWN_plot,
-                                           magma_cond_GE_LGE_0_35UP_10DOWN_plot, magma_cond_GE_LGE_2_35UP_10DOWN_plot,
+                                           magma_cond_GE_LGE_1_35UP_10DOWN_plot, magma_cond_GE_LGE_2_35UP_10DOWN_plot,
                                            magma_cond_GE_LGE_4_35UP_10DOWN_plot, magma_cond_GE_MGE_2_35UP_10DOWN_plot,
                                            magma_cond_GE_MGE_3_35UP_10DOWN_plot)
 
