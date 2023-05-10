@@ -5,6 +5,8 @@ resources/scDRS
 results/h5ad_objects/
 results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_*_baseline.v1.2.log
 results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_*_baseline.v1.2.results 
+results/LDSR_part_herit/baseline_v1.2/shi_bc_dwnSmpl/snRNAseq_LDSR_*_baseline.v1.2.log
+results/LDSR_part_herit/baseline_v1.2/shi_bc_dwnSmpl/snRNAseq_LDSR_*_baseline.v1.2.results
 results/gene_lists/.DS_Store
 results/gene_lists/LDSR/.DS_Store
 results/gene_lists/MAGMA/.DS_Store
