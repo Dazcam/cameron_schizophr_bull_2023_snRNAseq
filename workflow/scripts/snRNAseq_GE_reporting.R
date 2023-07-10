@@ -215,6 +215,9 @@ for (LEVEL in c(1, 2)) {
 magma_dwnSmple_lvl1_plot <- plot_grid(magma_SCZ_lvl_1_35UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_1_35UP_10DOWN_plot)
 magma_dwnSmple_lvl2_plot <- plot_grid(magma_SCZ_lvl_2_35UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_2_35UP_10DOWN_plot)
 
+ldsr_dwnSmple_lvl1_plot <- plot_grid(ldsr_SCZ_lvl_1_100UP_100DOWN_plot, ldsr_dwnSmpl_SCZ_lvl_1_100UP_100DOWN_plot)
+ldsr_dwnSmple_lvl2_plot <- plot_grid(ldsr_SCZ_lvl_2_100UP_100DOWN_plot, ldsr_dwnSmpl_SCZ_lvl_2_100UP_100DOWN_plot)
+
 # magma_dwnSmple_lvl1_all_plot <- plot_grid(magma_dwnSmpl_SCZ_lvl_1_10UP_10DOWN_plot, magma_dwnSmpl_SCZ_lvl_1_35UP_10DOWN_plot, 
 #           magma_dwnSmpl_SCZ_lvl_1_100UP_100DOWN_plot, magma_dwnSmpl_HEIGHT_lvl_1_10UP_10DOWN_plot, 
 #           magma_dwnSmpl_HEIGHT_lvl_1_35UP_10DOWN_plot, magma_dwnSmpl_HEIGHT_lvl_1_100UP_100DOWN_plot)

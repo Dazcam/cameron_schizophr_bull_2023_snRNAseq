@@ -100,7 +100,7 @@ for(LEVEL in c('lvl1', 'lvl2')) {
   cat("\n\n***\n", sep = "")
   plot(get(paste0('ldsr_dnwSmple_scatter_', LEVEL, '_plot')))
   cat("\n\n***\n", sep = "")
-  #plot(get(paste0('ldsr_dwnSmple_', LEVEL, '_plot')))
+  plot(get(paste0('ldsr_dwnSmple_', LEVEL, '_plot')))
   cat("\n\n*** \n", sep = "")
   cat("  \n")
 }
