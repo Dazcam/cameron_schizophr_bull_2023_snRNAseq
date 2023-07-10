@@ -8,6 +8,8 @@
 
   # 1. Create ctd for level 1 and level 2 clusters
   # 2. Prep gene lists for MAGMA and LDSR (latter bed files)
+  # 3. Prep gene lists for MAGMA conditional analyses
+  # 4. Prep gene lists for top 1000 genes, rather than top 10% specific genes, analyses
 
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
@@ -249,6 +251,47 @@ for (CTD_EXT in c("")) {
     
 }
   
+
+# Additional analysis to run top n genes rather than top 10%
+for (CTD_EXT in c("")) {
+  
+  for (LEVEL in LEVELS) { 
+    
+    UPSTREAM <- 100000
+    DOWNSTREAM <- 100000
+    dir.create(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_top_1000_genes/'),  recursive = TRUE, showWarnings = FALSE)
+    dir.create(paste0(GENELIST_DIR, SUB_DIR, 'LDSR_top_1000_genes/'), recursive = TRUE, showWarnings = FALSE)
+  
+  MAGMA <- as_tibble(ctd[[LEVEL]]$specificity, rownames = 'hgnc') %>%
+    inner_join(gene_coord) %>%
+    tidyr::pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'specificity') %>%
+    group_by(cell_type) %>%
+    top_n(n = 1000, wt = specificity) %>%
+    select(cell_type, entrez) %>%
+    with(., split(entrez, cell_type))
+  
+  for(i in names(MAGMA)) {
+    
+    cat(i, " ", paste(MAGMA[[i]], collapse = " "), "\n", 
+        file = paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_top_1000_genes/shi_top10_lvl_', LEVEL, '.txt')
+        , sep = '', append = TRUE)
+    
+  }
+  
+  LDSR <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity), rownames = 'hgnc') %>%
+    inner_join(gene_coord) %>%
+    pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'specificity') %>%
+    mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
+    group_by(cell_type) %>%
+    top_n(n = 1000, wt = specificity) %>%
+    select(chr, start, end, entrez, cell_type) %>%
+    group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR_top_1000_genes/', 
+                                            .y$cell_type, '.', WINDOW, '.bed'), col_names = FALSE))
+  
+  }
+  
+}
+
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 
