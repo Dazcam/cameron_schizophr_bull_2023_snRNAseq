@@ -6,9 +6,8 @@ GWAS:
 # -----  OBJECT AND CLUSTER LEVEL -----
 SEURAT_OBJ:
     shi_bc:
-    shi_bc_dwnSmpl:
+#    shi_bc_dwnSmpl:
 
-# Currently running dwnSmpl for MAGMA
 
 # ------------  SLDSR  ----------------
 RNA_CELL_TYPES:
@@ -63,9 +62,9 @@ MAGMA_CONDITIONS:
 
 
 GENE_WINDOW:
-    0UP_0DOWN:
-    10UP_10DOWN:
-    35UP_10DOWN:
+#    0UP_0DOWN:
+#    10UP_10DOWN:
+#    35UP_10DOWN:
     100UP_100DOWN:
 
 # Level only required for MAGMA

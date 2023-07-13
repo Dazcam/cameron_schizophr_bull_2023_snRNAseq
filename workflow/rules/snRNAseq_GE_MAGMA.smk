@@ -123,5 +123,20 @@ rule magma_conditional:
 
              """
 
+rule magma_gene_set_analysis_top1000:
+    input:   genes = "../results/magma/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
+             data  = "../results/gene_lists/{SEURAT_OBJ}/MAGMA/shi_top1000_lvl_{LEVEL}.txt"
+    output:  "../results/magma/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out"
+    params:  out = "../results/magma/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}"
+    message: "Running magma gene set analysis step for {wildcards.GWAS}, {wildcards.SEURAT_OBJ}, top 1000 genes, cluster level {wildcards.LEVEL}. Gene window: {wildcards.GENE_WINDOW}"
+    log:     "../results/logs/magma/snRNAseq.GE.gene_set_analysis.{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.{GENE_WINDOW}.log"
+    shell:
+             """
+
+             module load magma/1.10
+             magma --gene-results {input.genes} --set-annot {input.data} --out {params.out} &> {log}
+
+             """
+
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------
