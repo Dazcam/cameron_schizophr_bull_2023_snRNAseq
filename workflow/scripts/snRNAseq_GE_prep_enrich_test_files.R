@@ -8,7 +8,7 @@
 
   # 1. Create ctd for level 1 and level 2 clusters
   # 2. Prep gene lists for MAGMA and LDSR (latter bed files)
-  # 3. Prep gene lists for MAGMA conditional analyses
+  # 3. Prep gene lists for MAGMA and LDSR lvl 2 internal and adult conditional analyses
   # 4. Prep gene lists for top 1000 genes, rather than top 10% specific genes, analyses
 
 ##  Load Packages  --------------------------------------------------------------------
@@ -34,7 +34,7 @@ dir.create(paste0(DATA_DIR, 'refs/'))
 mart <- useMart("ensembl")
 mart <- useDataset("hsapiens_gene_ensembl", mart)
 mhc_genes <- getBM(attributes = c("hgnc_symbol", "chromosome_name", "start_position", "end_position"), 
-                   filters = c("chromosome_name","start","end"), 
+                   filters = c("chromosome_name","start", "end"), 
                    values = list(chromosome = "6", start = "28510120", end = "33480577"), 
                    mart = mart)
 mhc_genes_uniq <- stringi::stri_remove_empty(unique(mhc_genes$hgnc_symbol), na_empty = FALSE)
@@ -250,17 +250,53 @@ for (CTD_EXT in c("")) {
     
     
 }
+
+# Prepare files for LDSR conditional analyses - adult 
+for (CTD_EXT in c("")) {
+  
+  cat(paste0('\n\nRunning shi_bc', CTD_EXT, ' df ...\n\n'))
+  
+  UPSTREAM <- 100000
+  DOWNSTREAM <- 100000
+  WINDOW <- "100UP_100DOWN"
+  SUB_DIR <- "shi_bc/"
+  COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'LDSR/')
+  dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
+  
+  for (LINE in c(1, 2)) {
+    
+    if (LINE == 1) cell_type <- 'skene_InN' else cell_type <- 'skene_MSN'
+    
+    cat('Obtaining gene coords for', cell_type, '...\n\n')
+    skene_genes <- readLines(PUBLIC_DATA)
+    df <- unlist(strsplit(skene_genes[LINE], " ")) %>% 
+      as_tibble() %>%
+      janitor::row_to_names(row_number = 1) %>%
+      rename(entrez = 1) %>%
+      inner_join(gene_coordinates) %>%
+      mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
+      select(chr, start, end, entrez) %>%
+      write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', cell_type, '.', WINDOW, '.bed'), col_names = FALSE)
+      
+  }
+  
+  
+}
   
 
 # Additional analysis to run top n genes rather than top 10%
+#load(paste0(CTD_DIR, 'ctd_shi.rda'))
 for (CTD_EXT in c("")) {
   
-  for (LEVEL in LEVELS) { 
+  for (LEVEL in c(1, 2)) { 
     
     UPSTREAM <- 100000
     DOWNSTREAM <- 100000
-    dir.create(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_top_1000_genes/'),  recursive = TRUE, showWarnings = FALSE)
+    WINDOW <- '100UP_100DOWN'
+    SUB_DIR <- 'shi_bc/'
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'LDSR_top_1000_genes/'), recursive = TRUE, showWarnings = FALSE)
+    
+    CELL_TYPES <- colnames(ctd[[LEVEL]]$specificity_quantiles)
   
   MAGMA <- as_tibble(ctd[[LEVEL]]$specificity, rownames = 'hgnc') %>%
     inner_join(gene_coord) %>%
@@ -273,7 +309,7 @@ for (CTD_EXT in c("")) {
   for(i in names(MAGMA)) {
     
     cat(i, " ", paste(MAGMA[[i]], collapse = " "), "\n", 
-        file = paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_top_1000_genes/shi_top10_lvl_', LEVEL, '.txt')
+        file = paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/shi_top1000_lvl_', LEVEL, '.txt')
         , sep = '', append = TRUE)
     
   }
