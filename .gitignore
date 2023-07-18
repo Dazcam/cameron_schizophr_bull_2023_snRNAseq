@@ -31,3 +31,7 @@ results/LDSR_part_herit/baseline_v1.2/*.log
 results/LDSR_part_herit/baseline_v1.2/*.results
 results/LDSR_part_herit/baseline_v1.2/LDSR_top_1000_genes/*baseline.v1.2.log
 results/LDSR_part_herit/baseline_v1.2/LDSR_top_1000_genes/*baseline.v1.2.results
+results/LDSR_part_herit/baseline_v1.2/LDSR_cond_adult/*baseline.v1.2.log
+results/LDSR_part_herit/baseline_v1.2/LDSR_cond_adult/*baseline.v1.2.results
+results/LDSR_part_herit/baseline_v1.2/LDSR_cond_int/*baseline.v1.2.log
+results/LDSR_part_herit/baseline_v1.2/LDSR_cond_int/*baseline.v1.2.results

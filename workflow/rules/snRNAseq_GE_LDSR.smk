@@ -64,7 +64,6 @@ rule ldsr_stratified_baseline_v12:
 
 
 rule ldsr_stratified_summary:
-    # This is still optimised for multiple quantiles so creating > 100 single line files
     input:   expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config["RNA_CELL_TYPES"], GENE_WINDOW = config["GENE_WINDOW"], GWAS = config["GWAS"])
     output:  "../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
     message: "Creating summary file for {wildcards.GWAS} GWAS"
@@ -85,23 +84,6 @@ rule ldsr_stratified_summary:
 
              """
 
-#rule create_top_decile_tables:
-#    input:   expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSC_{CELL_TYPE}_{GWAS}_baseline.v1.2_summary.tsv", CELL_TYPE = config["RNA_CELL_TYPES"], GWAS = config["SUMSTATS"])
-#    output:  "../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSC_{GWAS}_baseline.v1.2_top10pc.tsv"
-#    message: "Creating LDSC top decile tables for {wildcards.GWAS} GWAS"
-#    params:  dir = "../results/LDSR_part_herit/baseline_v1.2/"
-#    log:     "../results/logs/LDSR/snRNAseq.{GWAS}_partHerit_baseline.v1.2_top10pc_summary.log"
-#    shell:
-#             """
-#             head -1 {params.dir}snRNAseq_LDSC_Cer-OPC_Q10_SCZ_baseline.v1.2.results > {output}
-#             for file in `ls {params.dir}*Q10_{wildcards.GWAS}*`; do
-#             CELL_TYPE=$(echo ${{file}} | cut -d'_' -f6)
-#             tail -1 ${{file}} >> {output}
-#             sed -i "s/L2_1/${{CELL_TYPE}}/g" {output}
-#             sed -i '/Total time elapsed/d' {output}
-#             done
-#             """        
-        
         
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------

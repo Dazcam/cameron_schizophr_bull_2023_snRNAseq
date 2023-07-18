@@ -1,7 +1,7 @@
 # ------------  GWAS  ----------------
 GWAS:
     SCZ:
-    HEIGHT:
+#    HEIGHT:
 
 # -----  OBJECT AND CLUSTER LEVEL -----
 SEURAT_OBJ:
@@ -47,6 +47,28 @@ RNA_CELL_TYPES:
     Progenitor_8:
     Progenitor_9:
     Progenitor:
+
+COND_CELL_A:
+    CGE_1:
+    CGE_2:
+    LGE_1:
+    LGE_2:
+    LGE_4:
+    MGE_2:
+    MGE_3:
+
+COND_CELL_B:
+    CGE_1:
+    CGE_2:
+    LGE_1:
+    LGE_2:
+    LGE_4:
+    MGE_2:
+    MGE_3:
+
+ADULT_CELL_TYPES:
+    skene_InN:
+    skene_MSN:
 
 # ------------  MAGMA  -----------------
 MAGMA_CONDITIONS:

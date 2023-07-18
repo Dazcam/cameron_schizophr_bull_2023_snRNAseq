@@ -5,7 +5,8 @@ include: 'rules/snRNAseq_GE_scDRS.smk'
 include: 'rules/snRNAseq_GE_LDSR.smk'
 include: 'rules/snRNAseq_GE_LDSR_downsample.smk'
 include: 'rules/snRNAseq_GE_LDSR_top1000.smk'
-
+include: 'rules/snRNAseq_GE_LDSR_conditional_int.smk'
+include: 'rules/snRNAseq_GE_LDSR_conditional_adult.smk'
 rule all:
     input:
 #        expand("../results/magma/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out", GWAS = config['GWAS'], SEURAT_OBJ = config['SEURAT_OBJ'], LEVEL = config['LEVEL'], GENE_WINDOW = config['GENE_WINDOW']),
@@ -16,4 +17,6 @@ rule all:
 #        expand("../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/{GENE_WINDOW}/{GWAS}.scdrs_group.cluster_level_2", GENE_WINDOW = config['GENE_WINDOW'], GWAS = config['GWAS'], H5AD_OBJ_SUBCLUST = config['H5AD_OBJ_SUBCLUST']),
 #        expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
 #        expand("../results/LDSR_part_herit/baseline_v1.2/shi_bc_dwnSmpl/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS'])
-        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_top_1000_genes/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS'])
+        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_top_1000_genes/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
+        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_int/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
+        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_adult/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']) 
