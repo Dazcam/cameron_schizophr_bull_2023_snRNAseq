@@ -20,11 +20,10 @@ Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro
 ##  Set Variables  --------------------------------------------------------------------
 DATA_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/'
 OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
-R_DIR  <- paste0(OUT_DIR, 'R_objects/')
+R_DIR  <- paste0(OUT_DIR, '01R_objects/')
 SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
-CTD_DIR <- paste0(OUT_DIR, 'ctd_objects/')
 H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
-GENELIST_DIR <- paste0(OUT_DIR, 'gene_lists/')
+GENELIST_DIR <- paste0(OUT_DIR, '03GENE_LISTS/')
 MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
 LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
 PUBLIC_DATA <- paste0(DATA_DIR, 'public_data/ALL_SIG_AND_SKENE_entrez_gene_list.tsv')
@@ -113,11 +112,11 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
   # Create object - saves ctd obj to folder
   cat('\nCreating CTD object ... \n\n')
-  dir.create(CTD_DIR, showWarnings = FALSE)
+  dir.create(R_DIR, showWarnings = FALSE)
   ctd <- EWCE::generate_celltype_data(exp = DROP_GENES_CPM, 
                                       annotLevels = annotLevels, 
                                       groupName = paste0('shi', ROBJ),
-                                      savePath = CTD_DIR,
+                                      savePath = R_DIR,
                                       numberOfBins = 10)
 
   
@@ -150,7 +149,7 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   for (LEVEL in LEVELS) { 
     
     cat('Running cluster level:', LEVEL, '...\n\n')
-    load(paste0(CTD_DIR, 'ctd_shi', CTD_EXT, '.rda'))
+    load(paste0(R_DIR, 'ctd_shi', CTD_EXT, '.rda'))
     
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'MAGMA/'),  recursive = TRUE, showWarnings = FALSE)
     dir.create(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/'), recursive = TRUE, showWarnings = FALSE)
@@ -229,7 +228,7 @@ for (CTD_EXT in c("")) {
   file.copy(PUBLIC_DATA, paste0(COND_DIR, FILE_NAME))
   
   cat('Running cluster level:', LEVEL, '...\n\n')
-  load(paste0(CTD_DIR, 'ctd_shi', CTD_EXT, '.rda'))
+  load(paste0(R_DIR, 'ctd_shi', CTD_EXT, '.rda'))
     
   # Note the inner join reduces number of genes by about 2-5K per cell type
   MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
@@ -285,7 +284,7 @@ for (CTD_EXT in c("")) {
   
 
 # Additional analysis to run top n genes rather than top 10%
-#load(paste0(CTD_DIR, 'ctd_shi.rda'))
+#load(paste0(R_DIR, 'ctd_shi.rda'))
 for (CTD_EXT in c("")) {
   
   for (LEVEL in c(1, 2)) { 
