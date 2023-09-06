@@ -28,6 +28,15 @@ FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 GENE_WINDOW <- c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
 COND_CELL_TYPES <- c('skene_InN', 'skene_MSN', 'CGE_1', 'CGE_2', 'LGE_1',
                      'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')
+LVL1_CELL_TYPES <- c("Microglia", "Progenitor", "IPC", "MGE-N", "LGE-N", 
+                     "CGE-N")
+LVL2_CELL_TYPES <- c("Progenitor-10", "Progenitor-9", "Progenitor-8", "Progenitor-7", 
+                     "Progenitor-6", "Progenitor-5", "Progenitor-4", "Progenitor-3", 
+                     "Progenitor-2", "Progenitor-1", "Progenitor-0", "MGE-N-5", 
+                     "MGE-N-4", "MGE-N-3", "MGE-N-2", "MGE-N-1", "MGE-N-0", "LGE-N-7", 
+                     "LGE-N-6", "LGE-N-5", "LGE-N-4", "LGE-N-3", "LGE-N-2", "LGE-N-1", 
+                     "LGE-N-0", "CGE-N-3", "CGE-N-2", "CGE-N-1", "CGE-N-0")
+
 
 ## Main gene set enrichment figures ---------------------------------------------------
 # MAGMA - prepare df
@@ -119,19 +128,23 @@ for (LEVEL in c('1', '2')) {
     if (LEVEL == '1') {
       
       BF_CORR <- 0.05/6
+      LEVELS <- LVL1_CELL_TYPES
       
     } else {
       
       BF_CORR <- 0.05/29
+      LEVELS <- LVL2_CELL_TYPES
       
     }
     
     PLOT_DF <- left_join(get(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df')), 
                          get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
                          by = 'Category') %>%
-               reshape2::melt()
+      mutate(Category = factor(Category, levels = LEVELS)) %>%
+      reshape2::melt() 
+      
         
-    MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
+    MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = Category, 
                                                   fill = variable, group = rev(variable))) +
     geom_bar(stat = "identity", color = 'black', position = "dodge") +
       geom_vline(xintercept=-log10(BF_CORR), linetype = "dashed", color = "black") +
@@ -160,160 +173,45 @@ for (LEVEL in c('1', '2')) {
 }
 
 ## Gene window comparisons  -----------------------------------------------------------
-# Plot MAGMA and LDSR barplot 
-cat('\nCreate plots ... \n')
-for (WINDOW in GENE_WINDOW) {
-  
-  DENOM <- 6
-  
-  PLOT_TITLE <- WINDOW %>%
-    str_replace('_', ' - ')
-  
-  PLOT_DF <- left_join(get(paste0('magma_SCZ_lvl_1_', WINDOW, '_df')), 
-                       get(paste0('ldsr_SCZ_lvl_1_', WINDOW, '_df')),
-                       by = 'Category') %>%
-    reshape2::melt()
-  
-  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
-                                                fill = variable, group = rev(variable))) +
-    geom_bar(stat = "identity", color = 'black', position = "dodge") +
-    geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
-    geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-    theme_bw() +
-    ggtitle(PLOT_TITLE) +
-    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-          panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(),
-          panel.border = element_rect(colour = "black", size = 1),
-          plot.title = element_text(hjust = 0.5, face = 'bold'),
-          axis.title.x = element_text(colour = "#000000", size = 14),
-          axis.title.y = element_text(colour = "#000000", size = 14),
-          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-          axis.text.y  = element_text(colour = "#000000", size = 13),
-          legend.text = element_text(size = 13),
-          legend.title = element_blank()) +
-    xlab(expression(-log[10](P))) +
-    ylab('Cell type') +
-    xlim(0, 8) 
-  
-  assign(paste0('magma_ldsr_gene_window_', WINDOW, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
-  
-}
-
-## Conditional analyses  --------------------------------------------------------------
-# MAGMA conditional - prepare df
-cat('\nPreparing MAGMA conditional data ... \n')
-for (CELL_TYPE in COND_CELL_TYPES) {
-  
-  for (WINDOW in c('35UP_10DOWN')) { 
-  
-  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_', 
-                                CELL_TYPE, '.', WINDOW, '.gsa.out'), header = TRUE) %>%
-    mutate(MAGMA = -log10(as.numeric(P))) %>%
-    filter(!grepl(CELL_TYPE, VARIABLE)) %>%
-    filter(!grepl('skene', VARIABLE)) %>%
-    select(VARIABLE, MAGMA) %>%
-    dplyr::rename(Category = VARIABLE) %>%
-    dplyr::mutate(across(Category, str_replace, 'GE_', 'GE-N-')) 
-  
-  assign(paste0('magma_cond_GE_', CELL_TYPE, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv) 
-  
-  }
-  
-}
-
-
-# LDSR conditional - prepare df
-cat('\nPreparing LDSR conditional data ... \n')
-for (COND_DIR in c('LDSR_cond_int/', 'LDSR_cond_adult/')) {
-  
-  WINDOW <- '100UP_100DOWN'
-  
-  if (COND_DIR == 'LDSR_cond_int/') {
-
-    for (CELL_TYPE in c('CGE_1', 'CGE_2', 'LGE_1', 'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')) {
-      
-      LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, COND_DIR, 'snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv')) %>%
-        mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
-        separate(Category, into = c('Category', 'Window'), sep = '\\.') %>%
-        separate(Category, into = c('Category', 'Condition'), sep = '_vs_') %>%
-        dplyr::mutate(across(Condition, str_replace, 'GE_', 'GE-N-')) %>%
-        filter(Category %in% CELL_TYPE) %>%
-        select(Condition, LDSR) %>%
-        rename(Category = Condition)
-      
-      assign(paste0('ldsr_cond_GE_', CELL_TYPE, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
-      
-    }
-    
-  } else {
-    
-    for (CELL_TYPE in c('skene_InN', 'skene_MSN')) {
-    
-      LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, COND_DIR, 'snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv')) %>%
-        mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
-        separate(Category, into = c('Category', 'Window'), sep = '\\.') %>%
-        separate(Category, into = c('Category', 'Condition'), sep = '_vs_') %>%
-        dplyr::mutate(across(Category, str_replace, 'GE_', 'GE-N-')) %>%
-        filter(Condition %in% CELL_TYPE) %>%
-        dplyr::mutate(across(Condition, str_replace, 'skene_', 'Adult-')) %>%
-        select(Category, LDSR) 
-    
-      assign(paste0('ldsr_cond_GE_', CELL_TYPE, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
-    
-      }
-    
-    
-  }
-      
-}
-
-# Plot
-for (CELL_TYPE in COND_CELL_TYPES) {
-  
-  if (grepl('skene', CELL_TYPE)) {
-    
-    DENOM <- 14 
-    TITLE <- str_replace(CELL_TYPE, 'skene_', 'Adult-')
-    
-  } else {
-    
-    DENOM <- 12
-    TITLE <- str_replace(CELL_TYPE, 'GE_', 'GE-N-')
-    
-  }
-  
-  PLOT_DF <- left_join(get(paste0('magma_cond_GE_', CELL_TYPE, '_35UP_10DOWN_df')), 
-                       get(paste0('ldsr_cond_GE_', CELL_TYPE, '_100UP_100DOWN_df')),
-                       by = 'Category') %>%
-    reshape2::melt()
-  
-  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
-                                                fill = variable, group = rev(variable))) +
-    geom_bar(stat = "identity", color = 'black', position = "dodge") +
-    geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
-    geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-    theme_bw() +
-    ggtitle(TITLE) +
-    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-          panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(),
-          panel.border = element_rect(colour = "black", size = 1),
-          plot.title = element_text(hjust = 0.5, face = 'bold'),
-          axis.title.x = element_text(colour = "#000000", size = 14),
-          axis.title.y = element_text(colour = "#000000", size = 14),
-          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-          axis.text.y  = element_text(colour = "#000000", size = 13),
-          legend.text = element_text(size = 13),
-          legend.title = element_blank()) +
-    xlab(expression(-log[10](P))) +
-    ylab('Cell type') +
-    xlim(0, 8) 
-  
-  assign(paste0('magma_ldsr_cond_', CELL_TYPE, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
-  
-}
-
+# Plot MAGMA and LDSR barplot - Omiotting for 
+# cat('\nCreate plots ... \n')
+# for (WINDOW in GENE_WINDOW) {
+#   
+#   DENOM <- 6
+#   
+#   PLOT_TITLE <- WINDOW %>%
+#     str_replace('_', ' - ')
+#   
+#   PLOT_DF <- left_join(get(paste0('magma_SCZ_lvl_1_', WINDOW, '_df')), 
+#                        get(paste0('ldsr_SCZ_lvl_1_', WINDOW, '_df')),
+#                        by = 'Category') %>%
+#     reshape2::melt()
+#   
+#   MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
+#                                                 fill = variable, group = rev(variable))) +
+#     geom_bar(stat = "identity", color = 'black', position = "dodge") +
+#     geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
+#     geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+#     theme_bw() +
+#     ggtitle(PLOT_TITLE) +
+#     theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+#           panel.grid.major = element_blank(), 
+#           panel.grid.minor = element_blank(),
+#           panel.border = element_rect(colour = "black", size = 1),
+#           plot.title = element_text(hjust = 0.5, face = 'bold'),
+#           axis.title.x = element_text(colour = "#000000", size = 14),
+#           axis.title.y = element_text(colour = "#000000", size = 14),
+#           axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+#           axis.text.y  = element_text(colour = "#000000", size = 13),
+#           legend.text = element_text(size = 13),
+#           legend.title = element_blank()) +
+#     xlab(expression(-log[10](P))) +
+#     ylab('Cell type') +
+#     xlim(0, 8) 
+#   
+#   assign(paste0('magma_ldsr_gene_window_', WINDOW, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
+#   
+# }
 
 ## Downsampled plots  -----------------------------------------------------------------
 # MAGMA - prepare df
@@ -339,27 +237,6 @@ for (LEVEL in c('1', '2')) {
         dplyr::mutate(across(Category, str_replace, 'Early_InN', 'IPC')) %>%  
         dplyr::mutate(across(Category, str_replace, 'GE', 'GE-N')) %>%  
         dplyr::mutate(across(Category, str_replace, '_', '-')) 
-      
-      MAGMA_PLOT <- ggplot(data = MAGMA_DF, aes(x = MAGMA, y = factor(Category, rev(levels(factor(Category)))), 
-                                                   fill = '#F8766D')) +
-        geom_bar(stat = "identity", color = 'black', position = "dodge") +
-        geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
-        geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-        theme_bw() +
-        ggtitle(paste0(DISORDER, "_", WINDOW)) +
-        theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-              panel.grid.major = element_blank(), 
-              panel.grid.minor = element_blank(),
-              panel.border = element_rect(colour = "black", size = 1),
-              plot.title = element_text(hjust = 0.5, face = 'bold'),
-              axis.title.x = element_text(colour = "#000000", size = 14),
-              axis.title.y = element_text(colour = "#000000", size = 14),
-              axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-              axis.text.y  = element_text(colour = "#000000", size = 13),
-              legend.position = "none") +
-        xlab(expression(-log[10](P))) +
-        ylab('Cell type') +
-        xlim(0, 10) 
       
       assign(paste0('magma_dwnSmpl_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv)   
     
@@ -410,28 +287,6 @@ for (DISORDER in 'SCZ') {
       LDSR_DF <- LDSR_FULL_DF %>%
         select(Category, LDSR)
       
-      LDSR_PLOT <- ggplot(data = LDSR_DF, aes(x = LDSR, y = factor(Category, rev(levels(factor(Category)))), 
-                                              fill = '#F8766D')) +
-        geom_bar(stat = "identity", color = 'black', position = "dodge") +
-        geom_vline(xintercept=-log10(BF_CORR), linetype = "dashed", color = "black") +
-        geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-        theme_bw() +
-        ggtitle(paste0(DISORDER, '_', WINDOW)) +
-        theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-              panel.grid.major = element_blank(), 
-              panel.grid.minor = element_blank(),
-              panel.border = element_rect(colour = "black", size = 1),
-              plot.title = element_text(hjust = 0.5, face = 'bold'),
-              axis.title.x = element_text(colour = "#000000", size = 14),
-              axis.title.y = element_text(colour = "#000000", size = 14),
-              axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-              axis.text.y  = element_text(colour = "#000000", size = 13),
-              legend.position = "none") +
-        xlab(expression(-log[10](P))) +
-        ylab('Cell type') +
-        xlim(0, 10) 
-      
-      
       assign(paste0('ldsr_dwnSmpl_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
       assign(paste0('ldsr_dwnSmpl_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv)
       
@@ -445,13 +300,15 @@ for (DISORDER in 'SCZ') {
 for (LEVEL in c('1', '2')) {
   
   DENOM <- if (LEVEL == 1) 6 else 29
+  LEVELS <- if (LEVEL == 1) LVL1_CELL_TYPES else LVL2_CELL_TYPES
   
   PLOT_DF <- left_join(get(paste0('magma_dwnSmpl_SCZ_lvl_', LEVEL, '_35UP_10DOWN_df')), 
                        get(paste0('ldsr_dwnSmpl_SCZ_lvl_', LEVEL, '_100UP_100DOWN_df')),
                        by = 'Category') %>%
+    mutate(Category = factor(Category, levels = LEVELS)) %>%
     reshape2::melt()
   
-  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
+  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = Category, 
                                                 fill = variable, group = rev(variable))) +
     geom_bar(stat = "identity", color = 'black', position = "dodge") +
     geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
@@ -476,7 +333,7 @@ for (LEVEL in c('1', '2')) {
   
 }
 
-# Top 1000 genes  ---------------------------------------------------------------------
+## Top 1000 genes  ---------------------------------------------------------------------
 # MAGMA - prepare df
 cat('\nPreparing MAGMA data ... \n')
 for (LEVEL in c('1', '2')) {
@@ -562,13 +419,15 @@ for (DISORDER in 'SCZ') {
 for (LEVEL in c('1', '2')) {
   
   DENOM <- if (LEVEL == 1) 6 else 29
+  LEVELS <- if (LEVEL == 1) LVL1_CELL_TYPES else LVL2_CELL_TYPES
   
   PLOT_DF <- left_join(get(paste0('magma_top1000_SCZ_lvl_', LEVEL, '_35UP_10DOWN_df')), 
                        get(paste0('ldsr_top1000_SCZ_lvl_', LEVEL, '_100UP_100DOWN_df')),
                        by = 'Category') %>%
+    mutate(Category = factor(Category, levels = LEVELS)) %>%
     reshape2::melt()
-  
-  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
+
+  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = Category, 
                                                 fill = variable, group = rev(variable))) +
     geom_bar(stat = "identity", color = 'black', position = "dodge") +
     geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
@@ -593,40 +452,154 @@ for (LEVEL in c('1', '2')) {
   
 }
 
+
+## Conditional analyses  --------------------------------------------------------------
+# MAGMA conditional - prepare df
+cat('\nPreparing MAGMA conditional data ... \n')
+for (CELL_TYPE in COND_CELL_TYPES) {
+  
+  for (WINDOW in c('35UP_10DOWN')) { 
+    
+    MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_all_sig_and_skene_condition_', 
+                                  CELL_TYPE, '.', WINDOW, '.gsa.out'), header = TRUE) %>%
+      mutate(MAGMA = -log10(as.numeric(P))) %>%
+      filter(!grepl(CELL_TYPE, VARIABLE)) %>%
+      filter(!grepl('skene', VARIABLE)) %>%
+      select(VARIABLE, MAGMA) %>%
+      dplyr::rename(Category = VARIABLE) %>%
+      dplyr::mutate(across(Category, str_replace, 'GE_', 'GE-N-')) 
+    
+    assign(paste0('magma_cond_GE_', CELL_TYPE, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv) 
+    
+  }
+  
+}
+
+
+# LDSR conditional - prepare df
+cat('\nPreparing LDSR conditional data ... \n')
+for (COND_DIR in c('LDSR_cond_int/', 'LDSR_cond_adult/')) {
+  
+  WINDOW <- '100UP_100DOWN'
+  
+  if (COND_DIR == 'LDSR_cond_int/') {
+    
+    for (CELL_TYPE in c('CGE_1', 'CGE_2', 'LGE_1', 'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')) {
+      
+      LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, COND_DIR, 'snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv')) %>%
+        mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
+        separate(Category, into = c('Category', 'Window'), sep = '\\.') %>%
+        separate(Category, into = c('Category', 'Condition'), sep = '_vs_') %>%
+        dplyr::mutate(across(Condition, str_replace, 'GE_', 'GE-N-')) %>%
+        filter(Category %in% CELL_TYPE) %>%
+        select(Condition, LDSR) %>%
+        rename(Category = Condition)
+      
+      assign(paste0('ldsr_cond_GE_', CELL_TYPE, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
+      
+    }
+    
+  } else {
+    
+    for (CELL_TYPE in c('skene_InN', 'skene_MSN')) {
+      
+      LDSR_DF <- read_tsv(paste0(LDSC_DATA_DIR, COND_DIR, 'snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv')) %>%
+        mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
+        separate(Category, into = c('Category', 'Window'), sep = '\\.') %>%
+        separate(Category, into = c('Category', 'Condition'), sep = '_vs_') %>%
+        dplyr::mutate(across(Category, str_replace, 'GE_', 'GE-N-')) %>%
+        filter(Condition %in% CELL_TYPE) %>%
+        dplyr::mutate(across(Condition, str_replace, 'skene_', 'Adult-')) %>%
+        select(Category, LDSR) 
+      
+      assign(paste0('ldsr_cond_GE_', CELL_TYPE, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
+      
+    }
+    
+    
+  }
+  
+}
+
+# Plot
+for (CELL_TYPE in COND_CELL_TYPES) {
+  
+  if (grepl('skene', CELL_TYPE)) {
+    
+    DENOM <- 14 
+    TITLE <- str_replace(CELL_TYPE, 'skene_', 'Adult-')
+    
+  } else {
+    
+    DENOM <- 12
+    TITLE <- str_replace(CELL_TYPE, 'GE_', 'GE-N-')
+    
+  }
+  
+  PLOT_DF <- left_join(get(paste0('magma_cond_GE_', CELL_TYPE, '_35UP_10DOWN_df')), 
+                       get(paste0('ldsr_cond_GE_', CELL_TYPE, '_100UP_100DOWN_df')),
+                       by = 'Category') %>%
+    reshape2::melt()
+  
+  MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
+                                                fill = variable, group = rev(variable))) +
+    geom_bar(stat = "identity", color = 'black', position = "dodge") +
+    geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
+    geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+    theme_bw() +
+    ggtitle(TITLE) +
+    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 1),
+          plot.title = element_text(hjust = 0.5, face = 'bold'),
+          axis.title.x = element_text(colour = "#000000", size = 14),
+          axis.title.y = element_text(colour = "#000000", size = 14),
+          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.text = element_text(size = 13),
+          legend.title = element_blank()) +
+    xlab(expression(-log[10](P))) +
+    ylab('Cell type') +
+    xlim(0, 8) 
+  
+  assign(paste0('magma_ldsr_cond_', CELL_TYPE, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
+  
+}
 # Produce final plots for paper. ------------------------------------------------------
 legend <- get_legend(SCZ_magma_ldsr_lvl_1_plot)
 
-# Level 1 - Gene set enrichment barplots
+# Main plots - fig 2 - Lvl 1 - Gene set enrichment barplots
 figure_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend(), 
                       HEIGHT_magma_ldsr_lvl_1_plot + NoLegend(), 
                       legend, ncol = 3, rel_widths = c(1, 1, 0.5),  
                       labels = c('A', 'B', ''), label_size = 20)
 
-# Level 2 - Gene set enrichment barplots
+# Main plots - fig 2 - Lvl 2 - Gene set enrichment barplots
 figure_4 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend(), 
                       HEIGHT_magma_ldsr_lvl_2_plot+ NoLegend(), 
                       legend, ncol = 3, rel_widths = c(1, 1, 0.5), 
                       labels = c('A', 'B', ''), label_size = 20)
 
-# Figure S1 - Gene window plots
-gene_windows_plot <- plot_grid(magma_ldsr_gene_window_10UP_10DOWN_plot + NoLegend(), 
-                               magma_ldsr_gene_window_35UP_10DOWN_plot + NoLegend(),
-                               magma_ldsr_gene_window_100UP_100DOWN_plot + NoLegend(),
-                               legend, ncol = 4, rel_widths = c(1, 1, 1, 0.5),
-                               labels = c('A', 'B', 'C', ''), label_size = 20)
+# Alternate gene window plots  
+# gene_windows_plot <- plot_grid(magma_ldsr_gene_window_10UP_10DOWN_plot + NoLegend(), 
+#                                magma_ldsr_gene_window_35UP_10DOWN_plot + NoLegend(),
+#                                magma_ldsr_gene_window_100UP_100DOWN_plot + NoLegend(),
+#                                legend, ncol = 4, rel_widths = c(1, 1, 1, 0.5),
+#                                labels = c('A', 'B', 'C', ''), label_size = 20)
 
-# Figure S2 - downsampled plots
-dwnSmple_plot <- plot_grid(magma_ldsr_dwnSmpl_SCZ_lvl_1_plot + NoLegend(), 
-                           magma_ldsr_dwnSmpl_SCZ_lvl_2_plot + theme(legend.position=c(.75,.25)),
-                           ncol = 1, labels = c('AUTO'), label_size = 20, 
-                           rel_heights = c(1, 3), align = 'hv')
+# Supplementary plots - S1 and S2 - dwnsampl and top1000 genes
+lvl_1_supp_plot <- plot_grid(magma_ldsr_dwnSmpl_SCZ_lvl_1_plot + NoLegend(), 
+                             magma_ldsr_top1000_SCZ_lvl_1_plot + NoLegend(), legend,
+                             ncol = 3, labels = c('A', 'B', ''), label_size = 20)
 
-# Figure SX - top1000 plots
-top1000_plot <- plot_grid(magma_ldsr_top1000_SCZ_lvl_1_plot + NoLegend(), 
-                          magma_ldsr_top1000_SCZ_lvl_2_plot + theme(legend.position=c(.75,.25)),
-                          ncol = 1, labels = c('AUTO'), label_size = 20, rel_heights = c(1, 3))
 
-# Figure S7 - Internal conditional
+lvl_2_supp_plot <- plot_grid(magma_ldsr_dwnSmpl_SCZ_lvl_2_plot + NoLegend(), 
+                             magma_ldsr_top1000_SCZ_lvl_2_plot + NoLegend(), legend,
+                             ncol = 3, labels = c('A', 'B', ''), label_size = 20)
+
+
+# Supplementary plots - S7 - Internal conditional
 cond_int_plot <- plot_grid(magma_ldsr_cond_CGE_1_plot + NoLegend(),
                            magma_ldsr_cond_CGE_2_plot + NoLegend(),
                            magma_ldsr_cond_LGE_1_plot + NoLegend(), 
@@ -638,7 +611,7 @@ cond_int_plot <- plot_grid(magma_ldsr_cond_CGE_1_plot + NoLegend(),
                                                         'F', 'G', ''), 
                            label_size = 20)
 
-# Figure S8 - Adult conditional
+# Supplementary plots - S7 - Adult conditional
 cond_adult_plot <- plot_grid(magma_ldsr_cond_skene_InN_plot + NoLegend(), 
                              magma_ldsr_cond_skene_MSN_plot + NoLegend(), legend,
                              ncol = 3, labels = c('A', 'B', ''), label_size = 20,
