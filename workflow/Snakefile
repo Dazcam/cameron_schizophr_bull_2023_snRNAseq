@@ -9,14 +9,26 @@ include: 'rules/snRNAseq_GE_LDSR_conditional_int.smk'
 include: 'rules/snRNAseq_GE_LDSR_conditional_adult.smk'
 rule all:
     input:
-#        expand("../results/magma/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out", GWAS = config['GWAS'], SEURAT_OBJ = config['SEURAT_OBJ'], LEVEL = config['LEVEL'], GENE_WINDOW = config['GENE_WINDOW']),
-#        expand("../results/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{GENE_WINDOW}.gsa.out", CONDITION = config['MAGMA_CONDITIONS'], GENE_WINDOW = config['GENE_WINDOW']),
-#        expand("../results/magma/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out", GWAS = config['GWAS'], SEURAT_OBJ = config['SEURAT_OBJ'], LEVEL = config['LEVEL'], GENE_WINDOW = config['GENE_WINDOW']),
-#        expand("../results/scDRS/scDRS_{H5AD_OBJ}/{GENE_WINDOW}/{GWAS}.full_score.gz", GENE_WINDOW = config['GENE_WINDOW'], GWAS = config['GWAS'], H5AD_OBJ = config['H5AD_OBJ']),
-#        expand("../results/scDRS/scDRS_shi_bc/{GENE_WINDOW}/{GWAS}.scdrs_group.cluster_level_1", GENE_WINDOW = config['GENE_WINDOW'], GWAS = config['GWAS']),
-#        expand("../results/scDRS/scDRS_{H5AD_OBJ_SUBCLUST}/{GENE_WINDOW}/{GWAS}.scdrs_group.cluster_level_2", GENE_WINDOW = config['GENE_WINDOW'], GWAS = config['GWAS'], H5AD_OBJ_SUBCLUST = config['H5AD_OBJ_SUBCLUST']),
-#        expand("../results/LDSR_part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
-#        expand("../results/LDSR_part_herit/baseline_v1.2/shi_bc_dwnSmpl/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS'])
-        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_top_1000_genes/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
-        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_int/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
-        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_adult/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']) 
+        expand("../results/03MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out", GWAS = config['GWAS'], SEURAT_OBJ = config['SEURAT_OBJ'], LEVEL = config['LEVEL'], GENE_WINDOW = config['GENE_WINDOW']),
+#        expand("../results/03MAGMA/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{GENE_WINDOW}.gsa.out", CONDITION = config['MAGMA_CONDITIONS'], GENE_WINDOW = config['GENE_WINDOW']),
+#        expand("../results/03MAGMA/magma/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out", GWAS = config['GWAS'], SEURAT_OBJ = config['SEURAT_OBJ'], LEVEL = config['LEVEL'], GENE_WINDOW = config['GENE_WINDOW']),
+        expand("../results/04LDSR/part_herit/baseline_v1.2/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
+#        expand("../results/04LDSR/part_herit/baseline_v1.2/shi_bc_dwnSmpl/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
+#        expand("../results/04LDSR/part_herit/baseline_v1.2/LDSR_top_1000_genes/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
+#        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_int/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']),
+#        expand("../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_adult/snRNAseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['GWAS']) 
+
+
+
+
+## Note on running order
+
+## Order that Snakmake was run in
+## 1. MAGMA and LDSR with SCZ and HEIGHT at 10UP_10DOWN; 35UP_10DOWN; 100UP_100DOWN
+## 2. MAGMA and LDSR downsample and top1000 on SCZ at 10UP_10DOWN; 35UP_10DOWN; 100UP_100DOWN 
+## 3. After checking which cell types have sig. pvals run conditional analyses on SCZ only
+
+rule help:
+    input: "Snakefile"
+    shell:
+        "sed -n 's/^##//p' {input}"
