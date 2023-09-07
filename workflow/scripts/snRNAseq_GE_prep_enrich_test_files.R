@@ -39,7 +39,7 @@ gene_coords <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
                 end = 'X4', strand = "X5", hgnc = 'X6') %>%
   filter(!(((start > mhc_coords[2] & start < mhc_coords[3]) | (end > mhc_coords[2] & end < mhc_coords[3])) &
              chr == mhc_coords[1])) %>%
-  write_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.MHCremoved.gene.loc.txt'), col_names = FALSE) %>%
+#  write_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.MHCremoved.gene.loc.txt'), col_names = FALSE) %>%
   mutate(chr = paste0("chr", chr)) %>%
   dplyr::select(chr, start, end, entrez, hgnc) 
 
@@ -229,7 +229,7 @@ for (CTD_EXT in c("")) {
     
   # Note the inner join reduces number of genes by about 2-5K per cell type
   MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
-    inner_join(gene_coordinates) %>%
+    inner_join(gene_coords) %>%
     select(chr, start, end, entrez, hgnc, any_of(SIG_CELL_TYPES)) %>%
     pivot_longer(all_of(SIG_CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
     filter(quantile == 10) %>%
@@ -259,20 +259,31 @@ for (CTD_EXT in c("")) {
   COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'LDSR/')
   dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
   
-  for (LINE in c(1, 2)) {
+  for (LINE in c('1', '2', '3', '4')) {
     
-    if (LINE == 1) cell_type <- 'skene_InN' else cell_type <- 'skene_MSN'
+    get_genelist_name <- function(x) { # Instead of nested ifelse
+      switch(x,
+             '1' = 'skene_InN',
+             '2' = 'skene_MSN',
+             '3' = 'bryois_GABA1',
+             '4' = 'bryois_GABA2',
+             stop("Invalid value")
+      )
+      
+    }
+    
+    genelist_name <- get_genelist_name(LINE)
     
     cat('Obtaining gene coords for', cell_type, '...\n\n')
-    skene_genes <- readLines(PUBLIC_DATA)
-    df <- unlist(strsplit(skene_genes[LINE], " ")) %>% 
+    cond_genelists <- readLines(PUBLIC_DATA)
+    df <- unlist(strsplit(cond_genelists[as.integer(LINE)], " ")) %>% 
       as_tibble() %>%
       janitor::row_to_names(row_number = 1) %>%
       rename(entrez = 1) %>%
-      inner_join(gene_coordinates) %>%
+      inner_join(gene_coords) %>%
       mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
       select(chr, start, end, entrez) %>%
-      write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', cell_type, '.', WINDOW, '.bed'), col_names = FALSE)
+      write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', genelist_name, '.', WINDOW, '.bed'), col_names = FALSE)
       
   }
   

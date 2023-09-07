@@ -21,9 +21,9 @@ library(Seurat) # For no legend
 ##  Initialise variables  -------------------------------------------------------------
 GWAS <- c('SCZ', 'HEIGHT')
 RESULTS_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
-MAGMA_DATA_DIR <- paste0(RESULTS_DIR, 'magma/')
+MAGMA_DATA_DIR <- paste0(RESULTS_DIR, '03MAGMA/')
 MAGMA_COND_DATA_DIR <- paste0(RESULTS_DIR, 'magma_conditional/')
-LDSC_DATA_DIR <- paste0(RESULTS_DIR, 'LDSR_part_herit/baseline_v1.2/')
+LDSC_DATA_DIR <- paste0(RESULTS_DIR, '04LDSR/part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 GENE_WINDOW <- c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
 COND_CELL_TYPES <- c('skene_InN', 'skene_MSN', 'CGE_1', 'CGE_2', 'LGE_1',
@@ -32,10 +32,11 @@ LVL1_CELL_TYPES <- c("Microglia", "Progenitor", "IPC", "MGE-N", "LGE-N",
                      "CGE-N")
 LVL2_CELL_TYPES <- c("Progenitor-10", "Progenitor-9", "Progenitor-8", "Progenitor-7", 
                      "Progenitor-6", "Progenitor-5", "Progenitor-4", "Progenitor-3", 
-                     "Progenitor-2", "Progenitor-1", "Progenitor-0", "MGE-N-5", 
-                     "MGE-N-4", "MGE-N-3", "MGE-N-2", "MGE-N-1", "MGE-N-0", "LGE-N-7", 
-                     "LGE-N-6", "LGE-N-5", "LGE-N-4", "LGE-N-3", "LGE-N-2", "LGE-N-1", 
-                     "LGE-N-0", "CGE-N-3", "CGE-N-2", "CGE-N-1", "CGE-N-0")
+                     "Progenitor-2", "Progenitor-1", "Progenitor-0", "IPC-5", "IPC-4", 
+                     "IPC-3", "IPC-2", "IPC-1", "IPC-0", "MGE-N-5", "MGE-N-4", "MGE-N-3", 
+                     "MGE-N-2", "MGE-N-1", "MGE-N-0", "LGE-N-7", "LGE-N-6", "LGE-N-5", 
+                     "LGE-N-4", "LGE-N-3", "LGE-N-2", "LGE-N-1", "LGE-N-0", "CGE-N-3", 
+                     "CGE-N-2", "CGE-N-1", "CGE-N-0")
 
 
 ## Main gene set enrichment figures ---------------------------------------------------
@@ -47,7 +48,7 @@ for (LEVEL in c('1', '2')) {
     
     for (WINDOW in GENE_WINDOW) {
         
-      DENOM <-  if (LEVEL == '1') 6 else 29
+      DENOM <-  if (LEVEL == '1') 6 else 35
 
       MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.shi_bc.lvl_', 
                                           LEVEL, '.magma.', WINDOW, '.gsa.out'), header = FALSE) %>%
@@ -60,8 +61,14 @@ for (LEVEL in c('1', '2')) {
         mutate(across('Category', str_replace, 'GE', 'GE-N')) %>%
         mutate(across('Category', str_replace, 'Early_InN', 'IPC')) %>%
         mutate(across('Category', str_replace, '_', '-')) 
+      
+        if (LEVEL == '2') MAGMA_DF <- MAGMA_DF %>% filter(!Category %in% c('Microglia'))
                
+      MAGMA_SIG <- MAGMA_DF %>%
+        filter(MAGMA > -log10(0.05 / 35))
+      
       assign(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv) 
+      assign(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_sig_df'), MAGMA_SIG, envir = .GlobalEnv)
                     
     }
  
@@ -93,25 +100,28 @@ for (DISORDER in GWAS) {
         
       } else {
         
-        BF_CORR <- 0.05/29
+        BF_CORR <- 0.05/35
         
         LDSR_FULL_DF <- read_tsv(paste0(LDSC_DATA_DIR, 'snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
           mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
           separate(Category, into=c('Category', 'Window'), sep = '\\.') %>%
-          filter(str_detect(Category, "_|Other")) %>%
-          filter(!str_detect(Category, "Early_InN")) %>%
           filter(Window == (!!WINDOW)) %>%
           mutate(across('Category', str_replace, 'GE', 'GE-N')) %>%
           mutate(across('Category', str_replace, 'Early_InN', 'IPC')) %>%
-          mutate(across('Category', str_replace, '_', '-')) 
+          mutate(across('Category', str_replace, '_', '-')) %>%
+          filter(!grepl("^CGE-N$|^LGE-N$|^MGE-N$|^IPC$|^Microglia$|^Progenitor$", Category))
         
       }
         
       LDSR_DF <- LDSR_FULL_DF %>%
         select(Category, LDSR)
       
+      LDSR_SIG <- LDSR_DF %>%
+        filter(LDSR > -log10(0.05 / 35))
+      
       assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), LDSR_DF, envir = .GlobalEnv) 
       assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_full_df'), LDSR_FULL_DF, envir = .GlobalEnv)
+      assign(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_sig_df'), LDSR_SIG, envir = .GlobalEnv)
       
     }
     
@@ -132,7 +142,7 @@ for (LEVEL in c('1', '2')) {
       
     } else {
       
-      BF_CORR <- 0.05/29
+      BF_CORR <- 0.05/35
       LEVELS <- LVL2_CELL_TYPES
       
     }
@@ -143,6 +153,7 @@ for (LEVEL in c('1', '2')) {
       mutate(Category = factor(Category, levels = LEVELS)) %>%
       reshape2::melt() 
       
+    
         
     MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = Category, 
                                                   fill = variable, group = rev(variable))) +
@@ -222,7 +233,7 @@ for (LEVEL in c('1', '2')) {
     
     for (WINDOW in '35UP_10DOWN') {
       
-      DENOM <-  if (LEVEL == '1') 6 else 29
+      DENOM <-  if (LEVEL == '1') 6 else 35
     
       MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, 
                                         '.shi_bc_dwnSmpl.lvl_', LEVEL, '.magma.', 
@@ -237,6 +248,7 @@ for (LEVEL in c('1', '2')) {
         dplyr::mutate(across(Category, str_replace, 'Early_InN', 'IPC')) %>%  
         dplyr::mutate(across(Category, str_replace, 'GE', 'GE-N')) %>%  
         dplyr::mutate(across(Category, str_replace, '_', '-')) 
+      
       
       assign(paste0('magma_dwnSmpl_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv)   
     
@@ -270,7 +282,7 @@ for (DISORDER in 'SCZ') {
         
       } else {
         
-        BF_CORR <- 0.05/29
+        BF_CORR <- 0.05/35
         
         LDSR_FULL_DF <- read_tsv(paste0(LDSC_DATA_DIR, '/shi_bc_dwnSmpl/snRNAseq_LDSR_', DISORDER, '_baseline.v1.2_summary.tsv')) %>%
           mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
@@ -299,7 +311,7 @@ for (DISORDER in 'SCZ') {
 # Plot
 for (LEVEL in c('1', '2')) {
   
-  DENOM <- if (LEVEL == 1) 6 else 29
+
   LEVELS <- if (LEVEL == 1) LVL1_CELL_TYPES else LVL2_CELL_TYPES
   
   PLOT_DF <- left_join(get(paste0('magma_dwnSmpl_SCZ_lvl_', LEVEL, '_35UP_10DOWN_df')), 
@@ -307,6 +319,8 @@ for (LEVEL in c('1', '2')) {
                        by = 'Category') %>%
     mutate(Category = factor(Category, levels = LEVELS)) %>%
     reshape2::melt()
+  
+  DENOM <- nrow(PLOT_DF)
   
   MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = Category, 
                                                 fill = variable, group = rev(variable))) +
