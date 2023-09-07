@@ -1,7 +1,7 @@
 # ------------  GWAS  ----------------
 GWAS:
     SCZ:
-#    HEIGHT:
+    HEIGHT:
 
 # -----  OBJECT AND CLUSTER LEVEL -----
 SEURAT_OBJ:
@@ -10,13 +10,20 @@ SEURAT_OBJ:
 
 
 # ------------  SLDSR  ----------------
-RNA_CELL_TYPES:
+CELL_TYPES:
+    CGE:
     CGE_0:
     CGE_1:
     CGE_2:
     CGE_3:
-    CGE:
     Early_InN:
+    Early_InN_0:
+    Early_InN_1:
+    Early_InN_2:
+    Early_InN_3:
+    Early_InN_4:
+    Early_InN_5:
+    LGE:
     LGE_0:
     LGE_1:
     LGE_2:
@@ -25,18 +32,15 @@ RNA_CELL_TYPES:
     LGE_5:
     LGE_6:
     LGE_7:
-    LGE:
+    MGE:
     MGE_0:
     MGE_1:
     MGE_2:
     MGE_3:
     MGE_4:
     MGE_5:
-    MGE:
     Microglia:
-    Other:
     Progenitor_0:
-    Progenitor_10:
     Progenitor_1:
     Progenitor_2:
     Progenitor_3:
@@ -46,7 +50,7 @@ RNA_CELL_TYPES:
     Progenitor_7:
     Progenitor_8:
     Progenitor_9:
-    Progenitor:
+    Progenitor_10:
 
 COND_CELL_A:
     CGE_1:
@@ -84,9 +88,9 @@ MAGMA_CONDITIONS:
 
 
 GENE_WINDOW:
-#    0UP_0DOWN:
-#    10UP_10DOWN:
-#    35UP_10DOWN:
+    0UP_0DOWN:
+    10UP_10DOWN:
+    35UP_10DOWN:
     100UP_100DOWN:
 
 # Level only required for MAGMA
