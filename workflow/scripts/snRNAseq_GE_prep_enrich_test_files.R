@@ -23,32 +23,27 @@ OUT_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 R_DIR  <- paste0(OUT_DIR, '01R_objects/')
 SHI_DIR <- paste0(DATA_DIR, 'raw_data/shi_et_al_2021/')
 H5AD_DIR <- paste0(OUT_DIR, 'h5ad_objects/')
-GENELIST_DIR <- paste0(OUT_DIR, '03GENE_LISTS/')
+GENELIST_DIR <- paste0(OUT_DIR, '02GENE_LISTS/')
 MAGMA_DIR <- paste0(GENELIST_DIR, 'MAGMA/')
 LDSR_DIR <- paste0(GENELIST_DIR, 'LDSR/')
-PUBLIC_DATA <- paste0(DATA_DIR, 'public_data/ALL_SIG_AND_SKENE_entrez_gene_list.tsv')
+PUBLIC_DATA <- paste0(DATA_DIR, 'public_data/skene_bryois_InN_entrez_gene_list.tsv')
 dir.create(paste0(DATA_DIR, 'refs/'))
+mhc_coords <- c(6, 28510120, 33480577)
 
-# Get MHC genes -----------------------------------------------------------------------
-mart <- useMart("ensembl")
-mart <- useDataset("hsapiens_gene_ensembl", mart)
-mhc_genes <- getBM(attributes = c("hgnc_symbol", "chromosome_name", "start_position", "end_position"), 
-                   filters = c("chromosome_name","start", "end"), 
-                   values = list(chromosome = "6", start = "28510120", end = "33480577"), 
-                   mart = mart)
-mhc_genes_uniq <- stringi::stri_remove_empty(unique(mhc_genes$hgnc_symbol), na_empty = FALSE)
-cat('\n\nMHC genes:', length(mhc_genes_uniq), '\n')
-
-# Remove MHC gene from gene coordinate reference file (and write to file)  ------------
-gene_coordinates <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
-                             col_names = FALSE, col_types = 'cciicc') %>%
+# Rm MHC genes -----------------------------------------------------------------------
+gene_coords_raw <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
+                                 col_names = FALSE, col_types = 'cciicc')
+gene_coords <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
+                               col_names = FALSE, col_types = 'cciicc') %>%
   dplyr::rename(entrez = "X1", chr = "X2", start = 'X3', 
                 end = 'X4', strand = "X5", hgnc = 'X6') %>%
-  filter(!hgnc %in% mhc_genes_uniq) %>%
+  filter(!(((start > mhc_coords[2] & start < mhc_coords[3]) | (end > mhc_coords[2] & end < mhc_coords[3])) &
+             chr == mhc_coords[1])) %>%
   write_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.MHCremoved.gene.loc.txt'), col_names = FALSE) %>%
   mutate(chr = paste0("chr", chr)) %>%
   dplyr::select(chr, start, end, entrez, hgnc) 
 
+cat('\nMHC genes removed: ', nrow(gene_coords_raw) - nrow(gene_coords))
 
 ##  Create ctd object  ----------------------------------------------------------------
 # Requires raw count gene matrix - needs to be genes x cell and annotation data
@@ -158,7 +153,7 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
     
     # Note the inner join reduces number of genes by about 2-5K per cell type
     MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
-      inner_join(gene_coordinates) %>%
+      inner_join(gene_coords) %>%
       pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
       filter(quantile == 10) %>%
       select(cell_type, entrez) %>%
@@ -172,7 +167,9 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
       
     }
     
-
+    # Note that we can only set the windows for LDSR as input for magma is just a
+    # gene list, not a genomic region. Windows for genes in gene list are derived in MAGMA.
+    # You cannot set non-symmetrical gene windows in LDSR.
     for (WINDOW in c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
       
       if (WINDOW == '0UP_0DOWN') {
@@ -223,7 +220,7 @@ for (CTD_EXT in c("")) {
   COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_CONDITIONAL/')
   SIG_CELL_TYPES <- c("CGE_1", "CGE_2","LGE_1", "LGE_2", "LGE_4", 
                       "MGE_2", "MGE_3")
-  FILE_NAME <- 'ALL_LEVEL_1_SIG_AND_SKENE_INs_entrez_gene_list.tsv'
+  FILE_NAME <- 'skene_bryois_InN_entrez_gene_list_entrez_gene_list.tsv'
   dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
   file.copy(PUBLIC_DATA, paste0(COND_DIR, FILE_NAME))
   
@@ -298,7 +295,7 @@ for (CTD_EXT in c("")) {
     CELL_TYPES <- colnames(ctd[[LEVEL]]$specificity_quantiles)
   
   MAGMA <- as_tibble(ctd[[LEVEL]]$specificity, rownames = 'hgnc') %>%
-    inner_join(gene_coord) %>%
+    inner_join(gene_coords) %>%
     tidyr::pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'specificity') %>%
     group_by(cell_type) %>%
     top_n(n = 1000, wt = specificity) %>%
@@ -314,7 +311,7 @@ for (CTD_EXT in c("")) {
   }
   
   LDSR <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity), rownames = 'hgnc') %>%
-    inner_join(gene_coord) %>%
+    inner_join(gene_coords) %>%
     pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'specificity') %>%
     mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
     group_by(cell_type) %>%
