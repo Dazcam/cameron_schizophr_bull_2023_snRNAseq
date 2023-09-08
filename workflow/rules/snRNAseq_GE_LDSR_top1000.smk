@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------
 #
 #
-#    Script for running LDSC on snRNA-seq downsampled data
+#    Script for running LDSC on snRNA-seq  data top 1000 GeX specifcity genes
 #
 #
 # -------------------------------------------------------------------------------------

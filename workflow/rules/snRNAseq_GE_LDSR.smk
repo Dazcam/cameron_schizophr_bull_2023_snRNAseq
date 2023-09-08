@@ -74,7 +74,7 @@ rule ldsr_stratified_summary:
              """
 
              
-             head -1 {params.dir}snRNAseq.LGE.10UP_10DOWN.SCZ_baseline.v1.2.results > {output}
+             head -1 {params.dir}snRNAseq.LGE.100UP_100DOWN.SCZ_baseline.v1.2.results > {output}
              File={params.cell_types}
              Lines=$(cat $File)
              for Line in $Lines

@@ -1,0 +1,25 @@
+# TOTAL_GENES = 18280
+# TEST_DIRECTION = one-sided, positive (set), two-sided (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_VARIABLES = skene_InN (set)
+VARIABLE          TYPE  MODEL  NGENES         BETA     BETA_STD           SE            P
+skene_InN          SET      1    1329      0.13451     0.034926     0.034478   4.8039e-05
+skene_MSN          SET      1    1356      0.19992     0.052394     0.034128   2.3925e-09
+skene_InN          SET      2    1329      0.14471     0.037574     0.035417   2.2079e-05
+bryois_GABA1       SET      2    1314     0.028531    0.0073695     0.035246      0.20913
+skene_InN          SET      3    1329      0.12581     0.032666     0.035073    0.0001678
+bryois_GABA2       SET      3    1304      0.13248     0.034099     0.035716   0.00010432
+skene_InN          SET      4    1329       0.1425     0.037002     0.034451   1.7734e-05
+CGE_1              SET      4    1010       0.1543     0.035255     0.038523   3.1098e-05
+skene_InN          SET      5    1329      0.13629     0.035388      0.03461   4.1319e-05
+CGE_2              SET      5     985      0.15098      0.03409     0.039585   6.8658e-05
+skene_InN          SET      6    1329      0.13951     0.036223     0.034453   2.5836e-05
+LGE_1              SET      6    1043      0.19224     0.044592     0.038949   4.0377e-07
+skene_InN          SET      7    1329        0.146      0.03791      0.03442   1.1157e-05
+LGE_2              SET      7    1027      0.13251     0.030515     0.038593   0.00029867
+skene_InN          SET      8    1329       0.1431     0.037158     0.034473   1.6633e-05
+LGE_4              SET      8     992       0.1316     0.029814     0.039025   0.00037373
+skene_InN          SET      9    1329      0.13613     0.035348     0.034595   4.1771e-05
+MGE_2              SET      9    1131      0.14792     0.035639     0.037193   3.5039e-05
+skene_InN          SET     10    1329      0.13744     0.035688     0.034624    3.617e-05
+MGE_3              SET     10    1015      0.13638     0.031233     0.039542   0.00028209

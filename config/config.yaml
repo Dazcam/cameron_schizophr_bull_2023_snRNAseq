@@ -6,7 +6,7 @@ GWAS:
 # -----  OBJECT AND CLUSTER LEVEL -----
 SEURAT_OBJ:
     shi_bc:
-#    shi_bc_dwnSmpl:
+    shi_bc_dwnSmpl:
 
 
 # ------------  SLDSR  ----------------
@@ -40,6 +40,7 @@ CELL_TYPES:
     MGE_4:
     MGE_5:
     Microglia:
+    Progenitor:
     Progenitor_0:
     Progenitor_1:
     Progenitor_2:
@@ -73,11 +74,15 @@ COND_CELL_B:
 ADULT_CELL_TYPES:
     skene_InN:
     skene_MSN:
+    bryois_GABA1:
+    bryois_GABA2:
 
 # ------------  MAGMA  -----------------
 MAGMA_CONDITIONS:
     skene_InN:
     skene_MSN:
+    bryois_GABA1:
+    bryois_GABA2:    
     CGE_1:
     CGE_2:
     LGE_1:
@@ -88,9 +93,9 @@ MAGMA_CONDITIONS:
 
 
 GENE_WINDOW:
-    0UP_0DOWN:
-    10UP_10DOWN:
-    35UP_10DOWN:
+#    0UP_0DOWN:
+#    10UP_10DOWN:
+#    35UP_10DOWN:
     100UP_100DOWN:
 
 # Level only required for MAGMA

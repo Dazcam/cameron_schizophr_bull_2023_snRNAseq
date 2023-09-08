@@ -25,6 +25,10 @@ results/03MAGMA/*.genes.out
 results/03MAGMA/*.log.suppl
 results/03MAGMA/*.gsa.genes.out
 results/03MAGMA/*.genes.annot
+results/03MAGMA/magma_conditional/*.log
+results/03MAGMA/magma_conditional/*.gsa.genes.out
+results/03MAGMA/magma_conditional/*.genes.annot
+results/03MAGMA/magma_conditional/*.gsa.sets.genes.out
 results/magma_conditional/*.gsa.genes.out
 results/magma_conditional/*.gsa.sets.genes.out
 results/magma_conditional/*.log
