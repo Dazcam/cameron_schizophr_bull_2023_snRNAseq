@@ -18,9 +18,7 @@ rule ldsr_stratified_baseline_v12_internal_cond:
              then 
                printf 'L2_2\t0.0\t0.0\t0.0\t0.0\t0.0\t0.0\t0.0\t0.0\t0.0\n' > {output} 2> {log} 
              else  
-               python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} \
-               --ref-ld-chr {params.baseline},{params.cond_anns},{params.LD_anns} --overlap-annot \ 
-               --frqfile-chr {params.frqfile} --out {params.out_file} --print-coefficients 2> {log}
+               python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} --ref-ld-chr {params.baseline},{params.cond_anns},{params.LD_anns} --overlap-annot --frqfile-chr {params.frqfile} --out {params.out_file} --print-coefficients 2> {log}
              fi
              """ 
 
@@ -40,7 +38,7 @@ rule ldsr_stratified_summary_internal_cond:
              Lines=$(cat $File)
              for Line in $Lines
              do
-             grep L2_2 ../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_int/snRNAseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_2/$Line/g" >> {output} 2> {log}
+             grep L2_2 ../results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_int/snRNAseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_2/$Line/g" >> {output} 2> {log}
              done
 
              """

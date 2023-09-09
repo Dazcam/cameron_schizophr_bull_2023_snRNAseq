@@ -79,7 +79,7 @@ rule ldsr_stratified_summary_cond_adult:
              Lines=$(cat $File)
              for Line in $Lines
              do
-             grep L2_2 ../results/LDSR_part_herit/baseline_v1.2/LDSR_cond_adult/snRNAseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_2/$Line/g" >> {output} 2> {log}
+             grep L2_2 ../results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_adult/snRNAseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_2/$Line/g" >> {output} 2> {log}
              done
 
              """
