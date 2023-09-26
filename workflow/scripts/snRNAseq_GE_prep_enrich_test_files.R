@@ -156,7 +156,7 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
       inner_join(gene_coords) %>%
       pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
       filter(quantile == 10) %>%
-      select(cell_type, entrez) %>%
+      dplyr::select(cell_type, entrez) %>%
       with(., split(entrez, cell_type))
     
     for(i in names(MAGMA)) {
@@ -170,42 +170,42 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
     # Note that we can only set the windows for LDSR as input for magma is just a
     # gene list, not a genomic region. Windows for genes in gene list are derived in MAGMA.
     # You cannot set non-symmetrical gene windows in LDSR.
-    for (WINDOW in c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
-      
-      if (WINDOW == '0UP_0DOWN') {
-        
-        UPSTREAM <- 0
-        DOWNSTREAM <- 0
-        
-        } else if (WINDOW == '10UP_10DOWN') {
-        
-        UPSTREAM <- 10000
-        DOWNSTREAM <- 10000
-        
-        } else if (WINDOW == '35UP_10DOWN') {
-        
-        UPSTREAM <- 35000
-        DOWNSTREAM <- 10000
-        
-        } else {
-        
-        UPSTREAM <- 100000
-        DOWNSTREAM <- 100000
-        
-        }
-      
-      LDSR <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
-        inner_join(gene_coordinates) %>%
-        pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
-        filter(quantile == 10) %>%
-        mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
-        select(chr, start, end, entrez, cell_type) %>%
-        group_by(cell_type) %>%
-        group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', 
-                                                .y$cell_type, '.', WINDOW, '.bed'), col_names = FALSE))
-        
-    }
-  
+    # for (WINDOW in c('0UP_0DOWN', '10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')) {
+    #   
+    #   if (WINDOW == '0UP_0DOWN') {
+    #     
+    #     UPSTREAM <- 0
+    #     DOWNSTREAM <- 0
+    #     
+    #     } else if (WINDOW == '10UP_10DOWN') {
+    #     
+    #     UPSTREAM <- 10000
+    #     DOWNSTREAM <- 10000
+    #     
+    #     } else if (WINDOW == '35UP_10DOWN') {
+    #     
+    #     UPSTREAM <- 35000
+    #     DOWNSTREAM <- 10000
+    #     
+    #     } else {
+    #     
+    #     UPSTREAM <- 100000
+    #     DOWNSTREAM <- 100000
+    #     
+    #     }
+    #   
+    #   LDSR <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
+    #     inner_join(gene_coordinates) %>%
+    #     pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
+    #     filter(quantile == 10) %>%
+    #     mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
+    #     select(chr, start, end, entrez, cell_type) %>%
+    #     group_by(cell_type) %>%
+    #     group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', 
+    #                                             .y$cell_type, '.', WINDOW, '.bed'), col_names = FALSE))
+    #     
+    # }
+    # 
   }
 
 }
@@ -220,7 +220,7 @@ for (CTD_EXT in c("")) {
   COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_CONDITIONAL/')
   SIG_CELL_TYPES <- c("CGE_1", "CGE_2","LGE_1", "LGE_2", "LGE_4", 
                       "MGE_2", "MGE_3")
-  FILE_NAME <- 'skene_bryois_InN_entrez_gene_list_entrez_gene_list.tsv'
+  FILE_NAME <- 'skene_bryois_InN_entrez_gene_list.tsv'
   dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
   file.copy(PUBLIC_DATA, paste0(COND_DIR, FILE_NAME))
   
@@ -230,7 +230,7 @@ for (CTD_EXT in c("")) {
   # Note the inner join reduces number of genes by about 2-5K per cell type
   MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
     inner_join(gene_coords) %>%
-    select(chr, start, end, entrez, hgnc, any_of(SIG_CELL_TYPES)) %>%
+    dplyr::select(chr, start, end, entrez, hgnc, any_of(SIG_CELL_TYPES)) %>%
     pivot_longer(all_of(SIG_CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
     filter(quantile == 10) %>%
     select(cell_type, entrez) %>%
@@ -274,9 +274,9 @@ for (CTD_EXT in c("")) {
     
     genelist_name <- get_genelist_name(LINE)
     
-    cat('Obtaining gene coords for', cell_type, '...\n\n')
+    cat('Obtaining gene coords for', genelist_name, '...\n\n')
     cond_genelists <- readLines(PUBLIC_DATA)
-    df <- unlist(strsplit(cond_genelists[as.integer(LINE)], " ")) %>% 
+    df <- unlist(strsplit(cond_genelists[as.integer(LINE)], "\t")) %>% 
       as_tibble() %>%
       janitor::row_to_names(row_number = 1) %>%
       rename(entrez = 1) %>%
@@ -310,7 +310,7 @@ for (CTD_EXT in c("")) {
     tidyr::pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'specificity') %>%
     group_by(cell_type) %>%
     top_n(n = 1000, wt = specificity) %>%
-    select(cell_type, entrez) %>%
+    dplyr::select(cell_type, entrez) %>%
     with(., split(entrez, cell_type))
   
   for(i in names(MAGMA)) {
@@ -327,7 +327,7 @@ for (CTD_EXT in c("")) {
     mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
     group_by(cell_type) %>%
     top_n(n = 1000, wt = specificity) %>%
-    select(chr, start, end, entrez, cell_type) %>%
+    dplyr::select(chr, start, end, entrez, cell_type) %>%
     group_walk(~ write_tsv(.x[,1:4], paste0(GENELIST_DIR, SUB_DIR, 'LDSR_top_1000_genes/', 
                                             .y$cell_type, '.', WINDOW, '.bed'), col_names = FALSE))
   
