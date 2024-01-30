@@ -8,13 +8,13 @@
 
   # 1. Create ctd for level 1 and level 2 clusters
   # 2. Prep gene lists for MAGMA and LDSR (latter bed files)
-  # 3. Prep gene lists for MAGMA and LDSR lvl 2 internal and adult conditional analyses
+  # 3. Prep gene lists for MAGMA and LDSR lvl 2 conditional analyses
   # 4. Prep gene lists for top 1000 genes, rather than top 10% specific genes, analyses
 
 ##  Load Packages  --------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
 Require::Require(c("tidyverse", "readxl", "data.table", "BiocManager", "ggdendro",
-                   "Seurat", "biomaRt")) # Last 2 for AnnData objects
+                   "Seurat", "biomaRt")) 
 # BiocManager::install(c("EWCE", "AnnotationDbi", "org.Hs.eg.db", "scuttle", zellkonverter"))
 
 ##  Set Variables  --------------------------------------------------------------------
@@ -31,6 +31,7 @@ dir.create(paste0(DATA_DIR, 'refs/'))
 mhc_coords <- c(6, 28510120, 33480577)
 
 # Rm MHC genes -----------------------------------------------------------------------
+# hg19 reference file was downloaded from MAGMA website
 gene_coords_raw <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
                                  col_names = FALSE, col_types = 'cciicc')
 gene_coords <- read_tsv(paste0(DATA_DIR, 'refs/NCBI37.3.gene.loc.txt'),
@@ -66,25 +67,8 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
                       level2class = annotations$level2class)
   
   # Normalize - this is optional, was not used in the original EWCE publication
-  # cat('\nRunning SCT ... ', '\n\n')
-  # COUNTS_SCT <- EWCE::sct_normalize(RAW_COUNTS_NO_MHC) 
-  
   cat('\nRunning CPM ... ', '\n')
   COUNTs_CPM <- edgeR::cpm(RAW_COUNTS_NO_MHC)
-  
-  # cat('\nDropping uninformative genes raw ... ', '\n\n')
-  # DROP_GENES_RAW <- EWCE::drop_uninformative_genes(
-  #   exp = RAW_COUNTS_NO_MHC, 
-  #   input_species = "human",
-  #   output_species = "human",
-  #   level2annot = annotLevels$level2class) 
-  # 
-  # cat('\nDropping uninformative genes sct norm ... ', '\n\n')
-  # DROP_GENES_SCT <- EWCE::drop_uninformative_genes(
-  #   exp = COUNTS_SCT, 
-  #   input_species = "human",
-  #   output_species = "human",
-  #   level2annot = annotLevels$level2class) 
   
   cat('\nDropping uninformative genes cpm norm ... ', '\n\n')
   DROP_GENES_CPM <- EWCE::drop_uninformative_genes(
@@ -98,13 +82,6 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
       '\nRAW_NO_MHC:', dim(RAW_COUNTS_NO_MHC)[1],
       '\nCPM_DROP_GENES:', dim(DROP_GENES_CPM)[1])
   
-  # cat('\nGene counts:',
-  #     '\n\nRAW:', dim(RAW_COUNTS)[1],
-  #     '\nRAW_NO_MHC:', dim(RAW_COUNTS_NO_MHC)[1],
-  #     '\nNO_NORM_DROP_GENES:', dim(DROP_GENES_RAW)[1],
-  #     '\nSCT_DROP_GENES:', dim( DROP_GENES_SCT)[1],
-  #     '\nCPM_DROP_GENES:', dim(DROP_GENES_CPM)[1])
-  
   # Create object - saves ctd obj to folder
   cat('\nCreating CTD object ... \n\n')
   dir.create(R_DIR, showWarnings = FALSE)
@@ -116,7 +93,6 @@ for (ROBJ in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
 
   
 }
-
 
 ##  Write MAGMA/LDSR input files ------------------------------------------------------
 for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
@@ -151,7 +127,6 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
   
     CELL_TYPES <- colnames(ctd[[LEVEL]]$specificity_quantiles)
     
-    # Note the inner join reduces number of genes by about 2-5K per cell type
     MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
       inner_join(gene_coords) %>%
       pivot_longer(all_of(CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
@@ -211,85 +186,8 @@ for (CTD_EXT in c("", "_dwnSmpl_lvl1", "_dwnSmpl_lvl2")) {
 }
 
 # Prepare file for MAGMA conditional analyses - need to check which cells are sig. first
-for (CTD_EXT in c("")) {
-  
-  cat(paste0('\n\nRunning shi_bc', CTD_EXT, ' df ...\n\n'))
-    
-  LEVEL <- 2
-  SUB_DIR <- 'shi_bc/'
-  COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'MAGMA_CONDITIONAL/')
-  SIG_CELL_TYPES <- c("CGE_1", "CGE_2","LGE_1", "LGE_2", "LGE_4", 
-                      "MGE_2", "MGE_3")
-  FILE_NAME <- 'skene_bryois_InN_entrez_gene_list.tsv'
-  dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
-  file.copy(PUBLIC_DATA, paste0(COND_DIR, FILE_NAME))
-  
-  cat('Running cluster level:', LEVEL, '...\n\n')
-  load(paste0(R_DIR, 'ctd_shi', CTD_EXT, '.rda'))
-    
-  # Note the inner join reduces number of genes by about 2-5K per cell type
-  MAGMA <- as_tibble(as.matrix(ctd[[LEVEL]]$specificity_quantiles), rownames = 'hgnc') %>%
-    inner_join(gene_coords) %>%
-    dplyr::select(chr, start, end, entrez, hgnc, any_of(SIG_CELL_TYPES)) %>%
-    pivot_longer(all_of(SIG_CELL_TYPES), names_to = 'cell_type', values_to = 'quantile') %>%
-    filter(quantile == 10) %>%
-    select(cell_type, entrez) %>%
-    with(., split(entrez, cell_type))
-    
-    for(i in names(MAGMA)) {
-      
-      cat(i, " ", paste(MAGMA[[i]], collapse = " "), "\n", 
-          file = paste0(COND_DIR, FILE_NAME)
-          , sep = '', append = TRUE)
-      
-      }
-    
-    
-}
+source(paste0('~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/snRNAseq_GE_prep_conditional_genesets.R'))
 
-# Prepare files for LDSR conditional analyses - adult 
-for (CTD_EXT in c("")) {
-  
-  cat(paste0('\n\nRunning shi_bc', CTD_EXT, ' df ...\n\n'))
-  
-  UPSTREAM <- 100000
-  DOWNSTREAM <- 100000
-  WINDOW <- "100UP_100DOWN"
-  SUB_DIR <- "shi_bc/"
-  COND_DIR <- paste0(GENELIST_DIR, SUB_DIR, 'LDSR/')
-  dir.create(COND_DIR,  recursive = TRUE, showWarnings = FALSE)
-  
-  for (LINE in c('1', '2', '3', '4')) {
-    
-    get_genelist_name <- function(x) { # Instead of nested ifelse
-      switch(x,
-             '1' = 'skene_InN',
-             '2' = 'skene_MSN',
-             '3' = 'bryois_GABA1',
-             '4' = 'bryois_GABA2',
-             stop("Invalid value")
-      )
-      
-    }
-    
-    genelist_name <- get_genelist_name(LINE)
-    
-    cat('Obtaining gene coords for', genelist_name, '...\n\n')
-    cond_genelists <- readLines(PUBLIC_DATA)
-    df <- unlist(strsplit(cond_genelists[as.integer(LINE)], "\t")) %>% 
-      as_tibble() %>%
-      janitor::row_to_names(row_number = 1) %>%
-      rename(entrez = 1) %>%
-      inner_join(gene_coords) %>%
-      mutate(start = ifelse(start - UPSTREAM < 0, 0, start - UPSTREAM), end = end + DOWNSTREAM) %>%
-      select(chr, start, end, entrez) %>%
-      write_tsv(paste0(GENELIST_DIR, SUB_DIR, 'LDSR/', genelist_name, '.', WINDOW, '.bed'), col_names = FALSE)
-      
-  }
-  
-  
-}
-  
 
 # Additional analysis to run top n genes rather than top 10%
 #load(paste0(R_DIR, 'ctd_shi.rda'))
