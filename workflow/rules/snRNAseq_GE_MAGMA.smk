@@ -79,7 +79,7 @@ rule magma_map_snps_to_genes:
 
 rule magma_gene_analysis:
     input:   gene_annot = "../results/03MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}.genes.annot",
-             gwas = "../results/GWAS_for_MAGMA/{GWAS}_hg19_magma_ready.tsv"
+             gwas = "../results/GWAS_for_MAGMA/{GWAS}_hg19_MAGMA_ready.tsv"
     output:  "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
              "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.out"
     params:  ref = "../resources/refs/g1000_eur",
@@ -110,11 +110,11 @@ rule magma_gene_set_analysis:
              """
 
 rule magma_conditional:
-    input:   gene_list = "../results/02GENE_LISTS/shi_bc/MAGMA_CONDITIONAL/skene_bryois_InN_entrez_gene_list.tsv",
+    input:   gene_list = "../results/02GENE_LISTS/shi_bc/MAGMA_CONDITIONAL/snRNAseq_GE_conditional_gene_sets.txt",
              scz_magma = "../results/03MAGMA/snRNAseq_GE_SCZ.magma.{GENE_WINDOW}.genes.raw" 
-    output:  "../results/03MAGMA/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{GENE_WINDOW}.gsa.out"
-    params:  "../results/03MAGMA/magma_conditional/magma_all_sig_and_skene_condition_{CONDITION}.{GENE_WINDOW}"
-    message: "Running MAGMA on all significant cell types conditioning on {wildcards.CONDITION}. Gene window: {wildcards.GENE_WINDOW}"
+    output:  "../results/03MAGMA/magma_conditional/magma_conditional_{CONDITION}.{GENE_WINDOW}.gsa.out"
+    params:  "../results/03MAGMA/magma_conditional/magma_conditional_{CONDITION}.{GENE_WINDOW}"
+    message: "Running MAGMA conditional analyses: Conditioning on {wildcards.CONDITION}. Gene window: {wildcards.GENE_WINDOW}"
     log:     "../results/00LOG/03MAGMA/magma_conditional/snRNAseq.magma.conditional.{CONDITION}.{GENE_WINDOW}.log"
     shell:
              """

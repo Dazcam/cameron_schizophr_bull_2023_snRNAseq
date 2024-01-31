@@ -1,12 +1,17 @@
 # ------------  GWAS  ----------------
+# Note that permissions for MDD & 23andMe GWAS required
 GWAS:
-    SCZ:
-    HEIGHT:
+    SCZ: https://figshare.com/ndownloader/files/28169757 
+    HEIGHT: https://portals.broadinstitute.org/collaboration/giant/images/6/63/Meta-analysis_Wood_et_al%2BUKBiobank_2018.txt.gz
+    ASD: https://figshare.com/ndownloader/files/28169292
+    ADHD: https://figshare.com/ndownloader/files/40036684
+#    BPD: https://figshare.com/ndownloader/files/40036705    
+    MDD: /gluster/neurocluster/databank/c.mdnra_shared/summaryqc/restricted/wray-ripke-mattheisen-2017-mdd-23me/wray-ripke-mattheisen-2017-mdd-23me-summaryqc.tsv.gz    
 
 # -----  OBJECT AND CLUSTER LEVEL -----
 SEURAT_OBJ:
     shi_bc:
-    shi_bc_dwnSmpl:
+#    shi_bc_dwnSmpl:
 
 
 # ------------  SLDSR  ----------------
@@ -71,18 +76,27 @@ COND_CELL_B:
     MGE_2:
     MGE_3:
 
-ADULT_CELL_TYPES:
-    skene_InN:
-    skene_MSN:
-    bryois_GABA1:
-    bryois_GABA2:
+PUBLIC_CELL_TYPES:
+    fetal_FC_ExN_2:
+    fetal_FC_ExN_3:
+    fetal_FC_ExN_4:
+    fetal_GE_InN_2:
+    fetal_Hipp_ExN_3:
+    fetal_Hipp_ExN_5:
+    mouse_InN:
+    mouse_MSN:
+    mouse_CA1:
+    mouse_SS:
+    adult_exCA1:
+    adult_exCA3:
+    adult_exPFC1:
+    adult_exDG:
+    adult_exPFC2:
+    adult_GABA1:
+    adult_GABA2:
 
 # ------------  MAGMA  -----------------
 MAGMA_CONDITIONS:
-    skene_InN:
-    skene_MSN:
-    bryois_GABA1:
-    bryois_GABA2:    
     CGE_1:
     CGE_2:
     LGE_1:
@@ -102,20 +116,6 @@ GENE_WINDOW:
 LEVEL:
     1:
     2:
-
-# ------------  scDRS  -----------------
-H5AD_OBJ:
-    shi_bc:
-    shi_bc_LGE:
-    shi_bc_MGE:
-    shi_bc_CGE:
-    shi_bc_Progenitor:
-
-H5AD_OBJ_SUBCLUST:
-    shi_bc_LGE:
-    shi_bc_MGE:
-    shi_bc_CGE:
-    shi_bc_Progenitor:
 
 
 

@@ -1,0 +1,45 @@
+# -------------------------------------------------------------------------------------
+#
+#    Cluster config file for snRNAseq in human fetal brain GE study
+#
+# -------------------------------------------------------------------------------------
+
+__default__:
+    num_cores: 1
+    total_mem: 20G
+    duration: 0-05:00:00
+
+# -------  MUNGE SUMSTATS  ---------
+prep_for_ldsr:
+    num_cores: 1
+    maxvmem: 20G
+    duration: 3-00:00:00
+
+# -----------  LDSR  ---------------
+ldsr_make_annot:
+    num_cores: 1
+    maxvmem: 10G
+ldsr_ld_scores:
+    num_cores: 1
+    maxvmem: 10G
+partitioned_heritability:
+    num_cores: 1
+    maxvmem: 20G
+partitioned_heritability_conditional:
+    num_cores: 1
+    maxvmem: 20G
+
+# -----------  MAGMA  --------------
+magma_gene_analysis:
+    num_cores: 1
+    maxvmem: 10G
+    duration: 3-00:00:00
+
+# -----------  scDRS  --------------
+scDRS_compute_score:
+    num_cores: 1
+    maxvmem: 60G
+
+
+# -------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
