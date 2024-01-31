@@ -112,8 +112,8 @@ rule magma_gene_set_analysis:
 rule magma_conditional:
     input:   gene_list = "../results/02GENE_LISTS/shi_bc/MAGMA_CONDITIONAL/snRNAseq_GE_conditional_gene_sets.txt",
              scz_magma = "../results/03MAGMA/snRNAseq_GE_SCZ.magma.{GENE_WINDOW}.genes.raw" 
-    output:  "../results/03MAGMA/magma_conditional/magma_conditional_{CONDITION}.{GENE_WINDOW}.gsa.out"
-    params:  "../results/03MAGMA/magma_conditional/magma_conditional_{CONDITION}.{GENE_WINDOW}"
+    output:  "../results/03MAGMA/magma_conditional/snRNAseq_GE_SCZ_magma_conditional_{CONDITION}.{GENE_WINDOW}.gsa.out"
+    params:  "../results/03MAGMA/magma_conditional/snRNAseq_GE_SCZ_magma_conditional_{CONDITION}.{GENE_WINDOW}"
     message: "Running MAGMA conditional analyses: Conditioning on {wildcards.CONDITION}. Gene window: {wildcards.GENE_WINDOW}"
     log:     "../results/00LOG/03MAGMA/magma_conditional/snRNAseq.magma.conditional.{CONDITION}.{GENE_WINDOW}.log"
     shell:
@@ -127,14 +127,30 @@ rule magma_gene_set_analysis_top1000:
     input:   genes = "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
              data  = "../results/02GENE_LISTS/{SEURAT_OBJ}/MAGMA/shi_top1000_lvl_{LEVEL}.txt"
     output:  "../results/03MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out"
-    params:  out = "../results/03MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}"
+    params:  "../results/03MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.magma.{GENE_WINDOW}"
     message: "Running MAGMA gene set analysis step for {wildcards.GWAS}, {wildcards.SEURAT_OBJ}, top 1000 genes, cluster level {wildcards.LEVEL}. Gene window: {wildcards.GENE_WINDOW}"
     log:     "../results/00LOG/03MAGMA/snRNAseq.GE.gene_set_analysis.{GWAS}.{SEURAT_OBJ}.top1000.lvl_{LEVEL}.{GENE_WINDOW}.log"
     shell:
              """
 
              module load magma/1.10
-             magma --gene-results {input.genes} --set-annot {input.data} --out {params.out} &> {log}
+             magma --gene-results {input.genes} --set-annot {input.data} --out {params} &> {log}
+
+             """
+
+
+rule magma_gene_set_analysis_diffExp:
+    input:   genes = "../results/03MAGMA/snRNAseq_GE_SCZ.magma.35UP_10DOWN.genes.raw",
+             data  = "../results/02GENE_LISTS/shi_bc/MAGMA_DIFFEXP/snRNAseq_GE_diffexp_gene_sets.txt"
+    output:  "../results/03MAGMA/magma_diffexp/snRNAseq_GE_magma_diffexp.35UP_10DOWN.gsa.out"
+    params:  "../results/03MAGMA/magma_diffexp/snRNAseq_GE_magma_diffexp.35UP_10DOWN"
+    message: "Running MAGMA gene set analysis step for SCZ, monocle diff exp genes, Gene window: 35UP_10DOWN"
+    log:     "../results/00LOG/03MAGMA/snRNAseq.GE.gene_set_analysis.SCZ.diffexp.35UP_10DOWN.log"
+    shell:
+             """
+
+             module load magma/1.10
+             magma --gene-results {input.genes} --set-annot {input.data} --out {params} &> {log}
 
              """
 

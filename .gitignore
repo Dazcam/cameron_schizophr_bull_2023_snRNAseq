@@ -32,12 +32,16 @@ results/03MAGMA/magma_conditional/*.gsa.sets.genes.out
 results/magma_conditional/*.gsa.genes.out
 results/magma_conditional/*.gsa.sets.genes.out
 results/magma_conditional/*.log
+results/03MAGMA/magma_diffexp/*.log
+results/03MAGMA/magma_diffexp/*.gsa.genes.out
+results/03MAGMA/magma_diffexp/*.genes.annot
+results/03MAGMA/magma_diffexp/*.gsa.sets.genes.out
 results/LDSR_part_herit/baseline_v1.2/*.log
 results/04LDSR/part_herit/baseline_v1.2/*.results
 results/04LDSR/part_herit/baseline_v1.2/LDSR_top_1000_genes/*baseline.v1.2.log
 results/04LDSR/part_herit/baseline_v1.2/LDSR_top_1000_genes/*baseline.v1.2.results
-results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_adult/*baseline.v1.2.log
-results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_adult/*baseline.v1.2.results
+results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_public/*baseline.v1.2.log
+results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_public/*baseline.v1.2.results
 results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_int/*baseline.v1.2.log
 results/04LDSR/part_herit/baseline_v1.2/LDSR_cond_int/*baseline.v1.2.results
 workflow/scripts/scanpy_desktop.py
@@ -47,3 +51,5 @@ workflow/scripts/snRNAseq_GE_plots_for_paper.R
 workflow/scripts/snRNAseq_GE_prepare_data_for_scDRS.py
 workflow/scripts/snRNAseq_GE_scDRS_visualisation.R
 workflow/scripts/snRNAseq_GE_scDRS_visualisation.py
+results/04LDSR/part_herit/baseline_v1.2/LDSR_DIFFEXP/*.log
+results/04LDSR/part_herit/baseline_v1.2/LDSR_DIFFEXP/*.results

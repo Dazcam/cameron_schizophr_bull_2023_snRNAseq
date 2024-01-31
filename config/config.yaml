@@ -2,11 +2,11 @@
 # Note that permissions for MDD & 23andMe GWAS required
 GWAS:
     SCZ: https://figshare.com/ndownloader/files/28169757 
-    HEIGHT: https://portals.broadinstitute.org/collaboration/giant/images/6/63/Meta-analysis_Wood_et_al%2BUKBiobank_2018.txt.gz
-    ASD: https://figshare.com/ndownloader/files/28169292
-    ADHD: https://figshare.com/ndownloader/files/40036684
+#    HEIGHT: https://portals.broadinstitute.org/collaboration/giant/images/6/63/Meta-analysis_Wood_et_al%2BUKBiobank_2018.txt.gz
+#    ASD: https://figshare.com/ndownloader/files/28169292
+#    ADHD: https://figshare.com/ndownloader/files/40036684
 #    BPD: https://figshare.com/ndownloader/files/40036705    
-    MDD: /gluster/neurocluster/databank/c.mdnra_shared/summaryqc/restricted/wray-ripke-mattheisen-2017-mdd-23me/wray-ripke-mattheisen-2017-mdd-23me-summaryqc.tsv.gz    
+#    MDD: /gluster/neurocluster/databank/c.mdnra_shared/summaryqc/restricted/wray-ripke-mattheisen-2017-mdd-23me/wray-ripke-mattheisen-2017-mdd-23me-summaryqc.tsv.gz    
 
 # -----  OBJECT AND CLUSTER LEVEL -----
 SEURAT_OBJ:
@@ -94,6 +94,12 @@ PUBLIC_CELL_TYPES:
     adult_exPFC2:
     adult_GABA1:
     adult_GABA2:
+
+DIFFEXP_CELL_TYPES:
+    early_InN_vs_Prog:
+    LGE_early_InN:
+    MGE_early_InN:
+    CGE_early_InN:
 
 # ------------  MAGMA  -----------------
 MAGMA_CONDITIONS:
