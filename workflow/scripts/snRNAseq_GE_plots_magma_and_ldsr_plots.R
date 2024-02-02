@@ -26,8 +26,7 @@ MAGMA_COND_DATA_DIR <- paste0(MAGMA_DATA_DIR, 'magma_conditional/')
 LDSC_DATA_DIR <- paste0(RESULTS_DIR, '04LDSR/part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 GENE_WINDOW <- c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
-COND_CELL_TYPES <- c('skene_InN', 'skene_MSN', 'bryois_GABA1', 'bryois_GABA2', 
-                     'CGE_1', 'CGE_2', 'LGE_1', 'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')
+COND_CELL_TYPES <- c('CGE_1', 'CGE_2', 'LGE_1', 'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')
 LVL1_CELL_TYPES <- c("Microglia", "Progenitor", "IPC", "MGE-N", "LGE-N", 
                      "CGE-N")
 LVL2_CELL_TYPES <- c("Progenitor-10", "Progenitor-9", "Progenitor-8", "Progenitor-7", 
@@ -39,7 +38,6 @@ LVL2_CELL_TYPES <- c("Progenitor-10", "Progenitor-9", "Progenitor-8", "Progenito
                      "CGE-N-2", "CGE-N-1", "CGE-N-0")
 LVL1_CORR <- 6
 LVL2_CORR <- 36
-
 
 ## Main gene set enrichment figures ---------------------------------------------------
 # MAGMA - prepare df
@@ -719,6 +717,58 @@ TEST_lvl_2 <- plot_grid(SCZ_magma_ldsr_lvl_2_TEST_plot + NoLegend(),
                         HEIGHT_magma_ldsr_lvl_2_TEST_plot + NoLegend(), 
                         legend, ncol = 3, rel_widths = c(1, 1, 0.5), 
                         labels = c('A', 'B', ''), label_size = 20)
+
+
+## Diff exp genes  ---------------------------------------------------------------------
+# MAGMA - prepare df
+cat('\nPreparing MAGMA data ... \n')
+magma_diffexp_tbl <- read.table(paste0(MAGMA_DATA_DIR, 
+                              'magma_diffexp/snRNAseq_GE_magma_diffexp.35UP_10DOWN.gsa.out'), 
+                       header = FALSE) %>%
+  as_tibble() %>%
+  janitor::row_to_names(row_number = 1) %>% 
+  dplyr::rename(Category = VARIABLE) %>%
+  mutate(Category = str_replace_all(Category, '_', '-')) %>%
+  mutate(MAGMA = -log10(as.numeric(P))) %>%
+  dplyr::select(Category, MAGMA)  
+      
+# LDSR - prepare df
+ldsr_diffexp_tbl <- read_tsv(paste0(LDSC_DATA_DIR, 
+                                    '/LDSR_DIFFEXP/snRNAseq_LDSR_SCZ_baseline.v1.2_summary.tsv')) %>%
+  as_tibble() %>%
+  mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
+  separate(Category, into = c('Category', 'Window'), sep = '\\.') %>%
+  mutate(Category = str_replace_all(Category, '_', '-')) %>%
+  dplyr::select(Category, LDSR) 
+
+# Plot
+levels <- c("LGE-early-InN", "CGE-early-InN", "MGE-early-InN", "early-InN-vs-Prog")
+magma_diffexp_tbl %>%
+  left_join(ldsr_diffexp_tbl) %>%
+  mutate(Category = factor(Category, levels = levels))  %>% # order y-axis
+  pivot_longer(c(MAGMA, LDSR)) %>%
+  ggplot(aes(x = value, y = Category, 
+                             fill = name, group = rev(name))) +
+  geom_bar(stat = "identity", color = 'black', position = "dodge") +
+  geom_vline(xintercept=-log10(0.05/4), linetype = "dashed", color = "black") +
+  geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+  theme_bw() +
+  theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(colour = "black", linewidth = 1),
+        plot.title = element_text(hjust = 0.5, face = 'bold'),
+        axis.title.x = element_text(colour = "#000000", size = 14),
+        axis.title.y = element_text(colour = "#000000", size = 14),
+        axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+        axis.text.y  = element_text(colour = "#000000", size = 13),
+        legend.text = element_text(size = 13),
+        legend.title = element_blank()) +
+  xlab(expression(-log[10](P))) +
+  ylab('Cell type') +
+  xlim(0, 16) 
+  
+
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 

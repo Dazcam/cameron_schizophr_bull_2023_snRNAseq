@@ -19,6 +19,7 @@ options(timeout = max(100000, getOption("timeout"))) # Prevent timeout errors
 out_dir <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
 data_dir <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/public_data/'
 genelist_dir <- paste0(out_dir, '02GENE_LISTS/')
+monocle_dir <- paste0(genelist_dir, 'diff_exp/')
 cond_dir <- paste0(genelist_dir, 'shi_bc/MAGMA_CONDITIONAL/')
 ldsr_cond_dir <- paste0(genelist_dir, 'shi_bc/LDSR/')
 dir.create(ldsr_cond_dir,  recursive = TRUE, showWarnings = FALSE)
