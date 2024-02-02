@@ -97,9 +97,10 @@ PUBLIC_CELL_TYPES:
 
 DIFFEXP_CELL_TYPES:
     early_InN_vs_Prog:
-    LGE_early_InN:
-    MGE_early_InN:
-    CGE_early_InN:
+    CGE_vs_early_InN:
+    MGE_vs_early_InN:
+    CGEandLGE_vs_early_InN:
+    LGE_vs_CGE:
 
 # ------------  MAGMA  -----------------
 MAGMA_CONDITIONS:
