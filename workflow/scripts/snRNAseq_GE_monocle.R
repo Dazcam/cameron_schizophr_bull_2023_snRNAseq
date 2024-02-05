@@ -26,7 +26,7 @@ monocle_dir <- paste0(genelist_dir, 'diff_exp/')
 diffexp_dir <- paste0(genelist_dir, 'shi_bc/MAGMA_DIFFEXP/')
 ldsr_diffexp_dir <- paste0(genelist_dir, 'shi_bc/LDSR_DIFFEXP/')
 dir.create(paste0(diffexp_dir))
-dir.create(paste0(ldsr_diff_dir))
+dir.create(paste0(ldsr_diffexp_dir))
 upstream <- 100000
 downstream <- 100000
 window <- "100UP_100DOWN"
@@ -142,7 +142,7 @@ for(i in names(magma_diffExp_list)) {
   
 }
      
-for (LINE in seq(1, 4, 1)) {
+for (LINE in seq(1, 5, 1)) {
   
   cond_genelists <- readLines(paste0(diffexp_dir, 'snRNAseq_GE_diffexp_gene_sets.txt'))
   genelist_name <- unlist(strsplit(cond_genelists[as.integer(LINE)], " "))[1]
