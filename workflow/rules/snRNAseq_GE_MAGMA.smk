@@ -16,7 +16,7 @@ localrules: magma_download_refs
 rule magma_download_refs:
     output:  "../resources/refs/g1000_eur.bim"
     params:  "../resources/refs/"
-    log:     "../results/01LOG/03MAGMA/snRNAseq.GE.getRefs.log"
+    log:     "../results/01LOG/04MAGMA/snRNAseq.GE.getRefs.log"
     shell:
              """
              
@@ -28,10 +28,10 @@ rule magma_download_refs:
 rule magma_map_snps_to_genes:
     input:   snp_loc = "../resources/refs/g1000_eur.bim",
              gene_loc = "../resources/refs/NCBI37.3.MHCremoved.gene.loc.txt"
-    output:  "../results/03MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}.genes.annot"
-    params:  "../results/03MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}"
+    output:  "../results/04MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}.genes.annot"
+    params:  "../results/04MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}"
     message: "Running MAGMA annotation step to map SNPs to genes. Gene window: {wildcards.GENE_WINDOW}"
-    log:     "../results/00LOG/03MAGMA/snRNAseq.GE.annotate.snps2genes.{GENE_WINDOW}.log"
+    log:     "../results/00LOG/04MAGMA/snRNAseq.GE.annotate.snps2genes.{GENE_WINDOW}.log"
     run: 
         if "0UP_0DOWN" in wildcards.GENE_WINDOW:
 
@@ -78,14 +78,14 @@ rule magma_map_snps_to_genes:
             """)
 
 rule magma_gene_analysis:
-    input:   gene_annot = "../results/03MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}.genes.annot",
-             gwas = "../results/GWAS_for_MAGMA/{GWAS}_hg19_MAGMA_ready.tsv"
-    output:  "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
-             "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.out"
+    input:   gene_annot = "../results/04MAGMA/snRNAseq_GE.magma.{GENE_WINDOW}.genes.annot",
+             gwas = "../results/03SUMSTATS/{GWAS}_hg19_MAGMA_ready.tsv"
+    output:  "../results/04MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
+             "../results/04MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.out"
     params:  ref = "../resources/refs/g1000_eur",
-             out = "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}"
+             out = "../results/04MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}"
     message: "Running magma gene analysis step for {wildcards.GWAS}. Gene window: {wildcards.GENE_WINDOW}"
-    log:     "../results/00LOG/03MAGMA/snRNAseq.GE.gene_analysis.{GWAS}.{GENE_WINDOW}.log"
+    log:     "../results/00LOG/04MAGMA/snRNAseq.GE.gene_analysis.{GWAS}.{GENE_WINDOW}.log"
     shell:
              """
 
@@ -95,12 +95,12 @@ rule magma_gene_analysis:
              """
 
 rule magma_gene_set_analysis:
-    input:   genes = "../results/03MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
+    input:   genes = "../results/04MAGMA/snRNAseq_GE_{GWAS}.magma.{GENE_WINDOW}.genes.raw",
              data  = "../results/02GENE_LISTS/{SEURAT_OBJ}/MAGMA/shi_top10_lvl_{LEVEL}.txt"
-    output:  "../results/03MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out"
-    params:  out = "../results/03MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}"
+    output:  "../results/04MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}.gsa.out"
+    params:  out = "../results/04MAGMA/snRNAseq_GE_{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.magma.{GENE_WINDOW}"
     message: "Running MAGMA gene set analysis step for {wildcards.GWAS}, {wildcards.SEURAT_OBJ}, cluster level {wildcards.LEVEL}. Gene window: {wildcards.GENE_WINDOW}"
-    log:     "../results/00LOG/03MAGMA/snRNAseq.GE.gene_set_analysis.{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.{GENE_WINDOW}.log"
+    log:     "../results/00LOG/04MAGMA/snRNAseq.GE.gene_set_analysis.{GWAS}.{SEURAT_OBJ}.lvl_{LEVEL}.{GENE_WINDOW}.log"
     shell:
              """
 
@@ -111,11 +111,11 @@ rule magma_gene_set_analysis:
 
 rule magma_conditional:
     input:   gene_list = "../results/02GENE_LISTS/shi_bc/MAGMA_CONDITIONAL/snRNAseq_GE_conditional_gene_sets.txt",
-             scz_magma = "../results/03MAGMA/snRNAseq_GE_SCZ.magma.{GENE_WINDOW}.genes.raw" 
-    output:  "../results/03MAGMA/magma_conditional/snRNAseq_GE_SCZ_magma_conditional_{CONDITION}.{GENE_WINDOW}.gsa.out"
-    params:  "../results/03MAGMA/magma_conditional/snRNAseq_GE_SCZ_magma_conditional_{CONDITION}.{GENE_WINDOW}"
+             scz_magma = "../results/04MAGMA/snRNAseq_GE_SCZ.magma.{GENE_WINDOW}.genes.raw" 
+    output:  "../results/04MAGMA/magma_conditional/snRNAseq_GE_SCZ_magma_conditional_{CONDITION}.{GENE_WINDOW}.gsa.out"
+    params:  "../results/04MAGMA/magma_conditional/snRNAseq_GE_SCZ_magma_conditional_{CONDITION}.{GENE_WINDOW}"
     message: "Running MAGMA conditional analyses: Conditioning on {wildcards.CONDITION}. Gene window: {wildcards.GENE_WINDOW}"
-    log:     "../results/00LOG/03MAGMA/magma_conditional/snRNAseq.magma.conditional.{CONDITION}.{GENE_WINDOW}.log"
+    log:     "../results/00LOG/04MAGMA/magma_conditional/snRNAseq.magma.conditional.{CONDITION}.{GENE_WINDOW}.log"
     shell:
              """
 

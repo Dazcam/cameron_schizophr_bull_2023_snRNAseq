@@ -1,11 +1,11 @@
 # ------------  GWAS  ----------------
 # Note that permissions for MDD & 23andMe GWAS required
 GWAS:
-    SCZ: https://figshare.com/ndownloader/files/28169757 
+#    SCZ: https://figshare.com/ndownloader/files/28169757 
 #    HEIGHT: https://portals.broadinstitute.org/collaboration/giant/images/6/63/Meta-analysis_Wood_et_al%2BUKBiobank_2018.txt.gz
 #    ASD: https://figshare.com/ndownloader/files/28169292
 #    ADHD: https://figshare.com/ndownloader/files/40036684
-#    BPD: https://figshare.com/ndownloader/files/40036705    
+    BPD: /gluster/neurocluster/databank/PGC3_BP/daner_bip_pgc3_nm.gz
 #    MDD: /gluster/neurocluster/databank/c.mdnra_shared/summaryqc/restricted/wray-ripke-mattheisen-2017-mdd-23me/wray-ripke-mattheisen-2017-mdd-23me-summaryqc.tsv.gz    
 
 # -----  OBJECT AND CLUSTER LEVEL -----
@@ -116,8 +116,8 @@ MAGMA_CONDITIONS:
 GENE_WINDOW:
 #    0UP_0DOWN:
 #    10UP_10DOWN:
-#    35UP_10DOWN:
-    100UP_100DOWN:
+    35UP_10DOWN:
+#    100UP_100DOWN:
 
 # Level only required for MAGMA
 LEVEL:
