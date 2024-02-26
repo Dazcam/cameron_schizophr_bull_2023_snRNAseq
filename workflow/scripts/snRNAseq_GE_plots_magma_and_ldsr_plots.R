@@ -1,14 +1,12 @@
 # -------------------------------------------------------------------------------------
 #
-#    snRNAseq MAGMA and LDSR plots 
+#    snRNAseq MAGMA and LDSR barcharts
 #
 # -------------------------------------------------------------------------------------
 
 ## Info  ------------------------------------------------------------------------------
 
 #  Code for figures: clusters lvl 1 and lvl 2
-#  Issues: Region IDs encoded differently in MAGMA and LSDR analysis
-#          Much tweaking needed between ggplot and cowplot for FDR < 5% line
 
 ##  Load packages  --------------------------------------------------------------------
 cat('\nLoading packages ... \n\n')
@@ -19,11 +17,11 @@ library(reshape2) # For melt
 library(Seurat) # For no legend
 
 ##  Initialise variables  -------------------------------------------------------------
-GWAS <- c('SCZ', 'HEIGHT')
+GWAS <- c('SCZ', 'BPD', 'ASD', 'MDD', 'ADHD', 'HEIGHT')
 RESULTS_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/results/'
-MAGMA_DATA_DIR <- paste0(RESULTS_DIR, '03MAGMA/')
+MAGMA_DATA_DIR <- paste0(RESULTS_DIR, '04MAGMA/')
 MAGMA_COND_DATA_DIR <- paste0(MAGMA_DATA_DIR, 'magma_conditional/')
-LDSC_DATA_DIR <- paste0(RESULTS_DIR, '04LDSR/part_herit/baseline_v1.2/')
+LDSC_DATA_DIR <- paste0(RESULTS_DIR, '05LDSR/part_herit/baseline_v1.2/')
 FIG_DIR <- paste0(RESULTS_DIR, 'figures/')
 GENE_WINDOW <- c('10UP_10DOWN', '35UP_10DOWN', '100UP_100DOWN')
 COND_CELL_TYPES <- c('CGE_1', 'CGE_2', 'LGE_1', 'LGE_2', 'LGE_4', 'MGE_2', 'MGE_3')
@@ -45,29 +43,26 @@ cat('\nPreparing MAGMA data ... \n')
 for (LEVEL in c('1', '2')) {
 
   for (DISORDER in GWAS) {
-    
-    for (WINDOW in GENE_WINDOW) {
         
-      CORR <- if (LEVEL == '1') 0.05 / LVL1_CORR else 0.05 / LVL2_CORR
+    CORR <- if (LEVEL == '1') 0.05 / LVL1_CORR else 0.05 / LVL2_CORR
 
-      MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.shi_bc.lvl_', 
-                                          LEVEL, '.magma.', WINDOW, '.gsa.out'), header = FALSE) %>%
-        janitor::row_to_names(row_number = 1) %>% 
-        mutate(VARIABLE = gsub('\\.', '-', VARIABLE)) %>%
-        mutate(MAGMA = -log10(as.numeric(P))) %>%
-        select(VARIABLE, MAGMA) %>%
-        dplyr::rename(Category = VARIABLE) %>%    
-        mutate(Category = str_replace(Category, 'GE', 'GE-N')) %>%
-        mutate(Category = str_replace(Category, 'Early_InN', 'IPC')) %>%
-        mutate(Category = str_replace(Category, '_', '-'))
-               
-      MAGMA_SIG <- MAGMA_DF %>%
-        filter(MAGMA > -log10(CORR))
-      
-      assign(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_df'), MAGMA_DF, envir = .GlobalEnv) 
-      assign(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_', WINDOW, '_sig_df'), MAGMA_SIG, envir = .GlobalEnv)
+    MAGMA_DF <- read.table(paste0(MAGMA_DATA_DIR, 'snRNAseq_GE_', DISORDER, '.shi_bc.lvl_', 
+                                        LEVEL, '.magma.35UP_10DOWN.gsa.out'), header = FALSE) %>%
+      janitor::row_to_names(row_number = 1) %>% 
+      mutate(VARIABLE = gsub('\\.', '-', VARIABLE)) %>%
+      mutate(MAGMA = -log10(as.numeric(P))) %>%
+      dplyr::select(VARIABLE, MAGMA) %>%
+      dplyr::rename(Category = VARIABLE) %>%    
+      mutate(Category = str_replace(Category, 'GE', 'GE-N')) %>%
+      mutate(Category = str_replace(Category, 'Early_InN', 'IPC')) %>%
+      mutate(Category = str_replace(Category, '_', '-'))
+             
+    MAGMA_SIG <- MAGMA_DF %>%
+      filter(MAGMA > -log10(CORR))
+    
+    assign(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df'), MAGMA_DF, envir = .GlobalEnv) 
+    assign(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_sig_df'), MAGMA_SIG, envir = .GlobalEnv)
                     
-    }
  
   }
   
@@ -109,7 +104,7 @@ for (DISORDER in GWAS) {
       }
         
       LDSR_DF <- LDSR_FULL_DF %>%
-        select(Category, LDSR)
+        dplyr::select(Category, LDSR)
       
       LDSR_SIG <- LDSR_DF %>%
         filter(LDSR > -log10(CORR))
@@ -132,6 +127,7 @@ for (LEVEL in c('1', '2')) {
     
     LEVELS <- if (LEVEL == '1') LVL1_CELL_TYPES else LVL2_CELL_TYPES
     CORR <- if (LEVEL == '1') 0.05 / LVL1_CORR else  0.05 / LVL2_CORR
+    LIMIT <- if (LEVEL == '1') 6 else  8
     
     PLOT_DF <- left_join(get(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df')), 
                          get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
@@ -160,7 +156,7 @@ for (LEVEL in c('1', '2')) {
             legend.title = element_blank()) +
       xlab(expression(-log[10](P))) +
       ylab('Cell type') +
-      xlim(0, 8) 
+      xlim(0, LIMIT) 
       
     assign(paste0(DISORDER, '_magma_ldsr_lvl_', LEVEL, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
     
@@ -688,10 +684,34 @@ plot_grid(magma_ldsr_cond_public_CGE_1_plot, magma_ldsr_cond_public_CGE_2_plot,
 legend <- get_legend(SCZ_magma_ldsr_lvl_1_plot)
 
 # Main plots - fig 2 - Lvl 1 - Gene set enrichment barplots
-figure_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend(), 
-                      HEIGHT_magma_ldsr_lvl_1_plot + NoLegend(), 
-                      legend, ncol = 3, rel_widths = c(1, 1, 0.5),  
-                      labels = c('A', 'B', ''), label_size = 20)
+figure_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle(NULL), 
+                      legend, ncol = 2, rel_widths = c(1, 0.3))
+
+# Main plots - fig 3 - Lvl 2 - Gene set enrichment barplots
+figure_3 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle(NULL), 
+                      legend, ncol = 2, rel_widths = c(1, 0.3))
+
+# Supp figs all GWAS
+# Main plots - fig 2 - Lvl 1 - Gene set enrichment barplots
+figure_S4_gwas <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Schizophrenia'),
+                            ADHD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('ADHD'),
+                            ASD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Autism'),
+                            BPD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Bipolar Disorder'),
+                            MDD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Major Depressive Disorder'), 
+                            HEIGHT_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Height'), 
+                            ncol = 3)
+figure_S4 <- ggdraw(figure_S4_gwas) +
+  draw_plot(legend, .67, .45, .5, .4)
+
+figure_S11_gwas <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Schizophrenia'),
+                             ADHD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('ADHD'),
+                             ASD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Autism'),
+                             BPD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Bipolar Disorder'),
+                             MDD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Major Depressive Disorder'), 
+                             HEIGHT_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Height'), 
+                             ncol = 3)
+figure_S11 <- ggdraw(figure_S11_gwas) +
+  draw_plot(legend, .67, .45, .5, .3)
 
 # Main plots - fig 2 - Lvl 2 - Gene set enrichment barplots
 figure_4 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend(), 
