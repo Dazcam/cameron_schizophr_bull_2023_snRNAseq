@@ -37,7 +37,27 @@ LVL2_CELL_TYPES <- c("Progenitor-10", "Progenitor-9", "Progenitor-8", "Progenito
 LVL1_CORR <- 6
 LVL2_CORR <- 36
 
-## Main gene set enrichment figures ---------------------------------------------------
+my_theme <- function() {
+  
+    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 1),
+          plot.title = element_text(hjust = 0.5, face = 'bold'),
+          axis.title.x = element_text(colour = "#000000", size = 14),
+          axis.title.y = element_text(colour = "#000000", size = 14),
+          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.text = element_text(size = 13),
+          legend.title = element_blank(),
+          strip.text.y = element_blank()) 
+  
+}
+
+## INDIVIDUAL FIGURES  ----------------------------------------------------------------
+
+## MAIN L1 and L2 FIGS -----
+
 # MAGMA - prepare df
 cat('\nPreparing MAGMA data ... \n')
 for (LEVEL in c('1', '2')) {
@@ -55,7 +75,7 @@ for (LEVEL in c('1', '2')) {
       dplyr::rename(Category = VARIABLE) %>%    
       mutate(Category = str_replace(Category, 'GE', 'GE-N')) %>%
       mutate(Category = str_replace(Category, 'Early_InN', 'IPC')) %>%
-      mutate(Category = str_replace(Category, '_', '-'))
+      mutate(Category = str_replace(Category, '_', '-')) 
              
     MAGMA_SIG <- MAGMA_DF %>%
       filter(MAGMA > -log10(CORR))
@@ -133,30 +153,38 @@ for (LEVEL in c('1', '2')) {
                          get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
                          by = 'Category') %>%
       mutate(Category = factor(Category, levels = LEVELS)) %>%
-      reshape2::melt() 
-
-        
-    MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = Category, 
-                                                  fill = variable, group = rev(variable))) +
-    geom_bar(stat = "identity", color = 'black', position = "dodge") +
+      rowwise() %>% 
+      mutate(MEAN = mean(c(MAGMA, LDSR))) %>%
+      mutate(COL = case_when(
+        MAGMA > -log10(CORR) & LDSR > -log10(CORR) ~ "Both",
+        MAGMA > -log10(CORR) & LDSR <= -log10(CORR) ~ "MAGMA",
+        MAGMA <= -log10(CORR) & LDSR > -log10(CORR) ~ "SLDSR",
+        MAGMA < -log10(CORR) & LDSR < -log10(CORR) ~ "None")) %>%
+      mutate(COL = factor(COL, levels = c('Both', 'MAGMA', 'SLDSR', 'None'))) %>%
+      mutate(TYPE = str_extract(Category, "^.{2}")) %>%
+      mutate(TYPE = factor(TYPE, levels = c('CG', 'LG', 'MG', 'IP', 'Mi', 'Pr')))
+    
+    MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = MEAN, y = Category, 
+                                                  fill = COL)) +
+    geom_bar(stat = "identity", color = 'black', position = "dodge", width = 0.8) +
       geom_vline(xintercept=-log10(CORR), linetype = "dashed", color = "black") +
       geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-      theme_bw() +
+      scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
+                                   "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
+                        drop = FALSE) +
       ggtitle(DISORDER) +
-      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(),
-            panel.border = element_rect(colour = "black", size = 1),
-            plot.title = element_text(hjust = 0.5, face = 'bold'),
-            axis.title.x = element_text(colour = "#000000", size = 14),
-            axis.title.y = element_text(colour = "#000000", size = 14),
-            axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-            axis.text.y  = element_text(colour = "#000000", size = 13),
-            legend.text = element_text(size = 13),
-            legend.title = element_blank()) +
-      xlab(expression(-log[10](P))) +
-      ylab('Cell type') +
-      xlim(0, LIMIT) 
+      xlim(0, LIMIT) +
+      theme_bw() +
+      my_theme() +
+      xlab(expression(Mean -log[10](P))) +
+      ylab('Cell type') 
+    
+    if (LEVEL == 2) {
+      
+      MAGMA_LDSR_PLOT <- MAGMA_LDSR_PLOT  +
+        facet_grid(rows = vars(TYPE), scales = 'free', space = 'free')
+      
+    }
       
     assign(paste0(DISORDER, '_magma_ldsr_lvl_', LEVEL, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
     
@@ -314,7 +342,7 @@ for (LEVEL in c('1', '2')) {
           axis.text.y  = element_text(colour = "#000000", size = 13),
           legend.text = element_text(size = 13),
           legend.title = element_blank()) +
-    xlab(expression(-log[10](P))) +
+    xlab(expression(Mean -log[10](P))) +
     ylab('Cell type') +
     scale_x_continuous(breaks=seq(0, 10, 2))
   
