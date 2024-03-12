@@ -8,6 +8,7 @@
 
 #  Run trajectory inference analyses using slingshot / tradeseq on Hawk
 #  K and fitGAM functions are resource intensive so I can't run it locally
+#  This is run in container
 
 # Load libraries  ---------------------------------------------------------------------
 message('Loading Libraries and setting env variables...')
@@ -21,8 +22,9 @@ results_dir <- toString(snakemake@params[['results_dir']])
 data_dir <- paste0(results_dir, '01R_objects/')
 
 # Set resources
-message('Seting seed and workers ...')
+message('Setting seed and workers ...')
 set.seed(10) # fitGAM is stochastic
+message('Cores avaialable on Hawk: ', parallel::detectCores())
 BPPARAM <- BiocParallel::bpparam()
 BPPARAM$workers <- 20 # use 3 cores
 BPPARAM # lists current options
@@ -63,7 +65,7 @@ message('Running fitGAM ...')
 shi_sce <- fitGAM(counts = counts(shi_sce), pseudotime = pseudotime, cellWeights = cellWeights,
                   nknots = 7, verbose = FALSE, parallel = T, genes = var_genes)
 
-# Run fitGAM
+# Save RDS
 message('Writing SCE object ...')
 saveRDS(shi_sce, paste0(data_dir, 'sce_shi.rds'))
 

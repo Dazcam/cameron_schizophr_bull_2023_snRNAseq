@@ -96,3 +96,56 @@ seurat_resolution_test <- function(SEURAT_OBJECT,
   }
   
 }
+
+## GENE LISTS
+# ATAC gene lists
+MGE_GENES <- c('CRABP1', 'NKX2-1', 'ETV1', 'NFIA', # Striatal and CRT Ns
+               'MEF2C', 'MAF', 'ARX', 'ZEB2', # Cortical interneurons
+               'ZFHX3', # Subpallial and GABA Ns also tested 'NR2F1', 'NR2F2', 
+               'LHX8', 'CNTNAP2', 'GRIA2', 'ZIC1', # Subpallial Cholin Ns also tested 'ISL1', 'GBX2',
+               'MDK', 'LHX6', 'SOX6', 'CXCR4', # Rest from Shi fig 5B
+               'ERBB4', 'ANGPT2', 
+               'SST'
+               
+)
+
+LGE_GENES <- c(#'MEIS2', 'TLE4', 'FOXP1', # 'ZNF503' (duplicate), # Striatal potential
+  'CHD7', 'DLX5', 'ID2', 'PAX6', # OB precursor
+  'PENK', 'CXCL12', 'SP9', # D2 MSN precursor
+  'TAC1', 'EBF1', 'ISL1', 'ZNF503', 'PDYN', # D1 MSN precursor (PDYN)
+  'TSHZ1', 'FOXP2', 'PBX3', 'ERBB4' #, # D1 MSN precursor (TSHZ1)
+  #'SIX3', 'ID4', 'ZFHX4', 'PHLDA1', # Rest from Shi fig 4H
+  #'GAP43', 'ZNF521', 'NTRK3',
+  #'LHFP', 'ZADH2', 'PBX1',
+  #'ADRA2A', 'DRD1', 'DRD2'
+)
+
+# LGE_GENES <- c('FOXP1', 'FOXP2', 'ISL1', 'SERTAD4', 'ZNF503',
+#                'SIX3', 'ZFHX3', 'SCGN', 'PBX1', 'ZNF521',
+#                'PDYN', 'EBF1', 'GRIA2', 'CNTNAP2', 'ZFHX3')
+
+CGE_GENES <- c(
+  'NRIP3', 'IER2', 'PRKCA', 'ERBB4',  #CGE-InN-1
+  'VSTM2A', 'BEX2', 'PRKCA', 'ERBB4', 'ARL6IP5', # CGE-InN-2
+  'ARL4D', 'HIGD2A', 'GNG5', 'SP9', 'STMN4','PBX1', 'MDK', 'SOX6', 'HES6',
+  'GAD2', 'CALB2' #CGE-InN-3
+)
+
+PROGENITOR_GENES <- c('SOX6', 'DLX6', 'SFTA3', 'NKX2-1', # 'LHX6', 
+                      'RIC3', 'MBIP', 'OLIG2', 'PCDH17', # 'GSX1',
+                      'NR2F1', 'NR2F2', 'NTRK2', 'DLX5', 'RBP1', 
+                      'ZFHX3', 'MEIS2', # 'VIP', 'CALB2', 'SCGN',
+                      'SIX3', 'PHLDA1', 'GLI3', 'LGALS1', # 'ZNF503',
+                      'PAX6', 'GSX2', 'HEY1'
+                      
+)
+
+IPC_GENES <- c('DLL1', 'DLL3', 'CCND2', 'GAD1', 'GAD2') # 'KI67', 'EOMES'
+
+LEVEL_1_MARKERS <- c("CALB2", "SCGN", "PCDH9", "ANKS1B",   # CGE
+                     "FOXP1", "ZNF503", "SERTAD4", "ISL1", # LGE
+                     "LHX6", "NXPH1",                      # MGE
+                     "GAD2",                               # InN
+                     "HES1", 'OLIG2', "PAX6", "GSX2", 'PTPRZ1', # Progenitor
+                     "DLL1", "DLL3", "CCND2",              # IPC
+                     "SPI1", "CD68")                       # MG
