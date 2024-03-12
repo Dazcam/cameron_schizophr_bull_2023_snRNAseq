@@ -217,44 +217,5 @@ fig_S7 <-plot_grid(cluster_CGE_umap, cluster_CGE_vln, labels = 'AUTO', label_siz
 fig_S8 <-plot_grid(cluster_Progenitor_umap, cluster_Progenitor_vln, labels = 'AUTO', label_size = 20)
 fig_S9 <-plot_grid(cluster_Early_InN_umap, cluster_Early_InN_vln, labels = 'AUTO', label_size = 20)
 
-
-
-## Load and prep archR project  -------------------------------------------------------
-archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))
-
-## Violin plots: https://github.com/ycl6/StackedVlnPlot  ------------------------------
-
-
-a <- ggplot(pbmc, aes(factor(Idents), Expr, fill = Feat)) +
-  geom_violin(scale = "width", adjust = 1, trim = TRUE) +
-  scale_y_continuous(expand = c(0, 0), position="right", labels = function(x)
-    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
-  facet_grid(rows = vars(Feat), scales = "free", switch = "y") +
-  theme_cowplot(font_size = 12) +
-  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
-        plot.title = element_text(hjust = 0.5),
-        panel.background = element_rect(fill = NA, color = "black"),
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
-        strip.text.y.left = element_text(angle = 0)) +
-  ggtitle("Identity on x-axis") + xlab("Identity") + ylab("Expression Level")
-
-
-
-# MGE
-plot_UMAPs_by_marker_genes(archR_50, 'UMAPHarmony', c('LHX6', 'NKX2-1', 'SFTA3', 'MAF', 'MEIS2',
-                                                      'SLC32A1', 'GAD1', 'GAD2'))
-
-## MAGMA and sLDSR
-
-legend <- get_legend(
-  # create some space to the left of the legend
-  ggplot(data = PLOT_DF, aes(x = value, y = Category, fill = variable, group = rev(variable))) +
-    geom_bar(stat = "identity", color = 'black', position = "dodge") +
-    theme(legend.key.size = unit(1.5, 'cm'),
-          legend.text = element_text(size = 14),
-          legend.title = element_blank())
-)
-level1_plot <- plot_grid(SCZ_magma_ldsr_lvl_1_plot, HEIGHT_magma_ldsr_lvl_1_plot)
-level2_plot <- plot_grid(SCZ_magma_ldsr_lvl_2_plot, HEIGHT_magma_ldsr_lvl_2_plot)
-final_plot <- plot_grid(level1_plot, level2_plot, rel_heights = c(0.5, 1), ncol = 1)
+#--------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
