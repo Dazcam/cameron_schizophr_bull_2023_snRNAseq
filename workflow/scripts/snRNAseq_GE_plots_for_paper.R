@@ -219,34 +219,6 @@ fig_S9 <-plot_grid(cluster_Early_InN_umap, cluster_Early_InN_vln, labels = 'AUTO
 
 
 
-
-## Get differentially expressed genes. ------------------------------------------------
-level_1_dex_genes <- FindAllMarkers(seurat.shi.bc_CGE, only.pos = TRUE,
-                                    min.pct = 0.25, logfc.threshold = 0.25)
-level_1_InN_vs_Proj_genes <- FindMarkers(seurat.shi.bc, only.pos = TRUE,
-                                         ident.1 = 'Early_InN', ident.2 = 'Progenitor',
-                                         min.pct = 0.25, logfc.threshold = 0.25)
-top_genes <- level_1_dex_genes %>%
-  filter(cluster == 'Early_InN') %>%
-  slice_head(n = 30) %>%
-  pull(gene)
-
-top_genes_2 <- level_1_InN_vs_Proj_genes %>%
-  as_tibble(rownames = 'gene') %>%
-  slice_head(n = 30) %>%
-  pull(gene)
-
-VlnPlot(seurat.shi.bc, top_genes_2, stack = TRUE, flip = TRUE,
-        cols = DiscretePalette_scCustomize(num_colors = 26, palette = "ditto_seq"),
-        same.y.lims = TRUE, fill.by = 'ident', group.by = 'cluster_level_1') +
-  theme(axis.title.x=element_blank(), legend.position = "none")
-
-level_1_dex_genes %>%
-  relocate(cluster, gene) %>%
-  filter(p_val_adj < 0.05) %>%
-  write_tsv(paste0(RESULTS_RNA_DIR, 'figs/cameron_2023_level_1_deX_genes.tsv'), col_names = TRUE)
-
-
 ## Load and prep archR project  -------------------------------------------------------
 archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))
 
