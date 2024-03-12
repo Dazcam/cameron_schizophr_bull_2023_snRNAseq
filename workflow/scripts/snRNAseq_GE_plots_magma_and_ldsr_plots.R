@@ -37,6 +37,7 @@ LVL2_CELL_TYPES <- c("Progenitor-10", "Progenitor-9", "Progenitor-8", "Progenito
 LVL1_CORR <- 6
 LVL2_CORR <- 36
 
+# General theme
 my_theme <- function() {
   
     theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
@@ -46,8 +47,8 @@ my_theme <- function() {
           plot.title = element_text(hjust = 0.5, face = 'bold'),
           axis.title.x = element_text(colour = "#000000", size = 14),
           axis.title.y = element_text(colour = "#000000", size = 14),
-          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-          axis.text.y  = element_text(colour = "#000000", size = 13),
+          axis.text.x  = element_text(colour = "#000000", size = 12, vjust = 0.5),
+          axis.text.y  = element_text(colour = "#000000", size = 12),
           legend.text = element_text(size = 13),
           legend.title = element_blank(),
           strip.text.y = element_blank()) 
@@ -147,7 +148,7 @@ for (LEVEL in c('1', '2')) {
     
     LEVELS <- if (LEVEL == '1') LVL1_CELL_TYPES else LVL2_CELL_TYPES
     CORR <- if (LEVEL == '1') 0.05 / LVL1_CORR else  0.05 / LVL2_CORR
-    LIMIT <- if (LEVEL == '1') 6 else  8
+    LIMIT <- 6
     
     PLOT_DF <- left_join(get(paste0('magma_', DISORDER, '_lvl_', LEVEL, '_35UP_10DOWN_df')), 
                          get(paste0('ldsr_', DISORDER, '_lvl_', LEVEL, '_100UP_100DOWN_df')),
@@ -192,46 +193,10 @@ for (LEVEL in c('1', '2')) {
 
 }
 
-## Gene window comparisons  -----------------------------------------------------------
-# Plot MAGMA and LDSR barplot - Omiotting for 
-# cat('\nCreate plots ... \n')
-# for (WINDOW in GENE_WINDOW) {
-#   
-#   DENOM <- 6
-#   
-#   PLOT_TITLE <- WINDOW %>%
-#     str_replace('_', ' - ')
-#   
-#   PLOT_DF <- left_join(get(paste0('magma_SCZ_lvl_1_', WINDOW, '_df')), 
-#                        get(paste0('ldsr_SCZ_lvl_1_', WINDOW, '_df')),
-#                        by = 'Category') %>%
-#     reshape2::melt()
-#   
-#   MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
-#                                                 fill = variable, group = rev(variable))) +
-#     geom_bar(stat = "identity", color = 'black', position = "dodge") +
-#     geom_vline(xintercept=-log10(0.05/DENOM), linetype = "dashed", color = "black") +
-#     geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-#     theme_bw() +
-#     ggtitle(PLOT_TITLE) +
-#     theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-#           panel.grid.major = element_blank(), 
-#           panel.grid.minor = element_blank(),
-#           panel.border = element_rect(colour = "black", size = 1),
-#           plot.title = element_text(hjust = 0.5, face = 'bold'),
-#           axis.title.x = element_text(colour = "#000000", size = 14),
-#           axis.title.y = element_text(colour = "#000000", size = 14),
-#           axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-#           axis.text.y  = element_text(colour = "#000000", size = 13),
-#           legend.text = element_text(size = 13),
-#           legend.title = element_blank()) +
-#     xlab(expression(-log[10](P))) +
-#     ylab('Cell type') +
-#     xlim(0, 8) 
-#   
-#   assign(paste0('magma_ldsr_gene_window_', WINDOW, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
-#   
-# }
+## Get Legend ----
+
+# Legends wonky unless all 4 categories are present
+legend <- get_legend(ASD_magma_ldsr_lvl_2_plot)
 
 ## Downsampled plots  -----------------------------------------------------------------
 # MAGMA - prepare df
@@ -708,38 +673,42 @@ plot_grid(magma_ldsr_cond_public_CGE_1_plot, magma_ldsr_cond_public_CGE_2_plot,
           magma_ldsr_cond_public_MGE_3_plot, ncol = 3)
 
 
-# Produce final plots for paper. ------------------------------------------------------
-legend <- get_legend(SCZ_magma_ldsr_lvl_1_plot)
+### CONSTRUCT PLOTS ------------------------------------------------------
 
-# Main plots - fig 2 - Lvl 1 - Gene set enrichment barplots
-figure_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle(NULL), 
+## MAIN L1 and L2 FIGS -----
+
+# FIG 2 - L1 
+fig_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle(NULL), 
                       legend, ncol = 2, rel_widths = c(1, 0.3))
 
-# Main plots - fig 3 - Lvl 2 - Gene set enrichment barplots
-figure_3 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle(NULL), 
+# FIG 3 - L2  
+fig_3 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle(NULL), 
                       legend, ncol = 2, rel_widths = c(1, 0.3))
 
-# Supp figs all GWAS
-# Main plots - fig 2 - Lvl 1 - Gene set enrichment barplots
-figure_S4_gwas <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Schizophrenia'),
+# FIG S4 - L1 
+fig_S4 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Schizophrenia'),
                             ADHD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('ADHD'),
                             ASD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Autism'),
                             BPD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Bipolar Disorder'),
                             MDD_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Major Depressive Disorder'), 
                             HEIGHT_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Height'), 
-                            ncol = 3)
-figure_S4 <- ggdraw(figure_S4_gwas) +
+                            ncol = 3, )
+fig_S4 <- ggdraw(fig_S4) +
   draw_plot(legend, .67, .45, .5, .4)
 
-figure_S11_gwas <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Schizophrenia'),
+# Fig S11 - L2
+Fig_S11 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Schizophrenia'),
                              ADHD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('ADHD'),
                              ASD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Autism'),
                              BPD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Bipolar Disorder'),
                              MDD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Major Depressive Disorder'), 
                              HEIGHT_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Height'), 
                              ncol = 3)
-figure_S11 <- ggdraw(figure_S11_gwas) +
-  draw_plot(legend, .67, .45, .5, .3)
+Fig_S11 <- ggdraw(Fig_S11) +
+  draw_plot(legend, .68, .45, .5, .3)
+
+
+
 
 # Main plots - fig 2 - Lvl 2 - Gene set enrichment barplots
 figure_4 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend(), 
