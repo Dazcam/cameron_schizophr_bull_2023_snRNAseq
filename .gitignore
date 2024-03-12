@@ -47,7 +47,6 @@ results/05LDSR/part_herit/baseline_v1.2/LDSR_cond_int/*baseline.v1.2.results
 workflow/scripts/scanpy_desktop.py
 workflow/scripts/snRNAseq_GE_create_covariates.py
 workflow/scripts/snRNAseq_GE_create_z_scores.py
-workflow/scripts/snRNAseq_GE_plots_for_paper.R
 workflow/scripts/snRNAseq_GE_prepare_data_for_scDRS.py
 workflow/scripts/snRNAseq_GE_scDRS_visualisation.R
 workflow/scripts/snRNAseq_GE_scDRS_visualisation.py
