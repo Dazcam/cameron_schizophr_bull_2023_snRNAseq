@@ -50,7 +50,7 @@ my_theme <- function() {
           axis.text.x  = element_text(colour = "#000000", size = 12, vjust = 0.5),
           axis.text.y  = element_text(colour = "#000000", size = 12),
           legend.text = element_text(size = 13),
-          legend.title = element_blank(),
+          legend.title = element_text(size = 13),
           strip.text.y = element_blank()) 
   
 }
@@ -174,7 +174,7 @@ for (LEVEL in c('1', '2')) {
       geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
       scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
                                    "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
-                        drop = FALSE) +
+                        drop = FALSE, name = "Bonferonni\nThreshold") +
       ggtitle(DISORDER) +
       xlim(0, LIMIT) +
       theme_bw() +
@@ -461,6 +461,8 @@ for (LEVEL in c('1', '2')) {
 ## CONDITIONAL ANALYSES  --------------------------------------------------------------
 # MAGMA conditional - prepare df
 cat('\nPreparing MAGMA conditional data ... \n')
+# MAGMA conditional - prepare df
+cat('\nPreparing MAGMA conditional data ... \n')
 for (CELL_TYPE in COND_CELL_TYPES) {
   
   names <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_conditional_', 
@@ -470,7 +472,17 @@ for (CELL_TYPE in COND_CELL_TYPES) {
     slice_head(n = 17) %>%
     pull(VARIABLE)
   
-  MAGMA_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_conditional_', 
+  MAGMA_INT_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_conditional_', 
+                                    CELL_TYPE, '.35UP_10DOWN.gsa.out'), header = TRUE) %>%
+    mutate(MAGMA = -log10(as.numeric(P))) %>%
+    slice_tail(n = 12) %>%
+    filter(!VARIABLE == !!CELL_TYPE) %>%
+    dplyr::rename(Category = VARIABLE) %>%
+    dplyr::mutate(Category = str_replace_all(Category, '_', '-N-')) %>%
+    dplyr::select(Category, MAGMA) 
+  
+  
+  MAGMA_PUB_DF <- read.table(paste0(MAGMA_COND_DATA_DIR, 'magma_conditional_', 
                                 CELL_TYPE, '.35UP_10DOWN.gsa.out'), header = TRUE) %>%
     mutate(MAGMA = -log10(as.numeric(P))) %>%
     slice_head(n = 34) %>%
@@ -480,7 +492,8 @@ for (CELL_TYPE in COND_CELL_TYPES) {
     dplyr::mutate(Category = str_replace_all(Category, '_', '-')) %>%
     dplyr::select(Category, MAGMA) 
   
-  assign(paste0('magma_cond_public_GE_', CELL_TYPE, '_df'), MAGMA_DF, envir = .GlobalEnv) 
+  assign(paste0('magma_cond_int_GE_', CELL_TYPE, '_df'), MAGMA_INT_DF, envir = .GlobalEnv) 
+  assign(paste0('magma_cond_public_GE_', CELL_TYPE, '_df'), MAGMA_PUB_DF, envir = .GlobalEnv) 
   
 }
 
@@ -533,51 +546,84 @@ cond_plot_list <- list()
 # Plot
 for (CELL_TYPE in COND_CELL_TYPES) {
   
-  for (COND in c('public')) {
-    
-    CORR <- if (COND == 'int') 0.05 / 6 else 0.05 / 17
-    
-    TITLE <- CELL_TYPE
-    
-    PLOT_DF <- left_join(get(paste0('magma_cond_', COND, '_GE_', CELL_TYPE, '_df')), 
-                         get(paste0('ldsr_cond_', COND, '_GE_', CELL_TYPE, '_df')),
-                         by = 'Category') %>%
-      reshape2::melt()
-    
-    MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = value, y = factor(Category, rev(levels(factor(Category)))), 
-                                                  fill = variable, group = rev(variable))) +
-      geom_bar(stat = "identity", color = 'black', position = "dodge") +
-      geom_vline(xintercept=-log10(CORR), linetype = "dashed", color = "black") +
-      geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-      theme_bw() +
-      ggtitle(TITLE) +
-      theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank(),
-            panel.border = element_rect(colour = "black", size = 1),
-            plot.title = element_text(hjust = 0.5, face = 'bold'),
-            axis.title.x = element_text(colour = "#000000", size = 14),
-            axis.title.y = element_text(colour = "#000000", size = 14),
-            axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-            axis.text.y  = element_text(colour = "#000000", size = 13),
-            legend.text = element_text(size = 13),
-            legend.title = element_blank()) +
-      xlab(expression(-log[10](P))) +
-      ylab('Cell type') +
-      xlim(0, 12) 
-    
-    assign(paste0('magma_ldsr_cond_', COND, '_', CELL_TYPE, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
-    cond_plot_list <- list(cond_plot_list, MAGMA_LDSR_PLOT)
+  CORR <- if (COND == 'int') 0.05 / 6 else 0.05 / 16
+  LIMIT <- 6
+  
+  for (COND in c('int', 'public')) {
+  
+    if (COND == 'int') {
+      
+      PLOT_DF <- left_join(get(paste0('magma_cond_', COND, '_GE_', CELL_TYPE, '_df')), 
+                           get(paste0('ldsr_cond_', COND, '_GE_', CELL_TYPE, '_df')),
+                           by = 'Category')%>%
+        rowwise() %>% 
+        mutate(MEAN = mean(c(MAGMA, LDSR))) %>%
+        mutate(COL = case_when(
+          MAGMA > -log10(CORR) & LDSR > -log10(CORR) ~ "Both",
+          MAGMA > -log10(CORR) & LDSR <= -log10(CORR) ~ "MAGMA",
+          MAGMA <= -log10(CORR) & LDSR > -log10(CORR) ~ "SLDSR",
+          MAGMA < -log10(CORR) & LDSR < -log10(CORR) ~ "None")) %>%
+        mutate(COL = factor(COL, levels = c('Both', 'MAGMA', 'SLDSR', 'None'))) 
+      
+      MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = MEAN, y = factor(Category, rev(levels(factor(Category)))), 
+                                                    fill = COL)) +
+        geom_bar(stat = "identity", color = 'black', position = "dodge", width = 0.8) +
+        geom_vline(xintercept=-log10(CORR), linetype = "dashed", color = "black") +
+        geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+        scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
+                                     "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
+                          drop = FALSE) +
+        xlim(0, LIMIT) +
+        theme_bw() +
+        my_theme() +
+        xlab(expression(Mean -log[10](P))) +
+        ylab('Cell type') 
+      
+      assign(paste0('magma_ldsr_cond_', COND, '_', CELL_TYPE, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv)
+      
+    }
+      
+  
+    if (COND == 'public') {
+      
+      PLOT_DF <- left_join(get(paste0('magma_cond_', COND, '_GE_', CELL_TYPE, '_df')), 
+                                   get(paste0('ldsr_cond_', COND, '_GE_', CELL_TYPE, '_df')),
+                                   by = 'Category') %>%
+        mutate(Category = str_replace(Category, 'fetal', 'Fetal')) %>%
+        mutate(Category = str_replace(Category, 'adult', 'Adult')) %>%
+        mutate(Category = str_replace(Category, 'mouse', 'Mouse')) %>%
+        filter(!Category == 'Fetal-GE-InN-2') %>%
+        rowwise() %>% 
+        mutate(MEAN = mean(c(MAGMA, LDSR))) %>%
+        mutate(COL = case_when(
+          MAGMA > -log10(CORR) & LDSR > -log10(CORR) ~ "Both",
+          MAGMA > -log10(CORR) & LDSR <= -log10(CORR) ~ "MAGMA",
+          MAGMA <= -log10(CORR) & LDSR > -log10(CORR) ~ "SLDSR",
+          MAGMA < -log10(CORR) & LDSR < -log10(CORR) ~ "None")) %>%
+        mutate(COL = factor(COL, levels = c('Both', 'MAGMA', 'SLDSR', 'None'))) 
+      
+      MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = MEAN, y = Category, 
+                                                    fill = COL)) +
+        geom_bar(stat = "identity", color = 'black', position = "dodge", width = 0.8) +
+        geom_vline(xintercept=-log10(CORR), linetype = "dashed", color = "black") +
+        geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+        scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
+                                     "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
+                          drop = FALSE) +
+        ggtitle(DISORDER) +
+        xlim(0, LIMIT) +
+        theme_bw() +
+        my_theme() +
+        xlab(expression(Mean -log[10](P))) +
+        ylab('Cell type') 
+      
+      assign(paste0('magma_ldsr_cond_', COND, '_', CELL_TYPE, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
+      
+    }
     
   }
   
 }
-
-plot_grid(magma_ldsr_cond_public_CGE_1_plot, magma_ldsr_cond_public_CGE_2_plot,
-          magma_ldsr_cond_public_LGE_1_plot, magma_ldsr_cond_public_LGE_2_plot,
-          magma_ldsr_cond_public_LGE_4_plot, magma_ldsr_cond_public_MGE_2_plot,
-          magma_ldsr_cond_public_MGE_3_plot, ncol = 3)
-
 
 ### CONSTRUCT PLOTS ------------------------------------------------------
 
@@ -600,7 +646,7 @@ fig_S4 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Schizophre
                             HEIGHT_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Height'), 
                             ncol = 3)
 fig_S4 <- ggdraw(fig_S4) +
-  draw_plot(legend, .67, .45, .5, .4)
+  draw_plot(legend, .67, .45, .5, .45)
 
 # Fig S11 - L2
 Fig_S11 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Schizophrenia'),
@@ -610,34 +656,40 @@ Fig_S11 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Schizophr
                              MDD_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Major Depressive Disorder'), 
                              HEIGHT_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle('Height'), 
                              ncol = 3)
+
 Fig_S11 <- ggdraw(Fig_S11) +
-  draw_plot(legend, .68, .45, .5, .3)
+  draw_plot(legend, .68, .45, .5, .32)
 
 ## DOWNSAMPLE AND TOP 1000 GENES FIGS ----
-
 Fig_S10 <- plot_grid(magma_ldsr_dwnSmpl_SCZ_lvl_2_plot + NoLegend() + ggtitle(NULL), 
                      magma_ldsr_top1000_SCZ_lvl_2_plot + NoLegend() + ggtitle(NULL), legend,
                      ncol = 3, labels = c('A', 'B', ''), label_size = 20, rel_widths = c(1, 1, 0.5))
 
 
-# Supplementary plots - S7 - Internal conditional
-cond_int_plot <- plot_grid(magma_ldsr_cond_CGE_1_plot + NoLegend(),
-                           magma_ldsr_cond_CGE_2_plot + NoLegend(),
-                           magma_ldsr_cond_LGE_1_plot + NoLegend(), 
-                           magma_ldsr_cond_LGE_2_plot + NoLegend(),
-                           magma_ldsr_cond_LGE_4_plot + NoLegend(),
-                           magma_ldsr_cond_MGE_2_plot + NoLegend(),
-                           magma_ldsr_cond_MGE_3_plot + NoLegend(),
-                           ncol = 3, legend, labels = c('A', 'B', 'C', 'D', 'E',
-                                                        'F', 'G', ''), 
+## CONDITIONAL ANALYSES ----
+# Fig S12 - Internal conditional
+fig_S12 <- plot_grid(magma_ldsr_cond_int_CGE_1_plot + NoLegend() + ggtitle('CGE-N-1'),
+                     magma_ldsr_cond_int_CGE_2_plot + NoLegend() + ggtitle('CGE-N-2'),
+                     magma_ldsr_cond_int_LGE_1_plot + NoLegend() + ggtitle('LGE-N-1'), 
+                     magma_ldsr_cond_int_LGE_2_plot + NoLegend() + ggtitle('LGE-N-2'),
+                     magma_ldsr_cond_int_LGE_4_plot + NoLegend() + ggtitle('LGE-N-4'),
+                     magma_ldsr_cond_int_MGE_2_plot + NoLegend() + ggtitle('MGE-N-2'),
+                     magma_ldsr_cond_int_MGE_3_plot + NoLegend() + ggtitle('MGE-N-3'),
+                     ncol = 3, legend, labels = c('A', 'B', 'C', 'D', 'E',
+                                                  'F', 'G', ''), 
                            label_size = 20)
 
-# Supplementary plots - S8 - Adult conditional
-cond_adult_plot <- plot_grid(magma_ldsr_cond_skene_InN_plot + NoLegend(), 
-                             magma_ldsr_cond_skene_MSN_plot + NoLegend(),
-                             magma_ldsr_cond_bryois_GABA1_plot + NoLegend(),
-                             magma_ldsr_cond_bryois_GABA2_plot + NoLegend(), legend,
-                             ncol = 3, labels = c('A', 'B', 'C', 'D', ''), label_size = 20)
+# Fig S13 - Public data conditional
+fig_S13 <- plot_grid(magma_ldsr_cond_public_CGE_1_plot + NoLegend() + ggtitle('CGE-N-1'), 
+                     magma_ldsr_cond_public_CGE_2_plot + NoLegend() + ggtitle('CGE-N-2'),
+                     magma_ldsr_cond_public_LGE_1_plot + NoLegend() + ggtitle('LGE-N-1'), 
+                     magma_ldsr_cond_public_LGE_2_plot + NoLegend() + ggtitle('LGE-N-2'),
+                     magma_ldsr_cond_public_LGE_4_plot + NoLegend() + ggtitle('LGE-N-4'), 
+                     magma_ldsr_cond_public_MGE_2_plot + NoLegend() + ggtitle('MGE-N-2'),
+                     magma_ldsr_cond_public_MGE_3_plot + NoLegend() + ggtitle('MGE-N-3'), 
+                     legend, labels = c('A', 'B', 'C', 'D', 'E',
+                                        'F', 'G', ''), ncol = 3, 
+                     label_size = 20)
 
 # Produce tables?
 # table_list <- c(ldsr_SCZ_lvl_1_100UP_100DOWN_full_df, ldsr_SCZ_lvl_2_100UP_100DOWN_full_df,
@@ -651,11 +703,6 @@ cond_adult_plot <- plot_grid(magma_ldsr_cond_skene_InN_plot + NoLegend(),
 #   }
 # openxlsx::write.xlsx(excel_list, "~/Desktop/Supplementary_tables_v11.xlsx")
 # 
-
-
-
-
-
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
