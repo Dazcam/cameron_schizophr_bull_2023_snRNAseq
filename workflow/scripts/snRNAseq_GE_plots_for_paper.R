@@ -4,6 +4,10 @@
 #
 #--------------------------------------------------------------------------------------
 
+## Info  ------------------------------------------------------------------------------
+
+#  Code for figures: UMAP and Vln plots
+
 ## Load packages  ---------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
 Require::Require(c("tidyverse", "readxl", "ComplexHeatmap", "pheatmap", "ArchR",
@@ -19,79 +23,8 @@ FRAGS_DIR <- paste0(RESULTS_ATAC_DIR, '04FRAGMENT_FILES/')
 PEAKS_DIR <- paste0(RESULTS_ATAC_DIR, '05PEAKS/')
 R_DIR <- paste0(RESULTS_RNA_DIR, '01R_objects/')
 
-# ATAC gene lists
-MGE_GENES <- c('CRABP1', 'NKX2-1', 'ETV1', 'NFIA', # Striatal and CRT Ns
-               'MEF2C', 'MAF', 'ARX', 'ZEB2', # Cortical interneurons
-               'ZFHX3', # Subpallial and GABA Ns also tested 'NR2F1', 'NR2F2', 
-               'LHX8', 'CNTNAP2', 'GRIA2', 'ZIC1', # Subpallial Cholin Ns also tested 'ISL1', 'GBX2',
-               'MDK', 'LHX6', 'SOX6', 'CXCR4', # Rest from Shi fig 5B
-               'ERBB4', 'ANGPT2', 
-               'SST'
-
-)
-
-LGE_GENES <- c(#'MEIS2', 'TLE4', 'FOXP1', # 'ZNF503' (duplicate), # Striatal potential
-  'CHD7', 'DLX5', 'ID2', 'PAX6', # OB precursor
-  'PENK', 'CXCL12', 'SP9', # D2 MSN precursor
-  'TAC1', 'EBF1', 'ISL1', 'ZNF503', 'PDYN', # D1 MSN precursor (PDYN)
-  'TSHZ1', 'FOXP2', 'PBX3', 'ERBB4' #, # D1 MSN precursor (TSHZ1)
-  #'SIX3', 'ID4', 'ZFHX4', 'PHLDA1', # Rest from Shi fig 4H
-  #'GAP43', 'ZNF521', 'NTRK3',
-  #'LHFP', 'ZADH2', 'PBX1',
-  #'ADRA2A', 'DRD1', 'DRD2'
-)
-
-# LGE_GENES <- c('FOXP1', 'FOXP2', 'ISL1', 'SERTAD4', 'ZNF503',
-#                'SIX3', 'ZFHX3', 'SCGN', 'PBX1', 'ZNF521',
-#                'PDYN', 'EBF1', 'GRIA2', 'CNTNAP2', 'ZFHX3')
-CGE_GENES <- c(
-  'NRIP3', 'IER2', 'PRKCA', 'ERBB4',  #CGE-InN-1
-  'VSTM2A', 'BEX2', 'PRKCA', 'ERBB4', 'ARL6IP5', # CGE-InN-2
-  'ARL4D', 'HIGD2A', 'GNG5', 'SP9', 'STMN4','PBX1', 'MDK', 'SOX6', 'HES6',
-  'GAD2', 'CALB2' #CGE-InN-3
-)
-
-PROGENITOR_GENES <- c('SOX6', 'DLX6', 'SFTA3', 'NKX2-1', # 'LHX6', 
-                      'RIC3', 'MBIP', 'OLIG2', 'PCDH17', # 'GSX1',
-                      'NR2F1', 'NR2F2', 'NTRK2', 'DLX5', 'RBP1', 
-                      'ZFHX3', 'MEIS2', # 'VIP', 'CALB2', 'SCGN',
-                      'SIX3', 'PHLDA1', 'GLI3', 'LGALS1', # 'ZNF503',
-                      'PAX6', 'GSX2', 'HEY1'
-                      
-)
-
-IPC_GENES <- c('DLL1', 'DLL3', 'CCND2', 'GAD1', 'GAD2') # 'KI67', 'EOMES'
-
-LEVEL_1_MARKERS <- c("CALB2", "SCGN", "PCDH9", "ANKS1B",   # CGE
-                     "FOXP1", "ZNF503", "SERTAD4", "ISL1", # LGE
-                     "LHX6", "NXPH1",                      # MGE
-                     "GAD2",                               # InN
-                     "HES1", 'OLIG2', "PAX6", "GSX2", 'PTPRZ1', # Progenitor
-                     "DLL1", "DLL3", "CCND2",              # IPC
-                     "SPI1", "CD68")                       # MG
-
-
-
-# RNA gene lists
-greens <- c('#3CBB75FF', '#00FF00A5','#006400', '#B7FFB7', '#10A53DFF',
-            '#95D840FF', '#9DC183',  '#708238', '#55C667FF', '#73D055FF',
-            '#567D46')
-
-ExN_blues <- c('#76B5C5', '#00BDD2', '#CEE5FD', '#00B6EB', '#ABDBE3',
-              '#1E81B0', '#B8D2EB', '#779CBA')
-
-reds <- c('#FAA0A0', '#FF5959', '#F75151', '#EF0029', '#D2042D')
-
-reds <- c('#B200ED',  '#DCBEFF', '#6F2DA8')
-
-
-
-
-
 ## Load functions  --------------------------------------------------------------------
-source(paste0(SCRIPT_ATAC_DIR, 'snATACseq_functions.R'))
-source(paste0(SCRIPT_RNA_DIR, 'snRNAseq_GE_plots_magma_and_ldsr_plots.R'))
-source(paste0(SCRIPT_ATAC_DIR, 'snATACseq_plots_LDSR_barplots.R'))
+source(paste0(SCRIPT_RNA_DIR, 'snRNAseq_GE_functions.R'))
 
 ## RNA seq ----------------------------------------------------------------------------
 ## Load Seurat Objects
@@ -101,14 +34,12 @@ seurat.shi.bc_MGE <- readRDS(paste0(R_DIR, 'seurat_shi_bc_MGE.rds'))
 seurat.shi.bc_CGE <- readRDS(paste0(R_DIR, 'seurat_shi_bc_CGE.rds'))
 seurat.shi.bc_Progenitor <- readRDS(paste0(R_DIR, 'seurat_shi_bc_Progenitor.rds'))
 seurat.shi.bc_Early_InN <- readRDS(paste0(R_DIR, 'seurat_shi_bc_Early_InN.rds'))
-seurat.shi.bc_dwnSmpl_lvl1 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl1.rds'))
-seurat.shi.bc_dwnSmpl_lvl2 <- readRDS(paste0(R_DIR, 'seurat_shi_bc_dwnSmpl_lvl2.rds'))
 
 ## Rename clusters
 for (SUFFIX in c('', '_LGE', '_MGE', '_CGE', '_Progenitor',
-                 '_Early_InN', '_dwnSmpl_lvl1', '_dwnSmpl_lvl2' )) {
+                 '_Early_InN')) {
 
-  cat('\nRunning seurat.shi.bc', SUFFIX, sep = '')
+  message('\nRunning seurat.shi.bc', SUFFIX)
 
   SEURAT_OBJ <- get(paste0('seurat.shi.bc', SUFFIX))
 
@@ -171,8 +102,6 @@ figure_1B <- VlnPlot(seurat.shi.bc, LEVEL_1_MARKERS, stack = TRUE, flip = TRUE,
                     same.y.lims = TRUE, fill.by = 'ident', group.by = 'cluster_level_1_new') +
   theme(axis.title.x=element_blank(), legend.position = "none")
 
-plot_grid(figure_1A, figure_1B, labels = 'AUTO', label_size = 20)
-
 # Fig S5-S9 - L2 cluster UMAPs and Vlns -----
 for (SUFFIX in c('_CGE', '_LGE', '_MGE', '_Progenitor', '_Early_InN')) {
 
@@ -209,6 +138,9 @@ for (SUFFIX in c('_CGE', '_LGE', '_MGE', '_Progenitor', '_Early_InN')) {
   
 
 }
+
+# Fig 1
+fig_1 <- plot_grid(figure_1A, figure_1B, labels = 'AUTO', label_size = 20)
 
 # Fig S5 to S9
 fig_S5 <- plot_grid(cluster_LGE_umap, cluster_LGE_vln, labels = 'AUTO', label_size = 20)
