@@ -1,12 +1,12 @@
 #--------------------------------------------------------------------------------------
 #
-#    Shi 2021 snRNAseq data - perpare shi data for seurat
+#    Prepare Shi data for Seurat
 #
 #--------------------------------------------------------------------------------------
 
 ##  Info  --------------------------------------------------------------------
 
-# 1. Prepare Shi data for seurat
+# 1. Prepare Shi data for Seurat
 
 ##  Set Variables  --------------------------------------------------------------------
 RES_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/resources/' 
