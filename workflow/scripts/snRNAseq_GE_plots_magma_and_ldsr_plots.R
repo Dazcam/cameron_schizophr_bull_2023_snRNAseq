@@ -174,7 +174,7 @@ for (LEVEL in c('1', '2')) {
       geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
       scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
                                    "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
-                        drop = FALSE, name = "Bonferonni\nThreshold") +
+                        drop = FALSE, name = "Bonferroni\nThreshold") +
       ggtitle(DISORDER) +
       xlim(0, LIMIT) +
       theme_bw() +
@@ -455,9 +455,6 @@ for (LEVEL in c('1', '2')) {
   
 }
 
-
-
-
 ## CONDITIONAL ANALYSES  --------------------------------------------------------------
 # MAGMA conditional - prepare df
 cat('\nPreparing MAGMA conditional data ... \n')
@@ -602,7 +599,7 @@ for (CELL_TYPE in COND_CELL_TYPES) {
           MAGMA < -log10(CORR) & LDSR < -log10(CORR) ~ "None")) %>%
         mutate(COL = factor(COL, levels = c('Both', 'MAGMA', 'SLDSR', 'None'))) 
       
-      MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = MEAN, y = Category, 
+      MAGMA_LDSR_PLOT <- ggplot(data = PLOT_DF, aes(x = MEAN, y = factor(Category, rev(levels(factor(Category)))), 
                                                     fill = COL)) +
         geom_bar(stat = "identity", color = 'black', position = "dodge", width = 0.8) +
         geom_vline(xintercept=-log10(CORR), linetype = "dashed", color = "black") +
@@ -661,6 +658,10 @@ Fig_S11 <- ggdraw(Fig_S11) +
   draw_plot(legend, .68, .45, .5, .32)
 
 ## DOWNSAMPLE AND TOP 1000 GENES FIGS ----
+Fig_S2 <- plot_grid(magma_ldsr_dwnSmpl_SCZ_lvl_1_plot + NoLegend() + ggtitle(NULL), 
+                    magma_ldsr_top1000_SCZ_lvl_1_plot + NoLegend() + ggtitle(NULL), legend,
+                    ncol = 3, labels = c('A', 'B', ''), label_size = 20, rel_widths = c(1, 1, 0.5))
+
 Fig_S10 <- plot_grid(magma_ldsr_dwnSmpl_SCZ_lvl_2_plot + NoLegend() + ggtitle(NULL), 
                      magma_ldsr_top1000_SCZ_lvl_2_plot + NoLegend() + ggtitle(NULL), legend,
                      ncol = 3, labels = c('A', 'B', ''), label_size = 20, rel_widths = c(1, 1, 0.5))
