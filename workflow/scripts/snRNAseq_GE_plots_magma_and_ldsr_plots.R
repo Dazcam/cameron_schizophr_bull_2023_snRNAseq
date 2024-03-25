@@ -185,11 +185,21 @@ for (LEVEL in c('1', '2')) {
     if (LEVEL == 2) {
       
       MAGMA_LDSR_PLOT <- MAGMA_LDSR_PLOT  +
-        facet_grid(rows = vars(TYPE), scales = 'free', space = 'free')
+        facet_grid(rows = vars(TYPE), scales = 'free', space = 'free')}
+    
+    if (LEVEL == 2 & DISORDER == 'ASD') {
       
-    }
+    
+      # Create a specific legend for S12 and S13
+      MAGMA_LDSR_PLOT2 <- MAGMA_LDSR_PLOT +
+        scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
+                                     "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
+                          drop = FALSE, name = "P < 0.05") 
+      legend_2 <- get_legend(MAGMA_LDSR_PLOT2)
+      
       
     assign(paste0(DISORDER, '_magma_ldsr_lvl_', LEVEL, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
+    assign('legend_2', legend_2, envir = .GlobalEnv)}
     
   }
 
@@ -540,10 +550,10 @@ for (COND in c('int', 'public')) {
 
 cond_plot_list <- list()
 
-# Plot
+# Plot - Note reporting these signifcance of these results to P < 0.05 only
 for (CELL_TYPE in COND_CELL_TYPES) {
   
-  CORR <- if (COND == 'int') 0.05 / 6 else 0.05 / 16
+  CORR <- if (COND == 'int') 0.05  else 0.05 
   LIMIT <- 6
   
   for (COND in c('int', 'public')) {
@@ -607,7 +617,6 @@ for (CELL_TYPE in COND_CELL_TYPES) {
         scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
                                      "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
                           drop = FALSE) +
-        ggtitle(DISORDER) +
         xlim(0, LIMIT) +
         theme_bw() +
         my_theme() +
@@ -676,8 +685,7 @@ fig_S12 <- plot_grid(magma_ldsr_cond_int_CGE_1_plot + NoLegend() + ggtitle('CGE-
                      magma_ldsr_cond_int_LGE_4_plot + NoLegend() + ggtitle('LGE-N-4'),
                      magma_ldsr_cond_int_MGE_2_plot + NoLegend() + ggtitle('MGE-N-2'),
                      magma_ldsr_cond_int_MGE_3_plot + NoLegend() + ggtitle('MGE-N-3'),
-                     ncol = 3, legend, labels = c('A', 'B', 'C', 'D', 'E',
-                                                  'F', 'G', ''), 
+                     ncol = 3, legend_2, labels = c('A', 'B', 'C', 'D', 'E', 'F', 'G', ''), 
                            label_size = 20)
 
 # Fig S13 - Public data conditional
@@ -688,9 +696,9 @@ fig_S13 <- plot_grid(magma_ldsr_cond_public_CGE_1_plot + NoLegend() + ggtitle('C
                      magma_ldsr_cond_public_LGE_4_plot + NoLegend() + ggtitle('LGE-N-4'), 
                      magma_ldsr_cond_public_MGE_2_plot + NoLegend() + ggtitle('MGE-N-2'),
                      magma_ldsr_cond_public_MGE_3_plot + NoLegend() + ggtitle('MGE-N-3'), 
-                     legend, labels = c('A', 'B', 'C', 'D', 'E',
-                                        'F', 'G', ''), ncol = 3, 
-                     label_size = 20)
+                     legend_2, labels = c('A', 'B', 'C', 'D', 'E','F', 'G', ''), ncol = 3, 
+                     label_size = 20) 
+  
 
 # Produce tables?
 # table_list <- c(ldsr_SCZ_lvl_1_100UP_100DOWN_full_df, ldsr_SCZ_lvl_2_100UP_100DOWN_full_df,
