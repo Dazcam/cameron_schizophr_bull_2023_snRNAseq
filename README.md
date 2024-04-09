@@ -29,12 +29,12 @@ See the following papers for GWAS data access:
 
 ***
 
-**Scripts**
+## **Scripts**
 
 1. [snRNAseq_GE_get_shi_data.sh](scripts/snRNAseq_GE_get_shi_data.sh) - Download Shi data
 2. [snRNAseq_GE_prep_shi_data_for_Seurat.R](scripts/snRNAseq_GE_prep_shi_data_for_Seurat.R) - Clean and prepare Shi data
 3. [snRNAseq_GE_shi_seurat.R](scripts/snRNAseq_GE_shi_seurat.R) - Generate Seurat objects (with batch correction) for cluster levels 1 and 2
 4. [snRNAseq_GE_prep_enrich_test_files.R](scripts/snRNAseq_GE_prep_enrich_test_files.R) - Generate specificity scores and top 10% genesets for enrichment testing
 
-
+***
 
