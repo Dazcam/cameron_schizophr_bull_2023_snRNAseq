@@ -38,3 +38,8 @@ See the following papers for GWAS data access:
 
 ***
 
+## **Copyright and Licence Information**
+
+See the [LICENCE file](LICENCE.md)
+
+***
