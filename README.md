@@ -17,7 +17,7 @@ Details on the snATACseq data  / analyses for this study can be found [here](htt
 
 ## **GWAS Data**
 
-See the following papers for GWAS data access:
+GWAS data were accessed from the following:
 
 + [Schizophrenia](https://figshare.com/ndownloader/files/28169757)
 + [Autism](https://figshare.com/ndownloader/files/28169292)
