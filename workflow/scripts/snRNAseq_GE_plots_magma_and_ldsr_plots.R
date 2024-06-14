@@ -172,8 +172,8 @@ for (LEVEL in c('1', '2')) {
     geom_bar(stat = "identity", color = 'black', position = "dodge", width = 0.8) +
       geom_vline(xintercept=-log10(CORR), linetype = "dashed", color = "black") +
       geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
-      scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
-                                   "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
+      scale_fill_manual(values = c("Both" = "#5DC863FF", "MAGMA" =  "#FDE725FF", 
+                                   "SLDSR" =   "#365D8DFF", "None" =  "#FFFFFF"), 
                         drop = FALSE, name = "Bonferroni\nThreshold") +
       ggtitle(DISORDER) +
       xlim(0, LIMIT) +
@@ -192,14 +192,15 @@ for (LEVEL in c('1', '2')) {
     
       # Create a specific legend for S12 and S13
       MAGMA_LDSR_PLOT2 <- MAGMA_LDSR_PLOT +
-        scale_fill_manual(values = c("Both" = "#00BA38", "MAGMA" =  "yellow", 
-                                     "SLDSR" =  "#00B0F6", "None" =  "lightgrey"), 
+        scale_fill_manual(values = c("Both" = "#5DC863FF", "MAGMA" =  "#FDE725FF", 
+                                     "SLDSR" =   "#365D8DFF", "None" =  "#FFFFFF"), 
                           drop = FALSE, name = "P < 0.05") 
       legend_2 <- get_legend(MAGMA_LDSR_PLOT2)
+      assign('legend_2', legend_2, envir = .GlobalEnv)}
       
       
     assign(paste0(DISORDER, '_magma_ldsr_lvl_', LEVEL, '_plot'), MAGMA_LDSR_PLOT, envir = .GlobalEnv) 
-    assign('legend_2', legend_2, envir = .GlobalEnv)}
+    
     
   }
 
@@ -634,7 +635,6 @@ for (CELL_TYPE in COND_CELL_TYPES) {
 ### CONSTRUCT PLOTS ------------------------------------------------------
 
 ## MAIN L1 and L2 FIGS -----
-
 # FIG 2 - L1 
 fig_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle(NULL), 
                       legend, ncol = 2, rel_widths = c(1, 0.3))
@@ -642,6 +642,19 @@ fig_2 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle(NULL),
 # FIG 3 - L2  
 fig_3 <- plot_grid(SCZ_magma_ldsr_lvl_2_plot + NoLegend() + ggtitle(NULL), 
                       legend, ncol = 2, rel_widths = c(1, 0.3))
+
+# Tiffs for paper
+FIG_DIR <- '~/Desktop/'
+tiff(paste0(FIG_DIR, "Fig_2.tiff"), height = 20, width = 16, units='cm', 
+     compression = "lzw", res = 300)
+fig_2
+dev.off()
+
+tiff(paste0(FIG_DIR, "Fig_3.tiff"), height = 30, width = 20, units='cm', 
+     compression = "lzw", res = 300)
+fig_3
+dev.off()
+
 
 # FIG S4 - L1 
 fig_S4 <- plot_grid(SCZ_magma_ldsr_lvl_1_plot + NoLegend() + ggtitle('Schizophrenia'),

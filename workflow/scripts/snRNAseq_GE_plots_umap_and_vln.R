@@ -22,6 +22,7 @@ ARCHR_DIR <- paste0(RESULTS_ATAC_DIR, '02ARCHR/')
 FRAGS_DIR <- paste0(RESULTS_ATAC_DIR, '04FRAGMENT_FILES/')
 PEAKS_DIR <- paste0(RESULTS_ATAC_DIR, '05PEAKS/')
 R_DIR <- paste0(RESULTS_RNA_DIR, '01R_objects/')
+FIG_DIR <- '~/Desktop/'
 
 ## Load functions  --------------------------------------------------------------------
 source(paste0(SCRIPT_RNA_DIR, 'snRNAseq_GE_functions.R'))
@@ -100,7 +101,8 @@ figure_1A <- DimPlot_scCustom(seurat.shi.bc, group.by = 'cluster_level_1_new',
 figure_1B <- VlnPlot(seurat.shi.bc, LEVEL_1_MARKERS, stack = TRUE, flip = TRUE,
                     cols = DiscretePalette_scCustomize(num_colors = 26, palette = "ditto_seq"),
                     same.y.lims = TRUE, fill.by = 'ident', group.by = 'cluster_level_1_new') +
-  theme(axis.title.x=element_blank(), legend.position = "none")
+  theme(axis.title.x=element_blank(), axis.text.y = element_text(size = 12), legend.position = "none")
+
 
 # Fig S5-S9 - L2 cluster UMAPs and Vlns -----
 for (SUFFIX in c('_CGE', '_LGE', '_MGE', '_Progenitor', '_Early_InN')) {
@@ -140,7 +142,7 @@ for (SUFFIX in c('_CGE', '_LGE', '_MGE', '_Progenitor', '_Early_InN')) {
 }
 
 # Fig 1
-fig_1 <- plot_grid(figure_1A, figure_1B, labels = 'AUTO', label_size = 20)
+fig_1 <- plot_grid(figure_1A, figure_1B, labels = 'AUTO', label_size = 20,scale = c(1, 0.95))
 
 # Fig S5 to S9
 fig_S5 <- plot_grid(cluster_LGE_umap, cluster_LGE_vln, labels = 'AUTO', label_size = 20)
@@ -148,6 +150,37 @@ fig_S6 <-plot_grid(cluster_MGE_umap, cluster_MGE_vln, labels = 'AUTO', label_siz
 fig_S7 <-plot_grid(cluster_CGE_umap, cluster_CGE_vln, labels = 'AUTO', label_size = 20)
 fig_S8 <-plot_grid(cluster_Progenitor_umap, cluster_Progenitor_vln, labels = 'AUTO', label_size = 20)
 fig_S9 <-plot_grid(cluster_Early_InN_umap, cluster_Early_InN_vln, labels = 'AUTO', label_size = 20)
+
+# Tiffs for paper
+tiff(paste0(FIG_DIR, "Fig_1.tiff"), height = 20, width = 20, units='cm', 
+     compression = "lzw", res = 300)
+fig_1 
+dev.off()
+
+tiff(paste0(FIG_DIR, "Fig_S5.tiff"), height = 30, width = 30, units='cm', 
+     compression = "lzw", res = 300)
+fig_S5
+dev.off()
+
+tiff(paste0(FIG_DIR, "Fig_S6.tiff"), height = 30, width = 30, units='cm', 
+     compression = "lzw", res = 300)
+fig_S6
+dev.off()
+
+tiff(paste0(FIG_DIR, "Fig_S7.tiff"), height = 30, width = 30, units='cm', 
+     compression = "lzw", res = 300)
+fig_S7
+dev.off()
+
+tiff(paste0(FIG_DIR, "Fig_S8.tiff"), height = 30, width = 30, units='cm', 
+     compression = "lzw", res = 300)
+fig_S8
+dev.off()
+
+tiff(paste0(FIG_DIR, "Fig_S9.tiff"), height = 30, width = 30, units='cm', 
+     compression = "lzw", res = 300)
+fig_S9
+dev.off()
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
