@@ -1,7 +1,6 @@
 # Genetic implication of prenatal GABAergic and cholinergic neuron development in susceptibility to schizophrenia (2024)
 
-This project was carried out in the Division of Psychological Medicine and Clinical Neurosciences (DPMCN). The paper is [here]() ADD WHEN PUBLISHED. 
-
+This project was carried out in the Division of Psychological Medicine and Clinical Neurosciences (DPMCN). The paper is [here](https://academic.oup.com/schizophreniabulletin/advance-article/doi/10.1093/schbul/sbae083/7692829).
 ***
 
 ## **snRNAseq Data**
@@ -26,15 +25,6 @@ See the following papers for GWAS data access:
 + [ADHD](https://figshare.com/ndownloader/files/40036684)
 + [Bipolar Disorder]() - Permission required at time of access
 + [Height](https://portals.broadinstitute.org/collaboration/giant/images/6/63/Meta-analysis_Wood_et_al%2BUKBiobank_2018.txt.gz)
-
-***
-
-## **Scripts**
-
-1. [snRNAseq_GE_get_shi_data.sh](scripts/snRNAseq_GE_get_shi_data.sh) - Download Shi data
-2. [snRNAseq_GE_prep_shi_data_for_Seurat.R](scripts/snRNAseq_GE_prep_shi_data_for_Seurat.R) - Clean and prepare Shi data
-3. [snRNAseq_GE_shi_seurat.R](scripts/snRNAseq_GE_shi_seurat.R) - Generate Seurat objects (with batch correction) for cluster levels 1 and 2
-4. [snRNAseq_GE_prep_enrich_test_files.R](scripts/snRNAseq_GE_prep_enrich_test_files.R) - Generate specificity scores and top 10% genesets for enrichment testing
 
 ***
 
